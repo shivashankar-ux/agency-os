@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
 
     // Initialize admin Supabase client with Service Role Key
     const supabaseAdmin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co",
+      process.env.SUPABASE_SERVICE_ROLE_KEY || "placeholder-service-key",
       {
         auth: {
           autoRefreshToken: false,
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
       // Send invitation email via Resend
       // Use onboarding@resend.dev as fallback for development, or a verified custom domain
       const fromEmail = process.env.RESEND_FROM_EMAIL || "onboarding@resend.dev";
-      const { error: emailError } = await resend.emails.send({
+      const resendResponse = await resend.emails.send({
         from: `Agency OS Onboarding <${fromEmail}>`,
         to: email,
         subject: `You have been invited to join Agency OS`,
@@ -114,11 +114,15 @@ export async function POST(req: NextRequest) {
         `,
       });
 
-      if (emailError) {
+      console.log("Resend API full response:", JSON.stringify(resendResponse, null, 2));
+
+      if (resendResponse.error) {
+        console.error("Resend API returned an error:", JSON.stringify(resendResponse.error, null, 2));
         emailSent = false;
-        emailErrorMsg = emailError.message;
+        emailErrorMsg = resendResponse.error.message;
       }
     } catch (err: any) {
+      console.error("Resend API caught exception:", err);
       emailSent = false;
       emailErrorMsg = err.message || "Unknown mailer error";
     }

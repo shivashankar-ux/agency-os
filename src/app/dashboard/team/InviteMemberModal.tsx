@@ -13,6 +13,7 @@ export default function InviteMemberModal() {
   // Success state tracking
   const [successLink, setSuccessLink] = useState<string | null>(null);
   const [emailSent, setEmailSent] = useState(true);
+  const [emailError, setEmailError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   const [form, setForm] = useState({
@@ -27,6 +28,7 @@ export default function InviteMemberModal() {
     setLoading(true);
     setError(null);
     setSuccessLink(null);
+    setEmailError(null);
 
     try {
       const response = await fetch("/api/invite-team-member", {
@@ -46,6 +48,7 @@ export default function InviteMemberModal() {
       // Success
       setSuccessLink(data.inviteLink || null);
       setEmailSent(data.emailSent ?? true);
+      setEmailError(data.emailError || null);
       
       // Clean up form variables
       setForm({
@@ -64,6 +67,7 @@ export default function InviteMemberModal() {
   function handleCloseSuccess() {
     setOpen(false);
     setSuccessLink(null);
+    setEmailError(null);
     setCopied(false);
     router.refresh();
   }
@@ -117,7 +121,7 @@ export default function InviteMemberModal() {
                     </div>
                   ) : (
                     <div className="p-3 bg-yellow-950/30 border border-yellow-900/60 rounded-lg text-xs text-yellow-400 leading-relaxed">
-                      <strong>Email Delivery Warning:</strong> Could not deliver email (Resend sandbox limit. You can only send to your account email). You can copy the setup URL below to onboard the user manually.
+                      <strong>Email Delivery Warning:</strong> {emailError || "Could not deliver email."} You can copy the setup URL below to onboard the user manually.
                     </div>
                   )}
 
