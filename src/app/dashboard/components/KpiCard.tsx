@@ -44,12 +44,14 @@ export default function KpiCard({
 
         {trend && (
           <span
-            className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${
+            className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${
               trend.isPositive
                 ? "bg-green-950/40 text-green-400 border-green-900/50"
                 : "bg-red-950/40 text-red-400 border-red-900/50"
             }`}
           >
+            {trend.value.startsWith("+") && <span className="text-[9px]">▲</span>}
+            {trend.value.startsWith("-") && <span className="text-[9px]">▼</span>}
             {trend.value}
           </span>
         )}

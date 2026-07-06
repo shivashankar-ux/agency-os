@@ -1,6 +1,7 @@
 import { getDashboardData } from "@/lib/dashboard-data";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { getPermissions } from "@/lib/permissions";
+import { createClient } from "@/lib/supabase/server";
 import KpiCard from "./components/KpiCard";
 import QuickActions from "./components/QuickActions";
 import ActivityTimeline from "./components/ActivityTimeline";
@@ -8,9 +9,11 @@ import TaskCharts from "./components/TaskCharts";
 import ProjectsProgressList from "./components/ProjectsProgressList";
 import TodaySchedule from "./components/TodaySchedule";
 import TeamPerformance from "./components/TeamPerformance";
+import NotificationsWidget from "./components/NotificationsWidget";
+import PerformanceWidget from "./components/PerformanceWidget";
 import { redirect } from "next/navigation";
 import { 
-  Users, Briefcase, CheckCircle, Clock, HeartHandshake, DollarSign, Receipt, BellRing 
+  Users, Briefcase, CheckCircle, Clock, HeartHandshake, DollarSign, Receipt, BellRing, Calendar, ShieldAlert 
 } from "lucide-react";
 
 export default async function DashboardPage() {
@@ -19,9 +22,19 @@ export default async function DashboardPage() {
     if (!profile) {
       redirect("/login");
     }
-    const isOwner = profile.role === "owner";
 
-    // Fetch user permissions and scopes
+    const supabase = await createClient();
+
+    // Fetch profile and organization name join
+    const { data: profileWithOrg } = await supabase
+      .from("profiles")
+      .select("*, organizations(name)")
+      .eq("id", profile.id)
+      .single();
+
+    const workspaceName = profileWithOrg?.organizations?.name || "The Story Builder";
+
+    // Resolve user permissions and scopes
     const permissions = await getPermissions(profile.id);
     const canViewClients = permissions.clients?.view?.allowed || false;
     const canViewProjects = permissions.projects?.view?.allowed || false;
@@ -31,30 +44,80 @@ export default async function DashboardPage() {
     const canViewRevenue = canViewFinance && (permissions.dashboard?.view_revenue?.allowed || false);
     const canViewAnalytics = permissions.dashboard?.view_analytics?.allowed || false;
     const canViewTeamPerformance = canViewTeam && (permissions.dashboard?.view_team_performance?.allowed || false);
+    const canViewReports = permissions.reports?.view?.allowed || false;
 
-    // Load dynamic aggregations from Supabase in parallel (scoped to permissions inside helper)
+    // Load dynamic aggregations from Supabase (scoped to permission query filters)
     const data = await getDashboardData();
-    const { kpis, activities, taskStatus, taskPriority, projects, schedule, teamPerformance } = data;
+    const { 
+      kpis, 
+      activities, 
+      taskStatus, 
+      taskPriority, 
+      projects, 
+      mostActiveProjects,
+      mostDelayedProjects,
+      notifications,
+      schedule, 
+      teamPerformance 
+    } = data;
 
     // Formatting currency values
     const formattedRevenue = `₹${kpis.revenue.toLocaleString("en-IN")}`;
     const formattedPendingRevenue = `₹${kpis.pendingRevenue.toLocaleString("en-IN")}`;
 
+    // Dynamic greeting calculation
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+
+    // Dynamic Date
+    const formattedDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    // Dynamic Role Badge Styles
+    const roleBadges: Record<string, string> = {
+      owner: "bg-amber-950/40 text-amber-400 border-amber-900/50",
+      admin: "bg-red-950/40 text-red-400 border-red-900/50",
+      manager: "bg-indigo-950/40 text-indigo-400 border-indigo-900/50",
+      member: "bg-neutral-800 text-neutral-400 border-neutral-700",
+    };
+
+    const roleBadgeText: Record<string, string> = {
+      owner: "Super Admin",
+      admin: "Administrator",
+      manager: "Manager",
+      member: "Employee",
+    };
+
     return (
       <div className="space-y-6">
-        {/* Header Title Section */}
-        <div className="mb-2">
-          <h1 className="text-2xl font-bold text-white tracking-tight">
-            {isOwner ? "Executive Dashboard" : `Welcome back, ${profile.name}`}
-          </h1>
-          <p className="text-neutral-500 text-xs mt-1">
-            {isOwner
-              ? "Comprehensive analytics and operational status for The Story Builder"
-              : "Here is your operational snapshot for today"}
-          </p>
+        {/* SECTION 1: Welcome Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-neutral-850 pb-5 gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white tracking-tight">
+              {greeting}, {profile.name}
+            </h1>
+            <p className="text-neutral-500 text-xs mt-1.5 flex items-center gap-1.5">
+              <span>{formattedDate}</span>
+              <span className="text-neutral-700">·</span>
+              <span className="text-indigo-400 font-semibold">{workspaceName}</span>
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center">
+            <span
+              className={`text-xxs px-3 py-1 rounded-full border font-semibold tracking-wider uppercase ${
+                roleBadges[profile.role] || roleBadges.member
+              }`}
+            >
+              {roleBadgeText[profile.role] || "Employee"}
+            </span>
+          </div>
         </div>
 
-        {/* 1. TOP SECTION: KPI Cards */}
+        {/* SECTION 2: Dynamic KPI Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {canViewClients && (
             <KpiCard
@@ -84,11 +147,19 @@ export default async function DashboardPage() {
               icon={<CheckCircle size={18} />}
             />
           )}
+          {canViewTasks && (
+            <KpiCard
+              label="Completed Today"
+              value={kpis.completedTodayCount}
+              icon={<CheckCircle size={18} className="text-green-400" />}
+            />
+          )}
           {canViewTeam && (
             <KpiCard
               label="Team Members"
               value={kpis.teamMembers}
               icon={<Users size={18} />}
+              trend={{ value: `${kpis.teamActive} Online`, isPositive: true }}
             />
           )}
           {canViewRevenue && (
@@ -96,7 +167,7 @@ export default async function DashboardPage() {
               label="Paid Revenue"
               value={formattedRevenue}
               icon={<DollarSign size={18} />}
-              trend={{ value: "Live Invoices", isPositive: true }}
+              trend={{ value: kpis.growthTrend, isPositive: true }}
             />
           )}
           {canViewRevenue && (
@@ -104,7 +175,7 @@ export default async function DashboardPage() {
               label="Pending Invoices"
               value={formattedPendingRevenue}
               icon={<Receipt size={18} />}
-              trend={{ value: "Sent", isPositive: true }}
+              trend={{ value: `${kpis.pendingInvoicesCount} Sent`, isPositive: true }}
             />
           )}
           {canViewTasks && (
@@ -116,38 +187,47 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        {/* 2. SECOND SECTION: Quick Actions */}
+        {/* SECTION 7: Quick Actions */}
         <QuickActions />
 
-        {/* 3. GRID SECTION: Split layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Main Content Columns (2/3 width) */}
-          <div className="lg:col-span-2 space-y-6">
-            {/* Visual Task Charts */}
+        {/* GRID SECTION: Split layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          {/* Main Content Columns (8/12 width) */}
+          <div className="lg:col-span-8 space-y-6">
+            
+            {/* SECTION 4: Task Overview Charts */}
             {canViewTasks && canViewAnalytics && (
               <TaskCharts taskStatus={taskStatus} taskPriority={taskPriority} />
             )}
 
-            {/* Projects Progress List */}
+            {/* SECTION 5: Projects Overview */}
             {canViewProjects && (
               <ProjectsProgressList projects={projects} />
             )}
 
-            {/* Team Performance Leaderboard */}
-            {canViewTeamPerformance && (
-              <TeamPerformance teamPerformance={teamPerformance} />
+            {/* SECTION 9: Performance Leaderboards */}
+            {(canViewTeamPerformance || canViewProjects) && (
+              <PerformanceWidget 
+                teamPerformance={canViewTeamPerformance ? teamPerformance : []}
+                mostActiveProjects={canViewProjects ? mostActiveProjects : []}
+                mostDelayedProjects={canViewProjects ? mostDelayedProjects : []}
+              />
             )}
           </div>
 
-          {/* Sidebar Columns (1/3 width) */}
-          <div className="space-y-6">
-            {/* Activities Timeline */}
-            <ActivityTimeline activities={activities} />
+          {/* Sidebar Columns (4/12 width) */}
+          <div className="lg:col-span-4 space-y-6">
+            
+            {/* SECTION 8: Notifications Widget */}
+            <NotificationsWidget notifications={notifications} />
 
-            {/* Today Schedule List */}
+            {/* SECTION 6: Today's Schedule */}
             {canViewTasks && (
               <TodaySchedule schedule={schedule} />
             )}
+
+            {/* SECTION 3: Recent Activity Timeline */}
+            <ActivityTimeline activities={activities} />
           </div>
         </div>
       </div>
