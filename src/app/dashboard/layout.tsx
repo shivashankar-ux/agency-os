@@ -15,10 +15,10 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-neutral-950 flex">
+    <div className="h-screen bg-neutral-950 flex overflow-hidden">
       <PermissionProvider>
         <Sidebar profile={profile} />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+        <main className="flex-1 overflow-y-auto">{children}</main>
       </PermissionProvider>
     </div>
   );
