@@ -1,90 +1,126 @@
-import { createClient } from "@/lib/supabase/server";
+import { getDashboardData } from "@/lib/dashboard-data";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import KpiCard from "./components/KpiCard";
+import QuickActions from "./components/QuickActions";
+import ActivityTimeline from "./components/ActivityTimeline";
+import TaskCharts from "./components/TaskCharts";
+import ProjectsProgressList from "./components/ProjectsProgressList";
+import TodaySchedule from "./components/TodaySchedule";
+import TeamPerformance from "./components/TeamPerformance";
+import { 
+  Users, Briefcase, CheckCircle, Clock, HeartHandshake, DollarSign, Receipt, BellRing 
+} from "lucide-react";
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
-  const profile = await getCurrentProfile();
-  const isOwner = profile?.role === "owner";
+  try {
+    const profile = await getCurrentProfile();
+    const isOwner = profile?.role === "owner";
 
-  const { count: clientCount } = await supabase
-    .from("clients")
-    .select("*", { count: "exact", head: true })
-    .eq("status", "active");
+    // Load dynamic aggregations from Supabase in parallel
+    const data = await getDashboardData();
+    const { kpis, activities, taskStatus, taskPriority, projects, schedule, teamPerformance } = data;
 
-  const { count: taskCount } = await supabase
-    .from("tasks")
-    .select("*", { count: "exact", head: true })
-    .eq(isOwner ? "id" : "assigned_to", isOwner ? undefined : profile?.id)
-    .neq("status", "done");
+    // Formatting currency values
+    const formattedRevenue = `₹${kpis.revenue.toLocaleString("en-IN")}`;
+    const formattedPendingRevenue = `₹${kpis.pendingRevenue.toLocaleString("en-IN")}`;
 
-  const { count: overdueCount } = await supabase
-    .from("tasks")
-    .select("*", { count: "exact", head: true })
-    .lt("due_date", new Date().toISOString().split("T")[0])
-    .neq("status", "done");
+    return (
+      <div className="space-y-6">
+        {/* Header Title Section */}
+        <div className="mb-2">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            {isOwner ? "Executive Dashboard" : `Welcome back, ${profile?.name}`}
+          </h1>
+          <p className="text-neutral-500 text-xs mt-1">
+            {isOwner
+              ? "Comprehensive analytics and operational status for The Story Builder"
+              : "Here is your operational snapshot for today"}
+          </p>
+        </div>
 
-  const stats = [
-    { label: "Active Clients", value: clientCount ?? 0, show: true },
-    {
-      label: isOwner ? "Open Tasks (All)" : "My Open Tasks",
-      value: taskCount ?? 0,
-      show: true,
-    },
-    { label: "Overdue Tasks", value: overdueCount ?? 0, show: true },
-  ];
+        {/* 1. TOP SECTION: KPI Cards */}
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard
+            label="Total Clients"
+            value={kpis.totalClients}
+            icon={HeartHandshake}
+          />
+          <KpiCard
+            label="Active Projects"
+            value={kpis.activeProjects}
+            icon={Briefcase}
+          />
+          <KpiCard
+            label="Pending Tasks"
+            value={kpis.pendingTasks}
+            icon={Clock}
+          />
+          <KpiCard
+            label="Completed Tasks"
+            value={kpis.completedTasks}
+            icon={CheckCircle}
+          />
+          <KpiCard
+            label="Team Members"
+            value={kpis.teamMembers}
+            icon={Users}
+          />
+          <KpiCard
+            label="Paid Revenue"
+            value={formattedRevenue}
+            icon={DollarSign}
+            trend={{ value: "Live Invoices", isPositive: true }}
+          />
+          <KpiCard
+            label="Pending Invoices"
+            value={formattedPendingRevenue}
+            icon={Receipt}
+            trend={{ value: "Sent", isPositive: true }}
+          />
+          <KpiCard
+            label="Active Deadlines"
+            value={kpis.upcomingDeadlinesCount}
+            icon={BellRing}
+          />
+        </div>
 
-  return (
-    <div>
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold text-white">
-          {isOwner ? "Agency Overview" : `Welcome, ${profile?.name}`}
-        </h1>
-        <p className="text-neutral-500 text-sm mt-1">
-          {isOwner
-            ? "Everything happening across The Story Builder"
-            : "Here's what's on your plate"}
-        </p>
-      </div>
+        {/* 2. SECOND SECTION: Quick Actions */}
+        <QuickActions />
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {stats.map((stat) => (
-          <div
-            key={stat.label}
-            className="bg-neutral-900 border border-neutral-800 rounded-xl p-5"
-          >
-            <p className="text-neutral-500 text-xs font-medium">{stat.label}</p>
-            <p className="text-white text-3xl font-semibold mt-2">
-              {stat.value}
-            </p>
+        {/* 3. GRID SECTION: Split layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content Columns (2/3 width) */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Visual Task Charts */}
+            <TaskCharts taskStatus={taskStatus} taskPriority={taskPriority} />
+
+            {/* Projects Progress List */}
+            <ProjectsProgressList projects={projects} />
+
+            {/* Team Performance Leaderboard */}
+            <TeamPerformance teamPerformance={teamPerformance} />
           </div>
-        ))}
-      </div>
 
-      {isOwner && (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5">
-          <h2 className="text-white text-sm font-medium mb-3">Quick Actions</h2>
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="/dashboard/clients"
-              className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              + Add Client
-            </a>
-            <a
-              href="/dashboard/tasks"
-              className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              + Assign Task
-            </a>
-            <a
-              href="/dashboard/team"
-              className="text-xs bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Manage Team
-            </a>
+          {/* Sidebar Columns (1/3 width) */}
+          <div className="space-y-6">
+            {/* Activities Timeline */}
+            <ActivityTimeline activities={activities} />
+
+            {/* Today Schedule List */}
+            <TodaySchedule schedule={schedule} />
           </div>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  } catch (error: any) {
+    return (
+      <div className="bg-red-950/20 border border-red-900 text-red-400 p-6 rounded-xl text-center space-y-3">
+        <h2 className="text-white text-base font-bold">Failed to load dashboard data</h2>
+        <p className="text-xs leading-relaxed max-w-md mx-auto">
+          {error.message || "An unexpected database connectivity error occurred. Please verify your connection."}
+        </p>
+      </div>
+    );
+  }
 }
+
