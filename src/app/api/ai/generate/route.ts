@@ -1,0 +1,202 @@
+import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import { getCurrentProfile } from "@/lib/supabase/profile";
+
+export async function POST(req: NextRequest) {
+  try {
+    const profile = await getCurrentProfile();
+    if (!profile) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json();
+    const { promptType, params } = body;
+
+    if (!promptType || !params) {
+      return NextResponse.json({ error: "Missing promptType or params" }, { status: 400 });
+    }
+
+    // ── Build prompt text based on Template Type ──
+    let prompt = "";
+    if (promptType === "proposal") {
+      prompt = `Act as an expert digital marketing agency director. Write a professional project proposal for Client "${params.clientName}".
+Project Goal/Scope: ${params.scope}
+Estimated Budget: ${params.budget}
+Timeline/Duration: ${params.duration}
+
+Format the response beautifully in Markdown with clear sections:
+1. Executive Summary
+2. Proposed Strategy & Key Deliverables
+3. Cost Breakdown & Milestones
+4. Why Choose Us (The Story Builder Agency)`;
+    } else if (promptType === "strategy") {
+      prompt = `Act as a Chief Growth Officer. Create a comprehensive Marketing Strategy for the product/service "${params.productName}".
+Target Audience: ${params.targetAudience}
+Main Business Goal: ${params.goal}
+Marketing Channels to Focus: ${params.channels}
+
+Format in Markdown with sections:
+1. Audience Analysis & Positioning
+2. Acquisition Funnel (Awareness, Consideration, Conversion)
+3. Action Plan per Channel
+4. Key Performance Indicators (KPIs) to Track`;
+    } else if (promptType === "caption") {
+      prompt = `Write a high-converting social media caption for the platform "${params.platform}".
+Topic: ${params.topic}
+Desired Tone: ${params.tone}
+Include Call to Action: ${params.cta}
+
+Format in Markdown, provide 3 alternative variations of the caption, and include relevant hashtags at the end of each.`;
+    } else if (promptType === "email") {
+      prompt = `Write a professional client email draft.
+Recipient Name: ${params.recipientName}
+Subject/Goal: ${params.subject}
+Key Points to Cover: ${params.points}
+Sender Name: ${profile.name} (The Story Builder Agency)
+
+Format the response in Markdown with standard email elements (Subject, Salutation, Body paragraphs, Sign-off).`;
+    } else if (promptType === "seo") {
+      prompt = `Act as an SEO Specialist. Provide meta suggestions and content optimizations.
+Target Keywords: ${params.keywords}
+Page/Post Topic: ${params.pageTopic}
+Primary Intent: ${params.intent}
+
+Format in Markdown with sections:
+1. Recommended Meta Title & Meta Description
+2. Suggested URL Slug
+3. H1 & Subheading Content Outline
+4. Keyword Clustering & LSI Suggestions`;
+    } else {
+      return NextResponse.json({ error: "Invalid promptType" }, { status: 400 });
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      // ── Fallback local heuristics system in case no API Key is added ──
+      console.warn("No GEMINI_API_KEY found in env, using template fallback system");
+      
+      let mockOutput = "";
+      const nowStr = new Date().toLocaleDateString("en-IN");
+
+      if (promptType === "proposal") {
+        mockOutput = `# Marketing Proposal: ${params.clientName}
+
+**Date:** ${nowStr}  
+**Prepared by:** ${profile.name} (The Story Builder Agency)  
+**Estimated Budget:** ${params.budget}  
+**Timeline:** ${params.duration}
+
+---
+
+## 1. Executive Summary
+We are thrilled to present this marketing proposal for **${params.clientName}**. Our primary objective is to execute a strategic marketing plan that addresses the following core scope:
+> "${params.scope}"
+
+## 2. Proposed Strategy & Key Deliverables
+* **Phase 1: Brand Alignment & Audit** — Comprehensive audit of existing digital footprints and alignment of marketing assets.
+* **Phase 2: Content Strategy & Funnel Setup** — Creating highly target-oriented conversion funnels for lead acquisition.
+* **Phase 3: Execution & Distribution** — Launching campaign setups, monitoring paid advertising channels, and content curation.
+
+## 3. Cost Breakdown & Milestones
+* **Milestone 1 (Discovery & Strategy)** — 20% of total budget (${params.budget})
+* **Milestone 2 (Setup & Assets Generation)** — 40% of total budget
+* **Milestone 3 (Campaign Launch & Optimization)** — 40% of total budget
+
+## 4. Why Choose Us (The Story Builder Agency)
+At The Story Builder, we align data insights with storytelling to scale client visibility. We operate under strict transparency rules, ensuring real-time reporting dashboards for all clients.`;
+      } else if (promptType === "strategy") {
+        mockOutput = `# Growth Strategy: ${params.productName}
+
+**Target Audience:** ${params.targetAudience}  
+**Primary Objective:** ${params.goal}
+
+---
+
+## 1. Audience Analysis & Positioning
+For **${params.productName}**, the target segment consists of **${params.targetAudience}**. We recommend positioning around pain-point resolution, emphasizing speed, cost efficiency, and distinct service quality.
+
+## 2. Acquisition Funnel
+* **Awareness**: Drive reach via social media and content marketing across ${params.channels}.
+* **Consideration**: Retarget high-intent visitors using detailed case studies and reviews.
+* **Conversion**: Offer incentives (free audit, discounts) to capture contact details.
+
+## 3. Action Plan per Channel
+For the channels chosen (**${params.channels}**), we propose:
+* Inbound content creation matching keyword search intent.
+* Video story campaigns highlighting client transformations.
+
+## 4. Key Performance Indicators (KPIs)
+* Customer Acquisition Cost (CAC) reduction by 15%.
+* Click-Through Rate (CTR) improvement on focus channels.`;
+      } else if (promptType === "caption") {
+        mockOutput = `# Social Media Captions (${params.platform})
+**Tone:** ${params.tone}  
+**Topic:** ${params.topic}
+
+---
+
+### Variation 1: Direct & engaging
+"Struggling with ${params.topic}? You're not alone. Let's make it simpler. 💡 Click below to learn more! ${params.cta}"
+*Hashtags: #Marketing #DigitalStrategy #Growth*
+
+### Variation 2: Story-driven
+"It started with a simple question: How do we solve ${params.topic}? Today, we are sharing the framework we use at The Story Builder. Check it out and let us know your thoughts! 👇"
+*Hashtags: #AgencyLife #CreativeStrategy #${params.tone}*
+
+### Variation 3: Short & punchy
+"The secret is out. 🚀 Here is how to conquer ${params.topic}. ${params.cta}"
+*Hashtags: #SuccessTips #MarketingTools*`;
+      } else if (promptType === "email") {
+        mockOutput = `# Email Draft
+**Subject:** Follow-up: ${params.subject}
+
+Dear ${params.recipientName},
+
+I hope this email finds you well.
+
+I am reaching out regarding **${params.subject}** to outline the next steps for our team. Specifically, I wanted to cover the following:
+* ${params.points.split("\n").join("\n* ")}
+
+Please let me know your availability for a brief call to align on these items this week.
+
+Best regards,
+
+**${profile.name}**  
+The Story Builder Agency`;
+      } else {
+        mockOutput = `# SEO Recommendations
+**Topic:** ${params.pageTopic}  
+**Target Keywords:** ${params.keywords}
+
+---
+
+## 1. Recommended Meta Tags
+* **Meta Title:** Best Guide on ${params.pageTopic} | Core Strategies
+* **Meta Description:** Learn how to optimize ${params.pageTopic} using our verified methods. Focus keywords: ${params.keywords}.
+
+## 2. Content Outline
+* **H1:** Ultimate Roadmap to ${params.pageTopic}
+* **H2:** Why ${params.keywords.split(",")[0] || "SEO"} matters for growth
+* **H3:** Implementation strategies you can use today`;
+      }
+
+      // Add notice about fallback system
+      mockOutput += "\n\n> ⚠️ *Note: This output was generated by the built-in fallback system because no GEMINI_API_KEY is configured in your .env.local file.*";
+
+      return NextResponse.json({ content: mockOutput });
+    }
+
+    // ── Call Live Gemini Pro API ──
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    const result = await model.generateContent(prompt);
+    const content = result.response.text();
+
+    return NextResponse.json({ content });
+  } catch (err: any) {
+    console.error("AI Generation Error:", err);
+    return NextResponse.json({ error: err.message || "Failed to generate AI content" }, { status: 500 });
+  }
+}
