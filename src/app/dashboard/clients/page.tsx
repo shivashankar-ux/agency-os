@@ -1,14 +1,34 @@
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getPermissions, applyClientFilters } from "@/lib/permissions";
+import { redirect } from "next/navigation";
 import ClientsTable from "./ClientsTable";
 import AddClientButton from "./AddClientButton";
 
 export default async function ClientsPage() {
-  const supabase = await createClient();
+  const profile = await getCurrentProfile();
+  if (!profile) {
+    redirect("/login");
+  }
 
-  const { data: clients } = await supabase
-    .from("clients")
-    .select("*")
-    .order("created_at", { ascending: false });
+  // Resolve user permissions
+  const permissions = await getPermissions(profile.id);
+  const canViewClients = permissions.clients?.view?.allowed || false;
+  const canCreateClients = permissions.clients?.create?.allowed || false;
+  const clientScope = permissions.clients?.view?.scope || "all";
+
+  if (!canViewClients) {
+    redirect("/dashboard");
+  }
+
+  const supabase = await createClient();
+  let query = supabase.from("clients").select("*").order("created_at", { ascending: false });
+  query = await applyClientFilters(query, profile.id, clientScope);
+
+  const { data: clients, error } = await query;
+  if (error) {
+    console.error("Failed to load scoped clients:", error.message);
+  }
 
   return (
     <div>
@@ -19,7 +39,7 @@ export default async function ClientsPage() {
             {clients?.length ?? 0} client{clients?.length === 1 ? "" : "s"}
           </p>
         </div>
-        <AddClientButton />
+        {canCreateClients && <AddClientButton />}
       </div>
 
       <ClientsTable clients={clients ?? []} />

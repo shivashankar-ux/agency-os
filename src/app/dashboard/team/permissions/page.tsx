@@ -20,7 +20,7 @@ export default async function PermissionsPage() {
 
   // Fetch existing permissions
   const { data: permissions } = await supabase
-    .from("permissions")
+    .from("user_permissions")
     .select("*");
 
   return (
@@ -28,7 +28,7 @@ export default async function PermissionsPage() {
       <div className="mb-6">
         <h1 className="text-xl font-semibold text-white">Team Permissions</h1>
         <p className="text-neutral-500 text-sm mt-1">
-          Manage view and edit privileges for finance, client management, and team settings.
+          Manage view, create, edit, delete, and visibility scopes for finance, client management, projects, and settings.
         </p>
       </div>
 

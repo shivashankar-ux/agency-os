@@ -95,6 +95,7 @@ export default function ClientDetailClient({
   assignments,
   allProfiles,
   currentProfile,
+  permissions,
 }: {
   client: Client;
   projects: Project[];
@@ -102,6 +103,7 @@ export default function ClientDetailClient({
   assignments: Assignment[];
   allProfiles: Profile[];
   currentProfile: Profile;
+  permissions: any;
 }) {
   const router = useRouter();
   const supabase = createClient();

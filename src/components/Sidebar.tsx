@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { usePermissions } from "@/app/dashboard/components/PermissionProvider";
 import type { Profile } from "@/lib/supabase/profile";
 import {
   LayoutDashboard,
@@ -17,6 +18,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
+  const { canView } = usePermissions();
 
   async function handleLogout() {
     await supabase.auth.signOut();
@@ -26,20 +28,10 @@ export default function Sidebar({ profile }: { profile: Profile }) {
 
   const links = [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
-    { href: "/dashboard/clients", label: "Clients", icon: Users, show: true },
-    { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: true },
-    {
-      href: "/dashboard/team",
-      label: "Team",
-      icon: UserCog,
-      show: profile.role === "owner",
-    },
-    {
-      href: "/dashboard/finance",
-      label: "Finance",
-      icon: Wallet,
-      show: profile.role === "owner",
-    },
+    { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
+    { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
+    { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
+    { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
   ];
 
   return (

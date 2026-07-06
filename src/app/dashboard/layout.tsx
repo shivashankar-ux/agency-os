@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import Sidebar from "@/components/Sidebar";
+import { PermissionProvider } from "./components/PermissionProvider";
 
 export default async function DashboardLayout({
   children,
@@ -15,8 +16,10 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen bg-neutral-950 flex">
-      <Sidebar profile={profile} />
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+      <PermissionProvider>
+        <Sidebar profile={profile} />
+        <main className="flex-1 p-6 md:p-8 overflow-y-auto">{children}</main>
+      </PermissionProvider>
     </div>
   );
 }

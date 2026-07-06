@@ -1,5 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { 
+  getPermissions, applyClientFilters, applyProjectFilters, applyTaskFilters 
+} from "./permissions";
 
 export type ActivityItem = {
   id: string;
@@ -98,6 +101,26 @@ export async function getDashboardData(): Promise<DashboardData> {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
+  // Resolve user permissions and scopes
+  const permissions = await getPermissions(profile.id);
+  const clientScope = permissions.clients?.view?.scope || "all";
+  const projectScope = permissions.projects?.view?.scope || "all";
+  const taskScope = permissions.tasks?.view?.scope || "all";
+
+  // Build base queries
+  let clientsQuery = supabase.from("clients").select("id, name, status, created_at").order("created_at", { ascending: false });
+  let projectsQuery = supabase.from("projects")
+    .select("id, name, status, start_date, end_date, created_at, client_id, clients(name), created_by, profiles(name)")
+    .order("created_at", { ascending: false });
+  let tasksQuery = supabase.from("tasks")
+    .select("id, title, status, priority, due_date, assigned_to, project_id, created_at, updated_at, projects(name, client_id, clients(name)), profiles!assigned_to(name)")
+    .order("created_at", { ascending: false });
+
+  // Apply scope-based visibility filters
+  clientsQuery = await applyClientFilters(clientsQuery, profile.id, clientScope);
+  projectsQuery = await applyProjectFilters(projectsQuery, profile.id, projectScope);
+  tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
+
   // Parallel fetch operations for maximum performance
   const [
     clientsRes,
@@ -106,16 +129,9 @@ export async function getDashboardData(): Promise<DashboardData> {
     profilesRes,
     invoicesRes,
   ] = await Promise.all([
-    // Clients
-    supabase.from("clients").select("id, name, status, created_at").order("created_at", { ascending: false }),
-    // Projects with Client name and Owner profile details
-    supabase.from("projects")
-      .select("id, name, status, start_date, end_date, created_at, client_id, clients(name), created_by, profiles(name)")
-      .order("created_at", { ascending: false }),
-    // Tasks with Project and Assignee details
-    supabase.from("tasks")
-      .select("id, title, status, priority, due_date, assigned_to, project_id, created_at, updated_at, projects(name, client_id, clients(name)), profiles!assigned_to(name)")
-      .order("created_at", { ascending: false }),
+    clientsQuery,
+    projectsQuery,
+    tasksQuery,
     // Profiles
     supabase.from("profiles").select("id, name, email, role, job_title, created_at").order("created_at", { ascending: false }),
     // Invoices
