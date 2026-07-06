@@ -67,6 +67,20 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     finance: { view: { allowed: false, scope: "own" }, create_invoice: { allowed: false, scope: "own" }, edit_invoice: { allowed: false, scope: "own" }, expenses: { allowed: false, scope: "own" }, revenue: { allowed: false, scope: "own" }, profit: { allowed: false, scope: "own" } },
     files: { upload: { allowed: true, scope: "own" }, download: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
     ai: { proposal_generator: { allowed: false, scope: "own" }, marketing_ai: { allowed: false, scope: "own" }, caption_generator: { allowed: false, scope: "own" }, reports_ai: { allowed: false, scope: "own" } },
+  },
+  client: {
+    // Client Portal specific permissions: only view their own projects/tasks/invoices
+    clients: { view: { allowed: true, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" }, export: { allowed: false, scope: "own" } },
+    projects: { view: { allowed: true, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, archive: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
+    tasks: { view: { allowed: true, scope: "own" }, assign: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, complete: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
+    team: { view: { allowed: false, scope: "own" }, invite: { allowed: false, scope: "own" }, remove: { allowed: false, scope: "own" }, change_roles: { allowed: false, scope: "own" } },
+    crm: { view: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" }, convert: { allowed: false, scope: "own" } },
+    calendar: { view: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
+    dashboard: { view_revenue: { allowed: false, scope: "own" }, view_analytics: { allowed: false, scope: "own" }, view_kpis: { allowed: false, scope: "own" }, view_financial_cards: { allowed: false, scope: "own" }, view_team_performance: { allowed: false, scope: "own" } },
+    reports: { view: { allowed: false, scope: "own" }, export: { allowed: false, scope: "own" } },
+    finance: { view: { allowed: false, scope: "own" }, create_invoice: { allowed: false, scope: "own" }, edit_invoice: { allowed: false, scope: "own" }, expenses: { allowed: false, scope: "own" }, revenue: { allowed: false, scope: "own" }, profit: { allowed: false, scope: "own" } },
+    files: { upload: { allowed: true, scope: "own" }, download: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
+    ai: { proposal_generator: { allowed: false, scope: "own" }, marketing_ai: { allowed: false, scope: "own" }, caption_generator: { allowed: false, scope: "own" }, reports_ai: { allowed: false, scope: "own" } },
     settings: { company_settings: { allowed: false, scope: "own" }, branding: { allowed: false, scope: "own" }, integrations: { allowed: false, scope: "own" }, delete_workspace: { allowed: false, scope: "own" } },
   },
 };

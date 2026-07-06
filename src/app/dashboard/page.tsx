@@ -22,6 +22,9 @@ export default async function DashboardPage() {
     if (!profile) {
       redirect("/login");
     }
+    if (profile.role === "client") {
+      redirect("/dashboard/client-portal");
+    }
 
     const supabase = await createClient();
 

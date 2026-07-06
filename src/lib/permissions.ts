@@ -95,9 +95,18 @@ export async function canExport(userId: string, module: string): Promise<boolean
 
 // Scoped Data Queries filter helpers
 export async function applyClientFilters(query: any, userId: string, scope: PermissionScope) {
-  if (scope === "all") return query;
-
   const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, client_id")
+    .eq("id", userId)
+    .single();
+
+  if (profile?.role === "client") {
+    return query.eq("id", profile.client_id || "00000000-0000-0000-0000-000000000000");
+  }
+
+  if (scope === "all") return query;
   
   // Find clients this user is assigned to
   const { data: assignments } = await supabase
@@ -116,9 +125,18 @@ export async function applyClientFilters(query: any, userId: string, scope: Perm
 }
 
 export async function applyProjectFilters(query: any, userId: string, scope: PermissionScope) {
-  if (scope === "all") return query;
-
   const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, client_id")
+    .eq("id", userId)
+    .single();
+
+  if (profile?.role === "client") {
+    return query.eq("client_id", profile.client_id || "00000000-0000-0000-0000-000000000000");
+  }
+
+  if (scope === "all") return query;
 
   // Find clients this user is assigned to
   const { data: assignments } = await supabase
@@ -137,6 +155,26 @@ export async function applyProjectFilters(query: any, userId: string, scope: Per
 }
 
 export async function applyTaskFilters(query: any, userId: string, scope: PermissionScope) {
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, client_id")
+    .eq("id", userId)
+    .single();
+
+  if (profile?.role === "client") {
+    const { data: projects } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("client_id", profile.client_id || "00000000-0000-0000-0000-000000000000");
+    const projectIds = projects?.map((p) => p.id) || [];
+    if (projectIds.length > 0) {
+      return query.in("project_id", projectIds);
+    } else {
+      return query.eq("project_id", "00000000-0000-0000-0000-000000000000");
+    }
+  }
+
   if (scope === "all") return query;
 
   // Scoped select: task assigned to user OR task created by user

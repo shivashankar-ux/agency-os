@@ -9,7 +9,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "manager" | "member";
+  role: "owner" | "manager" | "member" | "client";
   job_title: string | null;
   is_active: boolean;
 };
@@ -35,7 +35,7 @@ export default function TeamListClient({
   // Edit form state
   const [editForm, setEditForm] = useState({
     name: "",
-    role: "member" as "manager" | "member",
+    role: "member" as "manager" | "member" | "client",
     job_title: "",
     is_active: true,
   });

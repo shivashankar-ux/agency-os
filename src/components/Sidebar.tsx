@@ -28,15 +28,19 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     router.refresh();
   }
 
-  const links = [
-    { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
-    { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
-    { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
-    { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: canView("crm") },
-    { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
-    { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
-    { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
-  ];
+  const links = profile.role === "client" 
+    ? [
+        { href: "/dashboard/client-portal", label: "Client Portal", icon: LayoutDashboard, show: true },
+      ]
+    : [
+        { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
+        { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
+        { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
+        { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: canView("crm") },
+        { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
+        { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
+        { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
+      ];
 
   return (
     <aside className="w-60 shrink-0 bg-neutral-900 border-r border-neutral-800 flex flex-col">
