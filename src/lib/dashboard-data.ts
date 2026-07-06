@@ -114,7 +114,7 @@ export async function getDashboardData(): Promise<DashboardData> {
       .order("created_at", { ascending: false }),
     // Tasks with Project and Assignee details
     supabase.from("tasks")
-      .select("id, title, status, priority, due_date, assigned_to, project_id, created_at, updated_at, projects(name, client_id, clients(name)), profiles(name)")
+      .select("id, title, status, priority, due_date, assigned_to, project_id, created_at, updated_at, projects(name, client_id, clients(name)), profiles!assigned_to(name)")
       .order("created_at", { ascending: false }),
     // Profiles
     supabase.from("profiles").select("id, name, email, role, job_title, created_at").order("created_at", { ascending: false }),
