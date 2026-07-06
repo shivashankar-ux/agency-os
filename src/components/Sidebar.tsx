@@ -13,6 +13,7 @@ import {
   Wallet,
   TrendingUp,
   CalendarDays,
+  FolderOpen,
   LogOut,
 } from "lucide-react";
 
@@ -38,6 +39,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
         { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: canView("crm") },
         { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
+        { href: "/dashboard/files", label: "Files", icon: FolderOpen, show: canView("files") },
         { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
         { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
       ];
