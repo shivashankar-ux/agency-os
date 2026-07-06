@@ -43,44 +43,44 @@ export default async function DashboardPage() {
           <KpiCard
             label="Total Clients"
             value={kpis.totalClients}
-            icon={HeartHandshake}
+            icon={<HeartHandshake size={18} />}
           />
           <KpiCard
             label="Active Projects"
             value={kpis.activeProjects}
-            icon={Briefcase}
+            icon={<Briefcase size={18} />}
           />
           <KpiCard
             label="Pending Tasks"
             value={kpis.pendingTasks}
-            icon={Clock}
+            icon={<Clock size={18} />}
           />
           <KpiCard
             label="Completed Tasks"
             value={kpis.completedTasks}
-            icon={CheckCircle}
+            icon={<CheckCircle size={18} />}
           />
           <KpiCard
             label="Team Members"
             value={kpis.teamMembers}
-            icon={Users}
+            icon={<Users size={18} />}
           />
           <KpiCard
             label="Paid Revenue"
             value={formattedRevenue}
-            icon={DollarSign}
+            icon={<DollarSign size={18} />}
             trend={{ value: "Live Invoices", isPositive: true }}
           />
           <KpiCard
             label="Pending Invoices"
             value={formattedPendingRevenue}
-            icon={Receipt}
+            icon={<Receipt size={18} />}
             trend={{ value: "Sent", isPositive: true }}
           />
           <KpiCard
             label="Active Deadlines"
             value={kpis.upcomingDeadlinesCount}
-            icon={BellRing}
+            icon={<BellRing size={18} />}
           />
         </div>
 

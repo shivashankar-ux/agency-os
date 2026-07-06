@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 interface KpiCardProps {
   label: string;
   value: string | number;
-  icon: LucideIcon;
+  icon: React.ReactNode;
   trend?: {
     value: string;
     isPositive: boolean;
@@ -17,7 +17,7 @@ interface KpiCardProps {
 export default function KpiCard({
   label,
   value,
-  icon: Icon,
+  icon,
   trend,
   className = "",
 }: KpiCardProps) {
@@ -33,7 +33,7 @@ export default function KpiCard({
           {label}
         </span>
         <div className="bg-neutral-800/80 p-2 rounded-lg text-neutral-400">
-          <Icon size={18} />
+          {icon}
         </div>
       </div>
 
