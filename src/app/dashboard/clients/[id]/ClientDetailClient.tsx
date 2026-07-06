@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { 
-  Plus, X, Calendar, User, DollarSign, ChevronDown, ChevronUp, Users, ArrowLeft, Briefcase 
+  Plus, X, Calendar, User, DollarSign, ChevronDown, ChevronUp, Users, ArrowLeft, Briefcase, ExternalLink
 } from "lucide-react";
 
 type Client = {
@@ -384,6 +384,14 @@ export default function ClientDetailClient({
                           <span className="text-xxs px-1.5 py-0.5 rounded border border-neutral-700 bg-neutral-800 text-neutral-400 capitalize">
                             {project.status}
                           </span>
+                          <Link
+                            href={`/dashboard/projects/${project.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1 text-xxs text-indigo-400 hover:text-indigo-300 font-semibold transition-colors shrink-0"
+                          >
+                            <ExternalLink size={11} />
+                            Open Workspace
+                          </Link>
                         </div>
                         {project.description && (
                           <p className="text-neutral-500 text-xs mt-1 truncate">
