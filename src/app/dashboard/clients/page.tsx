@@ -42,7 +42,7 @@ export default async function ClientsPage() {
         {canCreateClients && <AddClientButton />}
       </div>
 
-      <ClientsTable clients={clients ?? []} />
+      <ClientsTable clients={clients ?? []} role={profile.role as any} />
     </div>
   );
 }

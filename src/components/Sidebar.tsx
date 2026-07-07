@@ -45,7 +45,6 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
         { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
         { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
-        { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: canView("crm") },
         { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
         { href: "/dashboard/files", label: "Files", icon: FolderOpen, show: canView("files") },
         { href: "/dashboard/reports", label: "Reports", icon: BarChart3, show: canView("reports") },
