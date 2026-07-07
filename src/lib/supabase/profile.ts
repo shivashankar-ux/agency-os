@@ -6,7 +6,7 @@ export type Profile = {
   org_id: string;
   name: string;
   email: string;
-  role: "owner" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "member" | "client";
   job_title: string | null;
   avatar_url: string | null;
   is_active: boolean;

@@ -45,12 +45,13 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
         { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
         { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
+        { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: profile.role === "owner" || profile.role === "admin" },
         { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
         { href: "/dashboard/files", label: "Files", icon: FolderOpen, show: canView("files") },
         { href: "/dashboard/reports", label: "Reports", icon: BarChart3, show: canView("reports") },
         { href: "/dashboard/ai", label: "AI Copilot", icon: Sparkles, show: canUseAI },
-        { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
-        { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
+        { href: "/dashboard/team", label: "Team", icon: UserCog, show: profile.role === "owner" || profile.role === "admin" },
+        { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: profile.role === "owner" || profile.role === "admin" },
       ];
 
   return (
