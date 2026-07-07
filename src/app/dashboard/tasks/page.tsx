@@ -20,25 +20,59 @@ export default async function TasksPage() {
   }
 
   const supabase = await createClient();
-  let query = supabase
+
+  // 1. Resolve tasks query builder with permissions filters
+  let tasksQuery = supabase
     .from("tasks")
     .select("*, projects(name, clients(name)), assignee:profiles!tasks_assigned_to_fkey(id, name, role)")
     .order("created_at", { ascending: false });
 
-  query = await applyTaskFilters(query, profile.id, taskScope);
-  const { data: tasks, error } = await query;
-  if (error) {
-    console.error("Failed to load scoped tasks:", error.message);
+  tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
+
+  // 2. Fetch tasks, profiles, and projects in parallel
+  const [
+    tasksRes,
+    profilesRes,
+    projectsRes
+  ] = await Promise.all([
+    tasksQuery,
+    supabase
+      .from("profiles")
+      .select("id, name, role")
+      .order("name", { ascending: true }),
+    supabase
+      .from("projects")
+      .select("id, name")
+      .order("name", { ascending: true })
+  ]);
+
+  if (tasksRes.error) {
+    console.error("Failed to load scoped tasks:", tasksRes.error.message);
   }
+  if (profilesRes.error) {
+    console.error("Failed to load profiles:", profilesRes.error.message);
+  }
+  if (projectsRes.error) {
+    console.error("Failed to load projects:", projectsRes.error.message);
+  }
+
+  const tasks = tasksRes.data || [];
+  const allProfiles = profilesRes.data || [];
+  const allProjects = projectsRes.data || [];
 
   return (
     <div>
       <h1 className="text-xl font-semibold text-white mb-1">Tasks</h1>
       <p className="text-neutral-500 text-sm mb-6">
-        {tasks?.length ?? 0} task{tasks?.length === 1 ? "" : "s"}
+        {tasks.length} task{tasks.length === 1 ? "" : "s"}
       </p>
 
-      <TasksListClient tasks={tasks as any[] || []} currentProfile={profile as any} />
+      <TasksListClient 
+        tasks={tasks as any[]} 
+        currentProfile={profile as any} 
+        allProfiles={allProfiles as any}
+        allProjects={allProjects as any}
+      />
     </div>
   );
 }

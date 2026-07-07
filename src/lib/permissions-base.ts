@@ -45,7 +45,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     projects: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, archive: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     tasks: { view: { allowed: true, scope: "all" }, assign: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, complete: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     team: { view: { allowed: true, scope: "all" }, invite: { allowed: false, scope: "all" }, remove: { allowed: false, scope: "all" }, change_roles: { allowed: false, scope: "all" } },
-    crm: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" }, convert: { allowed: false, scope: "all" } },
+    crm: { view: { allowed: false, scope: "all" }, create: { allowed: false, scope: "all" }, edit: { allowed: false, scope: "all" }, delete: { allowed: false, scope: "all" }, convert: { allowed: false, scope: "all" } },
     calendar: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     dashboard: { view_revenue: { allowed: false, scope: "all" }, view_analytics: { allowed: true, scope: "all" }, view_kpis: { allowed: true, scope: "all" }, view_financial_cards: { allowed: false, scope: "all" }, view_team_performance: { allowed: true, scope: "all" } },
     reports: { view: { allowed: true, scope: "all" }, export: { allowed: false, scope: "all" } },

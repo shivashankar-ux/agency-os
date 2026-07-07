@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
 import { 
   ROLE_DEFAULTS, 
   getEmptyPermissionMap, 
@@ -11,7 +12,7 @@ export type { PermissionMap, PermissionScope, PermissionCheck };
 export { ROLE_DEFAULTS, getEmptyPermissionMap };
 
 // Central permissions resolver
-export async function getPermissions(userId: string): Promise<PermissionMap> {
+export const getPermissions = cache(async (userId: string): Promise<PermissionMap> => {
   const supabase = await createClient();
 
   // 1. Fetch profile to resolve user's base role
@@ -57,7 +58,7 @@ export async function getPermissions(userId: string): Promise<PermissionMap> {
   });
 
   return customMap;
-}
+});
 
 // Check helper
 export async function hasPermission(

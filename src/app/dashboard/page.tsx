@@ -127,6 +127,7 @@ export default async function DashboardPage() {
               label="Total Clients"
               value={kpis.totalClients}
               icon={<HeartHandshake size={18} />}
+              href="/dashboard/clients"
             />
           )}
           {canViewProjects && (
@@ -134,6 +135,7 @@ export default async function DashboardPage() {
               label="Active Projects"
               value={kpis.activeProjects}
               icon={<Briefcase size={18} />}
+              href="/dashboard/clients"
             />
           )}
           {canViewTasks && (
@@ -141,6 +143,7 @@ export default async function DashboardPage() {
               label="Pending Tasks"
               value={kpis.pendingTasks}
               icon={<Clock size={18} />}
+              href="/dashboard/tasks"
             />
           )}
           {canViewTasks && (
@@ -148,6 +151,7 @@ export default async function DashboardPage() {
               label="Completed Tasks"
               value={kpis.completedTasks}
               icon={<CheckCircle size={18} />}
+              href="/dashboard/tasks"
             />
           )}
           {canViewTasks && (
@@ -155,6 +159,7 @@ export default async function DashboardPage() {
               label="Completed Today"
               value={kpis.completedTodayCount}
               icon={<CheckCircle size={18} className="text-green-400" />}
+              href="/dashboard/tasks"
             />
           )}
           {canViewTeam && (
@@ -163,6 +168,7 @@ export default async function DashboardPage() {
               value={kpis.teamMembers}
               icon={<Users size={18} />}
               trend={{ value: `${kpis.teamActive} Online`, isPositive: true }}
+              href="/dashboard/team"
             />
           )}
           {canViewRevenue && (
@@ -171,6 +177,7 @@ export default async function DashboardPage() {
               value={formattedRevenue}
               icon={<DollarSign size={18} />}
               trend={{ value: kpis.growthTrend, isPositive: true }}
+              href="/dashboard/reports"
             />
           )}
           {canViewRevenue && (
@@ -179,6 +186,7 @@ export default async function DashboardPage() {
               value={formattedPendingRevenue}
               icon={<Receipt size={18} />}
               trend={{ value: `${kpis.pendingInvoicesCount} Sent`, isPositive: true }}
+              href="/dashboard/reports"
             />
           )}
           {canViewTasks && (
@@ -186,6 +194,7 @@ export default async function DashboardPage() {
               label="Active Deadlines"
               value={kpis.upcomingDeadlinesCount}
               icon={<BellRing size={18} />}
+              href="/dashboard/calendar"
             />
           )}
         </div>

@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { cache } from "react";
 
 export type Profile = {
   id: string;
@@ -12,7 +13,7 @@ export type Profile = {
   client_id?: string | null;
 };
 
-export async function getCurrentProfile(): Promise<Profile | null> {
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,4 +28,4 @@ export async function getCurrentProfile(): Promise<Profile | null> {
     .single();
 
   return profile as Profile | null;
-}
+});

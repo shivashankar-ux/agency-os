@@ -84,7 +84,7 @@ begin
       return v_role in ('owner', 'admin', 'manager', 'member');
 
     elsif feature = 'crm' then
-      return v_role in ('owner', 'admin', 'manager');
+      return v_role in ('owner', 'admin');
 
     elsif feature = 'finance' then
       return v_role in ('owner', 'admin');

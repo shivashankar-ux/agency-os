@@ -2,6 +2,7 @@
 
 import { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface KpiCardProps {
   label: string;
@@ -12,6 +13,7 @@ interface KpiCardProps {
     isPositive: boolean;
   };
   className?: string;
+  href?: string;
 }
 
 export default function KpiCard({
@@ -20,14 +22,10 @@ export default function KpiCard({
   icon,
   trend,
   className = "",
+  href,
 }: KpiCardProps) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors shadow-sm ${className}`}
-    >
+  const CardContent = (
+    <>
       <div className="flex items-center justify-between">
         <span className="text-neutral-500 text-xs font-medium tracking-wide uppercase">
           {label}
@@ -56,6 +54,32 @@ export default function KpiCard({
           </span>
         )}
       </div>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="block group">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-indigo-500/50 hover:bg-neutral-850/50 transition-all cursor-pointer shadow-sm group-hover:shadow-md ${className}`}
+        >
+          {CardContent}
+        </motion.div>
+      </Link>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors shadow-sm ${className}`}
+    >
+      {CardContent}
     </motion.div>
   );
 }
