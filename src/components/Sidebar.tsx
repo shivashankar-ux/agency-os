@@ -15,6 +15,7 @@ import {
   CalendarDays,
   FolderOpen,
   BarChart3,
+  Sparkles,
   LogOut,
 } from "lucide-react";
 
@@ -22,13 +23,19 @@ export default function Sidebar({ profile }: { profile: Profile }) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
-  const { canView } = usePermissions();
+  const { canView, hasPermission } = usePermissions();
 
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push("/login");
     router.refresh();
   }
+
+  const canUseAI =
+    hasPermission("ai", "proposal_generator") ||
+    hasPermission("ai", "marketing_ai") ||
+    hasPermission("ai", "caption_generator") ||
+    hasPermission("ai", "reports_ai");
 
   const links = profile.role === "client" 
     ? [
@@ -42,6 +49,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
         { href: "/dashboard/files", label: "Files", icon: FolderOpen, show: canView("files") },
         { href: "/dashboard/reports", label: "Reports", icon: BarChart3, show: canView("reports") },
+        { href: "/dashboard/ai", label: "AI Copilot", icon: Sparkles, show: canUseAI },
         { href: "/dashboard/team", label: "Team", icon: UserCog, show: canView("team") },
         { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: canView("finance") },
       ];
