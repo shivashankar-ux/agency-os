@@ -51,7 +51,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     reports: { view: { allowed: true, scope: "all" }, export: { allowed: false, scope: "all" } },
     finance: { view: { allowed: false, scope: "all" }, create_invoice: { allowed: false, scope: "all" }, edit_invoice: { allowed: false, scope: "all" }, expenses: { allowed: false, scope: "all" }, revenue: { allowed: false, scope: "all" }, profit: { allowed: false, scope: "all" } },
     files: { upload: { allowed: true, scope: "all" }, download: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
-    ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: false, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: false, scope: "all" } },
+    ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: false, scope: "all" }, branding: { allowed: false, scope: "all" }, integrations: { allowed: false, scope: "all" }, delete_workspace: { allowed: false, scope: "all" } },
   },
   member: {
@@ -66,7 +66,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     reports: { view: { allowed: false, scope: "own" }, export: { allowed: false, scope: "own" } },
     finance: { view: { allowed: false, scope: "own" }, create_invoice: { allowed: false, scope: "own" }, edit_invoice: { allowed: false, scope: "own" }, expenses: { allowed: false, scope: "own" }, revenue: { allowed: false, scope: "own" }, profit: { allowed: false, scope: "own" } },
     files: { upload: { allowed: true, scope: "own" }, download: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
-    ai: { proposal_generator: { allowed: false, scope: "own" }, marketing_ai: { allowed: false, scope: "own" }, caption_generator: { allowed: false, scope: "own" }, reports_ai: { allowed: false, scope: "own" } },
+    ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
   },
   client: {
     // Client Portal specific permissions: only view their own projects/tasks/invoices

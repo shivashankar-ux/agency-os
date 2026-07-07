@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { usePermissions } from "@/app/dashboard/components/PermissionProvider";
 import { 
-  X, Calendar, User, MessageSquare, Send, Clock, AlertCircle 
+  X, Calendar, User, MessageSquare, Send, Clock, AlertCircle,
+  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy
 } from "lucide-react";
 
 type Profile = {
@@ -70,6 +72,8 @@ export default function TasksListClient({
   const router = useRouter();
   const supabase = createClient();
 
+  const { hasPermission } = usePermissions();
+
   // State for active task modal
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -78,10 +82,27 @@ export default function TasksListClient({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // State for AI Task Copilot
+  const [aiExpanded, setAiExpanded] = useState(false);
+  const [aiPromptType, setAiPromptType] = useState<"strategy" | "caption" | "email" | "seo">("strategy");
+  const [aiOutput, setAiOutput] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiCopied, setAiCopied] = useState(false);
+  const [aiPlatform, setAiPlatform] = useState("LinkedIn");
+  const [aiTone, setAiTone] = useState("Professional");
+
+  const canUseAI =
+    hasPermission("ai", "proposal_generator") ||
+    hasPermission("ai", "marketing_ai") ||
+    hasPermission("ai", "caption_generator") ||
+    hasPermission("ai", "reports_ai");
+
   // Fetch comments when a task is selected
   useEffect(() => {
     if (!selectedTask) {
       setComments([]);
+      setAiOutput("");
+      setAiExpanded(false);
       return;
     }
 
@@ -156,6 +177,94 @@ export default function TasksListClient({
       setComments((prev) => [...prev, newCommentData as Comment]);
     }
     setCommentText("");
+    setLoading(false);
+    router.refresh();
+  }
+
+  // AI Task Copilot generator handler
+  async function handleAIGenerate() {
+    if (!selectedTask) return;
+    setAiLoading(true);
+    setAiOutput("");
+    setAiCopied(false);
+
+    let params = {};
+    const clientName = selectedTask.projects?.clients?.name || "Client";
+    const projectName = selectedTask.projects?.name || "Project";
+    const taskTitle = selectedTask.title;
+    const taskDesc = selectedTask.description || "Task details";
+
+    if (aiPromptType === "strategy") {
+      params = {
+        productName: taskTitle,
+        targetAudience: `Target segment for ${clientName}`,
+        goal: `Successfully complete: ${taskDesc}`,
+        channels: "Omnichannel (Social, Web, Email)",
+      };
+    } else if (aiPromptType === "caption") {
+      params = {
+        platform: aiPlatform,
+        topic: taskTitle,
+        tone: aiTone,
+        cta: `Learn more about our work on ${projectName}`,
+      };
+    } else if (aiPromptType === "email") {
+      params = {
+        recipientName: clientName,
+        subject: `Update on Task: ${taskTitle}`,
+        points: `We are making progress on "${taskTitle}" under project "${projectName}". Key details:\n- ${taskDesc}`,
+      };
+    } else if (aiPromptType === "seo") {
+      params = {
+        keywords: `${taskTitle.toLowerCase().replace(/[^a-z0-9 ]/g, "").replace(/\s+/g, ", ")}`,
+        pageTopic: `${taskTitle} - ${taskDesc}`,
+        intent: "Informational",
+      };
+    }
+
+    try {
+      const res = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ promptType: aiPromptType, params }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to generate text");
+      setAiOutput(data.content);
+    } catch (err: any) {
+      alert(err.message || "Something went wrong during generation");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  // Post AI content directly to comment section
+  async function handlePostAICopyAsComment(text: string) {
+    if (!selectedTask || !text.trim()) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { data: newCommentData, error: commentError } = await supabase
+      .from("task_comments")
+      .insert({
+        task_id: selectedTask.id,
+        user_id: currentProfile.id,
+        comment: `✨ **AI Task Copilot Output (${aiPromptType.toUpperCase()}):**\n\n${text.trim()}`,
+      })
+      .select("*, profiles(name)")
+      .single();
+
+    if (commentError) {
+      setError(commentError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (newCommentData) {
+      setComments((prev) => [...prev, newCommentData as Comment]);
+    }
     setLoading(false);
     router.refresh();
   }
@@ -317,6 +426,168 @@ export default function TasksListClient({
                   {selectedTask.description || "No description provided."}
                 </div>
               </div>
+
+              {/* AI Task Copilot Panel */}
+              {canUseAI && (
+                <div className="border border-neutral-800 bg-neutral-950/40 rounded-xl overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setAiExpanded(!aiExpanded)}
+                    className="w-full flex items-center justify-between px-4 py-3 bg-neutral-900/60 hover:bg-neutral-900 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-2 text-indigo-400 text-sm font-semibold">
+                      <Sparkles size={16} className="animate-pulse" />
+                      <span>AI Task Copilot</span>
+                    </div>
+                    <span className="text-neutral-500">
+                      {aiExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </span>
+                  </button>
+
+                  {aiExpanded && (
+                    <div className="p-4 space-y-4 border-t border-neutral-800/80">
+                      {/* Generation Type Selection */}
+                      <div className="flex flex-wrap gap-1.5 p-1 bg-neutral-950 rounded-lg border border-neutral-800">
+                        {[
+                          { id: "strategy", label: "Breakdown" },
+                          { id: "caption", label: "Caption" },
+                          { id: "email", label: "Email" },
+                          { id: "seo", label: "SEO Plan" },
+                        ].map((type) => (
+                          <button
+                            key={type.id}
+                            type="button"
+                            onClick={() => {
+                              setAiPromptType(type.id as any);
+                              setAiOutput("");
+                            }}
+                            className={`flex-1 text-center py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
+                              aiPromptType === type.id
+                                ? "bg-indigo-600 text-white shadow-sm"
+                                : "text-neutral-400 hover:text-white"
+                            }`}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Custom inputs if caption selected */}
+                      {aiPromptType === "caption" && (
+                        <div className="grid grid-cols-2 gap-3 text-xs">
+                          <div>
+                            <label className="text-neutral-400 block mb-1">Platform</label>
+                            <select
+                              value={aiPlatform}
+                              onChange={(e) => setAiPlatform(e.target.value)}
+                              className="w-full bg-neutral-900 border border-neutral-800 rounded-md p-1.5 text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                            >
+                              <option value="LinkedIn">LinkedIn</option>
+                              <option value="Instagram">Instagram</option>
+                              <option value="Twitter">X / Twitter</option>
+                              <option value="Facebook">Facebook</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-neutral-400 block mb-1">Tone</label>
+                            <select
+                              value={aiTone}
+                              onChange={(e) => setAiTone(e.target.value)}
+                              className="w-full bg-neutral-900 border border-neutral-800 rounded-md p-1.5 text-white focus:ring-1 focus:ring-indigo-500 focus:outline-none"
+                            >
+                              <option value="Professional">Professional</option>
+                              <option value="Witty/Creative">Witty / Creative</option>
+                              <option value="Informative">Informative</option>
+                              <option value="Casual">Casual</option>
+                            </select>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Button */}
+                      <button
+                        type="button"
+                        disabled={aiLoading}
+                        onClick={handleAIGenerate}
+                        className="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                      >
+                        {aiLoading ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin" />
+                            <span>Generating draft...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={14} />
+                            <span>Run Generative Copilot</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* AI Output Window */}
+                      {(aiOutput || aiLoading) && (
+                        <div className="space-y-2 mt-3">
+                          <label className="text-neutral-400 text-xxs font-bold uppercase tracking-wider block">
+                            Generated Output
+                          </label>
+                          <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-3 max-h-[200px] overflow-y-auto">
+                            {aiLoading ? (
+                              <div className="flex flex-col items-center justify-center py-6 text-neutral-500 gap-2">
+                                <Loader2 size={20} className="animate-spin text-indigo-450" />
+                                <span className="text-xs">Processing prompt...</span>
+                              </div>
+                            ) : (
+                              <div className="text-xs text-neutral-300 whitespace-pre-wrap font-sans leading-relaxed">
+                                {aiOutput}
+                              </div>
+                            )}
+                          </div>
+
+                          {!aiLoading && aiOutput && (
+                            <div className="flex gap-2">
+                              {/* Copy Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(aiOutput);
+                                  setAiCopied(true);
+                                  setTimeout(() => setAiCopied(false), 2000);
+                                }}
+                                className="flex-1 py-1.5 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-300 rounded-md text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+                              >
+                                {aiCopied ? (
+                                  <>
+                                    <Check size={12} className="text-green-400" />
+                                    <span className="text-green-400">Copied!</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy size={12} />
+                                    <span>Copy Draft</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* Post as Comment Button */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handlePostAICopyAsComment(aiOutput);
+                                  alert("Success! The AI generation has been posted as a comment on this task.");
+                                }}
+                                className="flex-1 py-1.5 bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-indigo-400 rounded-md text-xs font-medium flex items-center justify-center gap-1 transition-colors"
+                              >
+                                <MessageSquare size={12} />
+                                <span>Save as Comment</span>
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Inline Error messages */}
               {error && (
