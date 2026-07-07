@@ -187,6 +187,7 @@ export default function ClientsTable({
                   {isOwnerOrAdmin ? (
                     <Link
                       href={`/dashboard/clients/${client.id}`}
+                      prefetch={false}
                       className="text-white hover:text-indigo-400 transition-colors"
                     >
                       {client.name}

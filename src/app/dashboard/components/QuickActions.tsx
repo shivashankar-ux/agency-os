@@ -69,6 +69,7 @@ export default function QuickActions() {
               >
                 <Link
                   href={act.href}
+                  prefetch={false}
                   className="group flex items-start gap-3.5 p-4 rounded-xl border border-neutral-800 bg-neutral-950/50 hover:bg-neutral-800/30 hover:border-neutral-700 transition-all duration-200"
                 >
                   <div className={`p-2.5 rounded-lg border ${act.color} flex-shrink-0`}>

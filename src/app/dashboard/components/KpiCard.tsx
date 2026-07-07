@@ -59,7 +59,7 @@ export default function KpiCard({
 
   if (href) {
     return (
-      <Link href={href} className="block group">
+      <Link href={href} prefetch={false} className="block group">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
