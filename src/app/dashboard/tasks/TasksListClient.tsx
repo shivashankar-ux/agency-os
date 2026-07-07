@@ -6,14 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { usePermissions } from "@/app/dashboard/components/PermissionProvider";
 import { 
   X, Calendar, User, MessageSquare, Send, Clock, AlertCircle,
-  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy
+  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy, Plus
 } from "lucide-react";
 
 type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "member" | "client";
 };
 
 type Task = {
@@ -65,9 +65,13 @@ const priorityColors: Record<string, string> = {
 export default function TasksListClient({
   tasks,
   currentProfile,
+  allProfiles = [],
+  allProjects = [],
 }: {
   tasks: Task[];
   currentProfile: Profile;
+  allProfiles?: { id: string; name: string; role: string }[];
+  allProjects?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -81,6 +85,62 @@ export default function TasksListClient({
   const [commentText, setCommentText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // State for global Create Task modal
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [createSubmitting, setCreateSubmitting] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [createFormData, setCreateFormData] = useState({
+    title: "",
+    description: "",
+    project_id: "",
+    assigned_to: "",
+    priority: "medium",
+    status: "todo",
+    due_date: "",
+  });
+
+  async function handleCreateTask(e: React.FormEvent) {
+    e.preventDefault();
+    if (!createFormData.title.trim() || !createFormData.project_id) {
+      setCreateError("Task title and project are required.");
+      return;
+    }
+
+    setCreateSubmitting(true);
+    setCreateError(null);
+
+    const { error: insertError } = await supabase
+      .from("tasks")
+      .insert({
+        project_id: createFormData.project_id,
+        title: createFormData.title.trim(),
+        description: createFormData.description.trim() || null,
+        assigned_to: createFormData.assigned_to || null,
+        priority: createFormData.priority,
+        status: createFormData.status,
+        due_date: createFormData.due_date || null,
+      });
+
+    if (insertError) {
+      setCreateError(insertError.message);
+      setCreateSubmitting(false);
+      return;
+    }
+
+    setCreateFormData({
+      title: "",
+      description: "",
+      project_id: "",
+      assigned_to: "",
+      priority: "medium",
+      status: "todo",
+      due_date: "",
+    });
+    setIsCreateModalOpen(false);
+    setCreateSubmitting(false);
+    router.refresh();
+  }
 
   // State for AI Task Copilot
   const [aiExpanded, setAiExpanded] = useState(false);
@@ -275,8 +335,27 @@ export default function TasksListClient({
     currentProfile.role === "owner" ||
     currentProfile.role === "manager";
 
+  const canCreateTasks =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "admin" ||
+    currentProfile.role === "manager";
+
   return (
     <div className="space-y-4">
+      {canCreateTasks && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={() => {
+              setIsCreateModalOpen(true);
+              setCreateError(null);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
+          >
+            <Plus size={14} /> Create Task
+          </button>
+        </div>
+      )}
+
       {/* Task List Grid */}
       {tasks.length === 0 ? (
         <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-10 text-center">
@@ -658,6 +737,122 @@ export default function TasksListClient({
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: CREATE TASK */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4 border-b border-neutral-850 pb-3">
+              <h2 className="text-white font-semibold text-base flex items-center gap-1.5">
+                <Plus size={18} className="text-indigo-400" />
+                Create New Task
+              </h2>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                className="text-neutral-500 hover:text-white"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTask} className="space-y-4 text-xs">
+              <div className="space-y-1">
+                <label className="text-neutral-400 font-semibold">Task Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Design homepage mockup"
+                  value={createFormData.title}
+                  onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-neutral-400 font-semibold">Description</label>
+                <textarea
+                  rows={3}
+                  placeholder="Task description and details..."
+                  value={createFormData.description}
+                  onChange={(e) => setCreateFormData({ ...createFormData, description: e.target.value })}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700 resize-none font-sans"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-semibold">Project</label>
+                  <select
+                    required
+                    value={createFormData.project_id}
+                    onChange={(e) => setCreateFormData({ ...createFormData, project_id: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700 font-sans"
+                  >
+                    <option value="">Select Project</option>
+                    {allProjects.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-semibold">Assignee</label>
+                  <select
+                    value={createFormData.assigned_to}
+                    onChange={(e) => setCreateFormData({ ...createFormData, assigned_to: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700 font-sans"
+                  >
+                    <option value="">Unassigned</option>
+                    {allProfiles.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-semibold">Priority</label>
+                  <select
+                    value={createFormData.priority}
+                    onChange={(e) => setCreateFormData({ ...createFormData, priority: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700 font-sans"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-neutral-400 font-semibold">Due Date</label>
+                  <input
+                    type="date"
+                    value={createFormData.due_date}
+                    onChange={(e) => setCreateFormData({ ...createFormData, due_date: e.target.value })}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-neutral-700 font-sans"
+                  />
+                </div>
+              </div>
+
+              {createError && (
+                <div className="bg-red-950/40 border border-red-900 text-red-400 text-xs px-3 py-2 rounded-lg flex items-center gap-2">
+                  <AlertCircle size={14} className="flex-shrink-0" />
+                  <span>{createError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={createSubmitting}
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg py-2.5 transition-colors mt-2"
+              >
+                {createSubmitting ? "Creating task..." : "Create Task"}
+              </button>
+            </form>
           </div>
         </div>
       )}
