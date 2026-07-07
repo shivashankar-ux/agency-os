@@ -81,7 +81,7 @@ begin
   else
     -- Static Role-based defaults mapping
     if feature = 'all_clients' then
-      return v_role in ('owner', 'admin', 'manager');
+      return v_role in ('owner', 'admin', 'manager', 'member');
 
     elsif feature = 'crm' then
       return v_role in ('owner', 'admin', 'manager');

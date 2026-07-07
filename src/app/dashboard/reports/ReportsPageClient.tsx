@@ -59,14 +59,19 @@ export default function ReportsPageClient({
   tasks,
   projects,
   profiles,
+  permissions,
 }: {
   invoices: Invoice[];
   expenses: Expense[];
   tasks: Task[];
   projects: Project[];
   profiles: Profile[];
+  permissions: any;
 }) {
-  const [activeReport, setActiveReport] = useState<"finance" | "team" | "projects">("finance");
+  const canViewFinance = permissions?.finance?.view?.allowed ?? false;
+  const [activeReport, setActiveReport] = useState<"finance" | "team" | "projects">(
+    canViewFinance ? "finance" : "team"
+  );
 
   // ── Financial Data Crunching ──────────────────────────────────
   const financialStats = useMemo(() => {
@@ -212,25 +217,27 @@ export default function ReportsPageClient({
       {/* Tabs */}
       <div className="flex gap-1 border-b border-neutral-900">
         {[
-          { key: "finance", label: "Financial Metrics", icon: DollarSign },
-          { key: "team", label: "Team Productivity", icon: Users },
-          { key: "projects", label: "Project Statuses", icon: Briefcase },
-        ].map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setActiveReport(t.key as any)}
-            className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg flex items-center gap-1.5 border-b border-transparent transition-colors -mb-px
-              ${activeReport === t.key ? "bg-neutral-900 text-white border-b-indigo-500 border border-neutral-800 border-b-transparent" : "text-neutral-500 hover:text-white"}`}
-          >
-            <t.icon size={13} />
-            {t.label}
-          </button>
-        ))}
+          { key: "finance", label: "Financial Metrics", icon: DollarSign, show: canViewFinance },
+          { key: "team", label: "Team Productivity", icon: Users, show: true },
+          { key: "projects", label: "Project Statuses", icon: Briefcase, show: true },
+        ]
+          .filter((t) => t.show)
+          .map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setActiveReport(t.key as any)}
+              className={`px-4 py-2.5 text-xs font-semibold rounded-t-lg flex items-center gap-1.5 border-b border-transparent transition-colors -mb-px
+                ${activeReport === t.key ? "bg-neutral-900 text-white border-b-indigo-500 border border-neutral-800 border-b-transparent" : "text-neutral-500 hover:text-white"}`}
+            >
+              <t.icon size={13} />
+              {t.label}
+            </button>
+          ))}
       </div>
 
       {/* Report Pages */}
       <AnimatePresence mode="wait">
-        {activeReport === "finance" && (
+        {activeReport === "finance" && canViewFinance && (
           <motion.div
             key="finance"
             initial={{ opacity: 0, y: 5 }}

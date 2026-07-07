@@ -71,6 +71,7 @@ export default async function ReportsPage() {
       tasks={(tasks ?? []) as any}
       projects={(projects ?? []) as any}
       profiles={(profiles ?? []) as any}
+      permissions={permissions}
     />
   );
 }
