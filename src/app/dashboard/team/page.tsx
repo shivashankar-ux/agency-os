@@ -7,7 +7,7 @@ import TeamListClient from "./TeamListClient";
 
 export default async function TeamPage() {
   const profile = await getCurrentProfile();
-  if (profile?.role !== "owner") redirect("/dashboard");
+  if (profile?.role !== "owner" && profile?.role !== "admin") redirect("/dashboard");
 
   const supabase = await createClient();
   const { data: team } = await supabase

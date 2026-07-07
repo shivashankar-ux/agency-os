@@ -65,7 +65,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "member" | "client";
   job_title: string | null;
 };
 

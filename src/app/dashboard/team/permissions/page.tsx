@@ -5,7 +5,7 @@ import PermissionsToggleList from "./PermissionsToggleList";
 
 export default async function PermissionsPage() {
   const profile = await getCurrentProfile();
-  if (profile?.role !== "owner") {
+  if (profile?.role !== "owner" && profile?.role !== "admin") {
     redirect("/dashboard");
   }
 

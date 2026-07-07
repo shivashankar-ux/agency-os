@@ -203,6 +203,8 @@ export default function InviteMemberModal() {
                       >
                         <option value="member">Member</option>
                         <option value="manager">Manager</option>
+                        <option value="admin">Admin</option>
+                        <option value="client">Client</option>
                       </select>
                     </div>
                     <div>

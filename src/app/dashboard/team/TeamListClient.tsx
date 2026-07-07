@@ -9,7 +9,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "member" | "client";
   job_title: string | null;
   is_active: boolean;
 };
@@ -35,7 +35,7 @@ export default function TeamListClient({
   // Edit form state
   const [editForm, setEditForm] = useState({
     name: "",
-    role: "member" as "manager" | "member" | "client",
+    role: "member" as "admin" | "manager" | "member" | "client",
     job_title: "",
     is_active: true,
   });
@@ -44,7 +44,7 @@ export default function TeamListClient({
     setEditingMember(member);
     setEditForm({
       name: member.name,
-      role: member.role === "owner" ? "member" : member.role, // fallback check
+      role: member.role === "owner" ? "member" : member.role,
       job_title: member.job_title || "",
       is_active: member.is_active,
     });
@@ -199,13 +199,15 @@ export default function TeamListClient({
                   <select
                     value={editForm.role}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, role: e.target.value as "manager" | "member" })
+                      setEditForm({ ...editForm, role: e.target.value as "admin" | "manager" | "member" | "client" })
                     }
                     disabled={loading}
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="member">Member</option>
                     <option value="manager">Manager</option>
+                    <option value="admin">Admin</option>
+                    <option value="client">Client</option>
                   </select>
                 </div>
                 <div>
