@@ -1,26 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-app: #030712;
+  --bg-sidebar: #090d16;
+  --bg-card: #0f172a;
+  --bg-card-hover: #1e293b;
+  --border-color: #1e293b;
+  --text-title: #ffffff;
+  --text-body: #94a3b8;
+  --text-muted: #64748b;
+  
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --instagram-gradient: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
+  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.15);
+  --glass-bg: rgba(15, 23, 42, 0.65);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+.light-mode {
+  --bg-app: #f8fafc;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --text-title: #0f172a;
+  --text-body: #475569;
+  --text-muted: #94a3b8;
+  
+  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.05);
+  --glass-bg: rgba(255, 255, 255, 0.75);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+@theme {
+  --color-neutral-950: var(--bg-app);
+  --color-neutral-900: var(--bg-sidebar);
+  --color-neutral-850: var(--bg-card-hover);
+  --color-neutral-800: var(--border-color);
+  --color-white: var(--text-title);
+  --color-neutral-400: var(--text-body);
+  --color-neutral-500: var(--text-muted);
+  --font-sans: 'Plus Jakarta Sans', sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-body);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom premium visual styles */
+.text-instagram-gradient {
+  background: var(--instagram-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.bg-instagram-gradient {
+  background: var(--instagram-gradient);
+}
+
+.border-instagram-gradient {
+  border-image: var(--instagram-gradient) 1;
+}
+
+.card-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-color);
+}
+
+.instagram-avatar-ring {
+  background: var(--instagram-gradient);
+  padding: 2px;
+}
+
+/* Floating custom elements */
+.neon-glow-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.neon-glow-hover:hover {
+  box-shadow: var(--neon-glow);
+  transform: translateY(-2px);
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

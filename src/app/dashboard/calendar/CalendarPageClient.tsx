@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Plus, X, Clock, Calendar, CalendarDays,
-  Briefcase, Users, Bell, Tag, Circle, Edit3, Trash2
+  Briefcase, Users, Bell, Tag, Circle, Edit3, Trash2, Sparkles
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────
@@ -27,10 +27,39 @@ export type CalEvent = {
 export type TaskEvent = {
   id: string;
   title: string;
-  due_date: string;
+  due_date: string | null;
   status: string;
   priority: string;
+  assigned_to: string | null;
+  project_id: string | null;
+  projects?: {
+    name: string;
+    clients?: {
+      name: string;
+    } | null;
+  } | null;
 };
+
+export function getClientColorClass(clientName: string) {
+  if (!clientName || clientName === "No Client" || clientName === "Unknown Client") {
+    return "bg-neutral-800 text-neutral-400 border-neutral-700";
+  }
+  const colors = [
+    "bg-pink-500/10 text-pink-500 border-pink-500/20",
+    "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    "bg-violet-500/10 text-violet-400 border-violet-500/20",
+    "bg-rose-500/10 text-rose-550 border-rose-500/20",
+    "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  ];
+  let hash = 0;
+  for (let i = 0; i < clientName.length; i++) {
+    hash = clientName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+}
 
 export type MilestoneEvent = {
   id: string;
@@ -327,9 +356,109 @@ export default function CalendarPageClient({
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [view, setView] = useState<"month" | "week">("month");
   const [events, setEvents] = useState<CalEvent[]>(initialEvents);
+  const [tasks, setTasks] = useState<TaskEvent[]>(taskEvents);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [modalMode, setModalMode] = useState<"create" | "edit" | "view" | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalEvent | null>(null);
+
+  // Quick Task Planner State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<"all" | "unassigned" | "unscheduled">("all");
+  const [quickTitle, setQuickTitle] = useState("");
+  const [quickProject, setQuickProject] = useState(allProjects[0]?.id || "");
+  const [quickAssignee, setQuickAssignee] = useState("");
+  const [quickDueDate, setQuickDueDate] = useState("");
+  const [allocatorLoading, setAllocatorLoading] = useState(false);
+
+  const supabase = createClient();
+
+  // ── Database Updates ──
+  async function handleAssignTask(taskId: string, userId: string | null) {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ assigned_to: userId || null, updated_at: new Date().toISOString() })
+      .eq("id", taskId);
+    if (error) {
+      alert("Error assigning task: " + error.message);
+    } else {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, assigned_to: userId } : t));
+    }
+  }
+
+  async function handleSetDueDate(taskId: string, date: string | null) {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ due_date: date || null, updated_at: new Date().toISOString() })
+      .eq("id", taskId);
+    if (error) {
+      alert("Error setting due date: " + error.message);
+    } else {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, due_date: date } : t));
+    }
+  }
+
+  async function handleSetProject(taskId: string, projectId: string) {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ project_id: projectId, updated_at: new Date().toISOString() })
+      .eq("id", taskId);
+    if (error) {
+      alert("Error updating project: " + error.message);
+    } else {
+      const { data: updatedTask, error: fetchErr } = await supabase
+        .from("tasks")
+        .select("id, title, due_date, status, priority, assigned_to, project_id, projects(name, clients(name))")
+        .eq("id", taskId)
+        .single();
+      if (!fetchErr && updatedTask) {
+        setTasks(prev => prev.map(t => t.id === taskId ? (updatedTask as any) : t));
+      }
+    }
+  }
+
+  async function handleSetStatus(taskId: string, status: string) {
+    const { error } = await supabase
+      .from("tasks")
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq("id", taskId);
+    if (error) {
+      alert("Error updating status: " + error.message);
+    } else {
+      setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status } : t));
+    }
+  }
+
+  async function handleQuickCreate(e: React.FormEvent) {
+    e.preventDefault();
+    if (!quickTitle.trim() || !quickProject) return;
+    setAllocatorLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert({
+          title: quickTitle.trim(),
+          project_id: quickProject,
+          assigned_to: quickAssignee || null,
+          due_date: quickDueDate || null,
+          status: "todo",
+          priority: "medium",
+        })
+        .select("id, title, due_date, status, priority, assigned_to, project_id, projects(name, clients(name))")
+        .single();
+      
+      if (error) throw error;
+      if (data) {
+        setTasks(prev => [data as any, ...prev]);
+        setQuickTitle("");
+        setQuickDueDate("");
+        setQuickAssignee("");
+      }
+    } catch (err: any) {
+      alert("Error creating task: " + err.message);
+    } finally {
+      setAllocatorLoading(false);
+    }
+  }
 
   // ── Navigation ──
   function prev() {
@@ -354,7 +483,7 @@ export default function CalendarPageClient({
       map[key].push({ id: ev.id, title: ev.title, color: ev.color, type: "event", raw: ev });
     });
 
-    taskEvents.forEach((t) => {
+    tasks.forEach((t) => {
       if (!t.due_date || t.status === "done") return;
       const key = t.due_date;
       if (!map[key]) map[key] = [];
@@ -369,7 +498,7 @@ export default function CalendarPageClient({
     });
 
     return map;
-  }, [events, taskEvents, milestoneEvents]);
+  }, [events, tasks, milestoneEvents]);
 
   // ── Month grid days ──
   const monthDays = useMemo(() => {
@@ -423,97 +552,165 @@ export default function CalendarPageClient({
     setEvents((prev) => prev.filter((e) => e.id !== id));
   }
 
+  // ── Filtered tasks list for Allocator ──
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((t) => {
+      // Search filter
+      const matchesSearch = t.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+        (t.projects?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+        (t.projects?.clients?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+
+      if (!matchesSearch) return false;
+
+      // Tab filter
+      if (activeTab === "unassigned") return !t.assigned_to;
+      if (activeTab === "unscheduled") return !t.due_date;
+      return true;
+    });
+  }, [tasks, searchQuery, activeTab]);
+
   const headerTitle = view === "month"
     ? `${MONTHS[viewDate.getMonth()]} ${viewDate.getFullYear()}`
     : `Week of ${weekDays[0].toLocaleDateString("en-IN", { day: "numeric", month: "short" })}`;
 
   return (
-    <div className="min-h-screen bg-neutral-950 p-6 space-y-4">
+    <div className="min-h-screen bg-neutral-950 p-6 space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-white flex items-center gap-2">
+          <h1 className="text-xl font-extrabold text-white flex items-center gap-2">
             <CalendarDays size={20} className="text-indigo-400" />
-            Calendar
+            Calendar & Scheduler
           </h1>
-          <button onClick={goToday} className="text-xs bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
+          <button onClick={goToday} className="text-xs bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white px-3 py-1.5 rounded-lg font-bold transition-colors">
             Today
           </button>
         </div>
 
         <div className="flex items-center gap-3">
           {/* View Toggle */}
-          <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg p-1">
+          <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-xl p-1">
             {(["month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)}
-                className={`px-3 py-1 text-xs font-semibold rounded-md capitalize transition-colors ${view === v ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"}`}>
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${view === v ? "bg-indigo-650 text-white shadow" : "text-neutral-500 hover:text-white"}`}>
                 {v}
               </button>
             ))}
           </div>
 
           {/* Navigation */}
-          <div className="flex items-center gap-1">
-            <button onClick={prev} className="p-1.5 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 rounded-lg transition-colors">
-              <ChevronLeft size={15} />
+          <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-xl p-1">
+            <button onClick={prev} className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors">
+              <ChevronLeft size={16} />
             </button>
-            <span className="text-white text-sm font-semibold px-3 min-w-40 text-center">{headerTitle}</span>
-            <button onClick={next} className="p-1.5 text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800 rounded-lg transition-colors">
-              <ChevronRight size={15} />
+            <span className="text-white text-xs font-bold px-2.5 min-w-36 text-center">{headerTitle}</span>
+            <button onClick={next} className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors">
+              <ChevronRight size={16} />
             </button>
           </div>
 
           {canCreate && (
             <button onClick={() => { setSelectedDate(today); setSelectedEvent(null); setModalMode("create"); }}
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/30">
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/10">
               <Plus size={14} /> New Event
             </button>
           )}
         </div>
       </div>
 
-      {/* Legend */}
-      <div className="flex items-center gap-4 text-xxs text-neutral-500">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-indigo-500" />Events</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-neutral-500" />Tasks Due</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-yellow-500" />Milestones</span>
-      </div>
-
-      {/* ── MONTH VIEW ────────────────────────────────────── */}
-      {view === "month" && (
-        <motion.div key="month" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-          {/* Day headers */}
-          <div className="grid grid-cols-7 border-b border-neutral-800">
-            {DAYS.map((d) => (
-              <div key={d} className="py-2 text-center text-neutral-600 text-xxs font-bold uppercase tracking-wider">
-                {d}
-              </div>
-            ))}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Side: Calendar Grid */}
+        <div className="lg:col-span-8 space-y-4">
+          {/* Legend */}
+          <div className="flex items-center gap-4 text-[10px] font-bold text-neutral-500 uppercase tracking-wider pl-1">
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-indigo-500 shadow-sm" />Events</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-neutral-500 shadow-sm" />Tasks Due</span>
+            <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-sm" />Milestones</span>
           </div>
-          {/* Day cells */}
-          <div className="grid grid-cols-7">
-            {monthDays.map((day, idx) => {
-              const key = day ? dateKey(day) : null;
-              const dayEvents = key ? (eventsByDay[key] ?? []) : [];
-              const isToday = day ? isSameDay(day, today) : false;
-              const isCurrentMonth = day ? day.getMonth() === viewDate.getMonth() : false;
 
-              return (
-                <div
-                  key={idx}
-                  onClick={() => day && openCreateOnDate(day)}
-                  className={`min-h-[90px] p-1.5 border-b border-r border-neutral-800/40 transition-colors relative
-                    ${day ? (canCreate ? "cursor-pointer hover:bg-neutral-800/30" : "cursor-default") : "bg-neutral-950/30"}
-                    ${idx % 7 === 6 ? "border-r-0" : ""}`}
-                >
-                  {day && (
-                    <>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1 text-xs font-bold mx-auto
-                        ${isToday ? "bg-indigo-600 text-white" : isCurrentMonth ? "text-neutral-300" : "text-neutral-700"}`}>
-                        {day.getDate()}
+          {/* ── MONTH VIEW ── */}
+          {view === "month" && (
+            <motion.div key="month" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-glass rounded-2xl overflow-hidden shadow-sm">
+              {/* Day headers */}
+              <div className="grid grid-cols-7 border-b border-neutral-800/60 bg-neutral-950/15">
+                {DAYS.map((d) => (
+                  <div key={d} className="py-3.5 text-center text-neutral-500 text-[10px] font-bold uppercase tracking-widest border-r border-neutral-800/10 last:border-r-0">
+                    {d}
+                  </div>
+                ))}
+              </div>
+              {/* Day cells */}
+              <div className="grid grid-cols-7">
+                {monthDays.map((day, idx) => {
+                  const key = day ? dateKey(day) : null;
+                  const dayEvents = key ? (eventsByDay[key] ?? []) : [];
+                  const isToday = day ? isSameDay(day, today) : false;
+                  const isCurrentMonth = day ? day.getMonth() === viewDate.getMonth() : false;
+
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => day && openCreateOnDate(day)}
+                      className={`min-h-[105px] p-2 border-b border-r border-neutral-800/40 transition-colors relative
+                        ${day ? (canCreate ? "cursor-pointer hover:bg-neutral-850/10" : "cursor-default") : "bg-neutral-950/15"}
+                        ${idx % 7 === 6 ? "border-r-0" : ""}`}
+                    >
+                      {day && (
+                        <>
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1.5 text-xs font-bold mx-auto
+                            ${isToday ? "bg-indigo-650 text-white shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                            {day.getDate()}
+                          </div>
+                          <div className="space-y-1">
+                            {dayEvents.slice(0, 3).map((ev) => (
+                              <EventPill
+                                key={ev.id}
+                                label={ev.title}
+                                color={ev.color}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  if (ev.type === "event" && ev.raw) openEvent(ev.raw);
+                                }}
+                              />
+                            ))}
+                            {dayEvents.length > 3 && (
+                              <p className="text-neutral-500 text-[9px] font-bold text-center">+{dayEvents.length - 3} MORE</p>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── WEEK VIEW ── */}
+          {view === "week" && (
+            <motion.div key="week" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card-glass rounded-2xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-7">
+                {weekDays.map((day, idx) => {
+                  const key = dateKey(day);
+                  const dayEvents = eventsByDay[key] ?? [];
+                  const isToday = isSameDay(day, today);
+
+                  return (
+                    <div key={idx}
+                      className={`border-r border-neutral-800/40 last:border-r-0 ${isToday ? "bg-indigo-950/10" : ""}`}>
+                      {/* Day header */}
+                      <div
+                        onClick={() => openCreateOnDate(day)}
+                        className={`p-3.5 text-center border-b border-neutral-800/40 cursor-pointer hover:bg-neutral-850/10 transition-colors`}>
+                        <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider">{DAYS[day.getDay()]}</p>
+                        <div className={`w-8 h-8 rounded-full mx-auto mt-1 flex items-center justify-center text-sm font-bold
+                          ${isToday ? "bg-indigo-650 text-white shadow-sm" : "text-white"}`}>
+                          {day.getDate()}
+                        </div>
                       </div>
-                      <div className="space-y-0.5">
-                        {dayEvents.slice(0, 3).map((ev) => (
+                      {/* Events */}
+                      <div className="p-2 space-y-1 min-h-[250px]">
+                        {dayEvents.map((ev) => (
                           <EventPill
                             key={ev.id}
                             label={ev.title}
@@ -524,64 +721,194 @@ export default function CalendarPageClient({
                             }}
                           />
                         ))}
-                        {dayEvents.length > 3 && (
-                          <p className="text-neutral-600 text-xxs pl-1">+{dayEvents.length - 3} more</p>
+                        {dayEvents.length === 0 && (
+                          <p className="text-neutral-700 text-[10px] text-center mt-6 italic">No items</p>
                         )}
                       </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ── WEEK VIEW ─────────────────────────────────────── */}
-      {view === "week" && (
-        <motion.div key="week" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden">
-          <div className="grid grid-cols-7">
-            {weekDays.map((day, idx) => {
-              const key = dateKey(day);
-              const dayEvents = eventsByDay[key] ?? [];
-              const isToday = isSameDay(day, today);
-
-              return (
-                <div key={idx}
-                  className={`border-r border-neutral-800/50 last:border-r-0 ${isToday ? "bg-indigo-950/20" : ""}`}>
-                  {/* Day header */}
-                  <div
-                    onClick={() => openCreateOnDate(day)}
-                    className={`p-3 text-center border-b border-neutral-800/50 cursor-pointer hover:bg-neutral-800/30 transition-colors`}>
-                    <p className="text-neutral-600 text-xxs font-bold uppercase">{DAYS[day.getDay()]}</p>
-                    <div className={`w-8 h-8 rounded-full mx-auto mt-1 flex items-center justify-center text-sm font-bold
-                      ${isToday ? "bg-indigo-600 text-white" : "text-neutral-300"}`}>
-                      {day.getDate()}
                     </div>
-                  </div>
-                  {/* Events */}
-                  <div className="p-1.5 space-y-1 min-h-[200px]">
-                    {dayEvents.map((ev) => (
-                      <EventPill
-                        key={ev.id}
-                        label={ev.title}
-                        color={ev.color}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (ev.type === "event" && ev.raw) openEvent(ev.raw);
-                        }}
-                      />
-                    ))}
-                    {dayEvents.length === 0 && (
-                      <p className="text-neutral-800 text-xxs text-center mt-4 italic">Empty</p>
-                    )}
-                  </div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Right Side: Quick Task Planner & Allocator Sidebar */}
+        <div className="lg:col-span-4 space-y-4">
+          <div className="card-glass rounded-2xl p-5 shadow-sm space-y-4 flex flex-col">
+            <div className="flex items-center gap-1.5 border-b border-neutral-800 pb-3">
+              <Sparkles size={16} className="text-indigo-400 animate-pulse" />
+              <h2 className="text-white text-xs font-bold tracking-wider uppercase">
+                Quick Task Allocator
+              </h2>
+            </div>
+
+            {/* Quick Add Form */}
+            <form onSubmit={handleQuickCreate} className="space-y-2.5 bg-neutral-950/30 border border-neutral-800/60 rounded-xl p-3 text-xxs">
+              <span className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest block mb-1">Set Quick Task</span>
+              <input
+                type="text"
+                required
+                placeholder="Write task title..."
+                value={quickTitle}
+                onChange={(e) => setQuickTitle(e.target.value)}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-700 font-sans"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  required
+                  value={quickProject}
+                  onChange={(e) => setQuickProject(e.target.value)}
+                  className="bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white focus:outline-none"
+                >
+                  <option value="">Select Project</option>
+                  {allProjects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={quickAssignee}
+                  onChange={(e) => setQuickAssignee(e.target.value)}
+                  className="bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white focus:outline-none"
+                >
+                  <option value="">Unassigned</option>
+                  {allProfiles.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={quickDueDate}
+                  onChange={(e) => setQuickDueDate(e.target.value)}
+                  className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg p-2 text-white focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  disabled={allocatorLoading || !quickTitle.trim() || !quickProject}
+                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold px-4 rounded-lg flex items-center justify-center transition-all shrink-0"
+                >
+                  Add
+                </button>
+              </div>
+            </form>
+
+            {/* Filters and Search */}
+            <div className="space-y-2">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search tasks or clients..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg py-2 pl-8 pr-3 text-xxs text-white placeholder-neutral-600 focus:outline-none focus:border-neutral-700"
+                />
+                <div className="absolute left-2.5 top-2.5 text-neutral-600">
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-              );
-            })}
+              </div>
+
+              {/* Sub-tabs */}
+              <div className="flex bg-neutral-950/80 p-0.5 rounded-lg border border-neutral-850 text-[10px] font-bold">
+                {(["all", "unassigned", "unscheduled"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`flex-1 py-1 rounded-md text-center transition-all ${
+                      activeTab === tab ? "bg-neutral-800 text-white shadow-sm" : "text-neutral-500 hover:text-white"
+                    }`}
+                  >
+                    {tab === "all" ? "All Tasks" : tab === "unassigned" ? "No Assignee" : "No Due Date"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Tasks List */}
+            <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+              {filteredTasks.length === 0 ? (
+                <div className="text-center py-8 text-xxs text-neutral-500 italic">
+                  No pending tasks found
+                </div>
+              ) : (
+                filteredTasks.map((t) => {
+                  const clientName = t.projects?.clients?.name || "No Client";
+                  return (
+                    <div key={t.id} className="bg-neutral-950/30 border border-neutral-800/80 rounded-xl p-3.5 space-y-2 text-xxs hover:border-neutral-700/60 transition-all shadow-inner">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
+                          <span className={`inline-block border text-[8px] font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-wider ${getClientColorClass(clientName)}`}>
+                            {clientName}
+                          </span>
+                          <span className="text-neutral-500 font-bold tracking-tight">{t.projects?.name}</span>
+                        </div>
+                        <h4 className="text-white font-bold text-xs leading-snug">{t.title}</h4>
+                      </div>
+
+                      {/* Inline Allocator Inputs */}
+                      <div className="grid grid-cols-3 gap-2 pt-1">
+                        <div>
+                          <label className="text-[8px] font-bold text-neutral-550 block mb-0.5 uppercase tracking-wide">Assignee</label>
+                          <select
+                            value={t.assigned_to || ""}
+                            onChange={(e) => handleAssignTask(t.id, e.target.value)}
+                            className="bg-neutral-950/80 border border-neutral-800/85 text-[10px] text-white rounded p-1 w-full focus:outline-none"
+                          >
+                            <option value="">Unassigned</option>
+                            {allProfiles.map((p) => (
+                              <option key={p.id} value={p.id}>{p.name}</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="text-[8px] font-bold text-neutral-550 block mb-0.5 uppercase tracking-wide">Due Date</label>
+                          <input
+                            type="date"
+                            value={t.due_date || ""}
+                            onChange={(e) => handleSetDueDate(t.id, e.target.value)}
+                            className="bg-neutral-950/80 border border-neutral-800/85 text-[10px] text-white rounded p-0.5 w-full focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-[8px] font-bold text-neutral-550 block mb-0.5 uppercase tracking-wide">Status</label>
+                          <select
+                            value={t.status}
+                            onChange={(e) => handleSetStatus(t.id, e.target.value)}
+                            className="bg-neutral-950/80 border border-neutral-800/85 text-[10px] text-white rounded p-1 w-full focus:outline-none font-semibold capitalize"
+                          >
+                            <option value="todo">To Do</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="review">Review</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Project selector */}
+                      <div className="pt-1.5 border-t border-neutral-800/40">
+                        <select
+                          value={t.project_id || ""}
+                          onChange={(e) => handleSetProject(t.id, e.target.value)}
+                          className="bg-neutral-950/40 border border-neutral-800/30 text-[9px] text-neutral-400 rounded px-1.5 py-0.5 w-full focus:outline-none"
+                        >
+                          <option value="">Link Project</option>
+                          {allProjects.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </motion.div>
-      )}
+        </div>
+      </div>
 
       {/* Modal */}
       <AnimatePresence>

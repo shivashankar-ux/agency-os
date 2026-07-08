@@ -386,8 +386,7 @@ export async function getDashboardData(): Promise<DashboardData> {
   }
 
   // 9. Today's Schedule (tasks due today or overdue)
-  const isOwner = profile.role === "owner";
-  const userTasks = isOwner ? tasks : tasks.filter(t => t.assigned_to === profile.id);
+  const userTasks = taskScope === "all" ? tasks : tasks.filter(t => t.assigned_to === profile.id);
   const scheduleItems = userTasks
     .filter(t => {
       if (t.status === "done" || !t.due_date) return false;

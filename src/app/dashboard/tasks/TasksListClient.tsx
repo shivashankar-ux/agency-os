@@ -49,8 +49,29 @@ type Comment = {
   } | null;
 };
 
+export function getClientColorClass(clientName: string) {
+  if (!clientName || clientName === "No Client" || clientName === "Unknown Client") {
+    return "bg-neutral-800 text-neutral-400 border-neutral-700";
+  }
+  const colors = [
+    "bg-pink-500/10 text-pink-500 border-pink-500/20",
+    "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
+    "bg-amber-500/10 text-amber-500 border-amber-500/20",
+    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    "bg-violet-500/10 text-violet-400 border-violet-500/20",
+    "bg-rose-500/10 text-rose-550 border-rose-500/20",
+    "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
+  ];
+  let hash = 0;
+  for (let i = 0; i < clientName.length; i++) {
+    hash = clientName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % colors.length;
+  return colors[index];
+}
+
 const taskStatusColors: Record<string, string> = {
-  todo: "bg-neutral-800 text-neutral-400 border-neutral-700",
+  todo: "bg-neutral-800 text-neutral-405 border-neutral-700",
   in_progress: "bg-indigo-950 text-indigo-400 border-indigo-900",
   review: "bg-purple-950 text-purple-400 border-purple-900",
   done: "bg-green-950 text-green-400 border-green-900",
@@ -358,13 +379,13 @@ export default function TasksListClient({
 
       {/* Task List Grid */}
       {tasks.length === 0 ? (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-10 text-center">
+        <div className="card-glass rounded-2xl p-10 text-center">
           <p className="text-neutral-500 text-sm">
             No tasks yet. Tasks live under projects — add a client and project first, then tasks.
           </p>
         </div>
       ) : (
-        <div className="bg-neutral-900 border border-neutral-800 rounded-xl divide-y divide-neutral-800">
+        <div className="card-glass rounded-2xl divide-y divide-neutral-800/40 overflow-hidden">
           {tasks.map((task) => (
             <div
               key={task.id}
@@ -372,22 +393,31 @@ export default function TasksListClient({
                 setSelectedTask(task);
                 setError(null);
               }}
-              className="p-4 flex items-center justify-between hover:bg-neutral-800/35 cursor-pointer transition-colors"
+              className="p-4 flex items-center justify-between hover:bg-neutral-850/10 cursor-pointer transition-colors"
             >
               <div className="flex-1 min-w-0 pr-4">
-                <p className="text-white text-sm font-medium truncate">{task.title}</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-neutral-500 text-xs mt-1">
-                  <span className="truncate">
-                    {task.projects?.clients?.name} · {task.projects?.name}
+                <p className="text-white text-sm font-bold truncate">{task.title}</p>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-neutral-500 text-xs mt-1.5">
+                  <span className="flex items-center gap-1.5 truncate">
+                    {task.projects?.clients?.name ? (
+                      <span className={`inline-block border text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 ${getClientColorClass(task.projects.clients.name)}`}>
+                        {task.projects.clients.name}
+                      </span>
+                    ) : (
+                      <span className="inline-block border text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider bg-neutral-850 text-neutral-500 border-neutral-800 shrink-0">
+                        No Client
+                      </span>
+                    )}
+                    <span className="text-neutral-400 font-semibold">{task.projects?.name}</span>
                   </span>
                   {task.due_date && (
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1 font-semibold text-neutral-500">
                       <Calendar size={12} className="text-neutral-600" />
                       {task.due_date}
                     </span>
                   )}
                   {task.assignee && (
-                    <span className="flex items-center gap-1 text-neutral-400">
+                    <span className="flex items-center gap-1 text-neutral-400 font-semibold">
                       <User size={12} className="text-neutral-500" />
                       {task.assignee.name}
                     </span>
@@ -400,15 +430,15 @@ export default function TasksListClient({
 
               <div className="flex items-center gap-2">
                 <span
-                  className={`text-xxs px-2 py-0.5 rounded-full border capitalize ${
-                    priorityColors[task.priority] || "border-neutral-700 text-neutral-400"
+                  className={`text-xxs px-2.5 py-0.5 rounded-full border capitalize font-semibold ${
+                    priorityColors[task.priority] || "border-neutral-700 text-neutral-450"
                   }`}
                 >
                   {task.priority}
                 </span>
                 <span
-                  className={`text-xs px-2 py-0.5 rounded-full border capitalize ${
-                    taskStatusColors[task.status] || "border-neutral-700 text-neutral-400"
+                  className={`text-xs px-2.5 py-0.5 rounded-full border capitalize font-semibold ${
+                    taskStatusColors[task.status] || "border-neutral-700 text-neutral-450"
                   }`}
                 >
                   {task.status.replace("_", " ")}

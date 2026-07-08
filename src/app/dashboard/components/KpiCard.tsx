@@ -27,16 +27,16 @@ export default function KpiCard({
   const CardContent = (
     <>
       <div className="flex items-center justify-between">
-        <span className="text-neutral-500 text-xs font-medium tracking-wide uppercase">
+        <span className="text-neutral-500 text-xs font-bold tracking-wider uppercase">
           {label}
         </span>
-        <div className="bg-neutral-800/80 p-2 rounded-lg text-neutral-400">
+        <div className="bg-indigo-650/10 border border-indigo-500/20 p-2.5 rounded-xl text-indigo-450 shadow-inner">
           {icon}
         </div>
       </div>
 
-      <div className="mt-3 flex items-baseline justify-between">
-        <span className="text-white text-3xl font-semibold tracking-tight">
+      <div className="mt-4 flex items-baseline justify-between">
+        <span className="text-white text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
           {value}
         </span>
 
@@ -44,8 +44,8 @@ export default function KpiCard({
           <span
             className={`text-[10px] font-bold px-2 py-0.5 rounded-full border flex items-center gap-1 shrink-0 ${
               trend.isPositive
-                ? "bg-green-950/40 text-green-400 border-green-900/50"
-                : "bg-red-950/40 text-red-400 border-red-900/50"
+                ? "bg-green-950/30 text-green-400 border-green-900/30"
+                : "bg-red-950/30 text-red-400 border-red-900/30"
             }`}
           >
             {trend.value.startsWith("+") && <span className="text-[9px]">▲</span>}
@@ -64,7 +64,7 @@ export default function KpiCard({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
-          className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-indigo-500/50 hover:bg-neutral-850/50 transition-all cursor-pointer shadow-sm group-hover:shadow-md ${className}`}
+          className={`card-glass rounded-2xl p-5 hover:border-indigo-500/60 hover:bg-neutral-900/50 transition-all cursor-pointer shadow-sm hover:shadow-lg group-hover:scale-[1.02] neon-glow-hover ${className}`}
         >
           {CardContent}
         </motion.div>
@@ -77,7 +77,7 @@ export default function KpiCard({
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-neutral-900 border border-neutral-800 rounded-xl p-5 hover:border-neutral-700 transition-colors shadow-sm ${className}`}
+      className={`card-glass rounded-2xl p-5 hover:border-neutral-700/60 hover:bg-neutral-900/50 transition-colors shadow-sm neon-glow-hover ${className}`}
     >
       {CardContent}
     </motion.div>
