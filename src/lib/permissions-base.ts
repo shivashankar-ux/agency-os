@@ -56,7 +56,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
   },
   member: {
     // Employees (members) have highly restricted defaults and scope = 'own'
-    clients: { view: { allowed: true, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" }, export: { allowed: false, scope: "own" } },
+    clients: { view: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" }, export: { allowed: false, scope: "own" } },
     projects: { view: { allowed: true, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, archive: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
     tasks: { view: { allowed: true, scope: "own" }, assign: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, complete: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
     team: { view: { allowed: false, scope: "own" }, invite: { allowed: false, scope: "own" }, remove: { allowed: false, scope: "own" }, change_roles: { allowed: false, scope: "own" } },
