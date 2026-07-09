@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft, ChevronRight, Plus, X, Clock, Calendar, CalendarDays,
   Briefcase, Users, Bell, Tag, Circle, Edit3, Trash2, Sparkles
 } from "lucide-react";
+import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
 
 // ── Types ──────────────────────────────────────────────────────
 export type CalEvent = {
@@ -339,6 +341,7 @@ export default function CalendarPageClient({
   allProjects,
   permissions,
   orgId,
+  currentProfile,
 }: {
   initialEvents: CalEvent[];
   taskEvents: TaskEvent[];
@@ -348,7 +351,9 @@ export default function CalendarPageClient({
   allProjects: Project[];
   permissions: any;
   orgId: string;
+  currentProfile: any;
 }) {
+  const router = useRouter();
   const canCreate = permissions?.calendar?.create?.allowed ?? false;
   const canEdit = permissions?.calendar?.edit?.allowed ?? false;
 
@@ -360,6 +365,7 @@ export default function CalendarPageClient({
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [modalMode, setModalMode] = useState<"create" | "edit" | "view" | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<CalEvent | null>(null);
+  const [selectedTaskForModal, setSelectedTaskForModal] = useState<any | null>(null);
 
   // Quick Task Planner State
   const [searchQuery, setSearchQuery] = useState("");
@@ -487,7 +493,7 @@ export default function CalendarPageClient({
       if (!t.due_date || t.status === "done") return;
       const key = t.due_date;
       if (!map[key]) map[key] = [];
-      map[key].push({ id: t.id, title: t.title, color: "task", type: "task" });
+      map[key].push({ id: t.id, title: t.title, color: "task", type: "task", raw: t as any });
     });
 
     milestoneEvents.forEach((m) => {
@@ -670,6 +676,7 @@ export default function CalendarPageClient({
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   if (ev.type === "event" && ev.raw) openEvent(ev.raw);
+                                  if (ev.type === "task" && ev.raw) setSelectedTaskForModal(ev.raw);
                                 }}
                               />
                             ))}
@@ -718,6 +725,7 @@ export default function CalendarPageClient({
                             onClick={(e) => {
                               e.stopPropagation();
                               if (ev.type === "event" && ev.raw) openEvent(ev.raw);
+                              if (ev.type === "task" && ev.raw) setSelectedTaskForModal(ev.raw);
                             }}
                           />
                         ))}
@@ -845,7 +853,12 @@ export default function CalendarPageClient({
                           </span>
                           <span className="text-neutral-500 font-bold tracking-tight">{t.projects?.name}</span>
                         </div>
-                        <h4 className="text-white font-bold text-xs leading-snug">{t.title}</h4>
+                        <h4
+                          onClick={() => setSelectedTaskForModal(t)}
+                          className="text-white font-bold text-xs leading-snug hover:text-indigo-400 cursor-pointer transition-colors"
+                        >
+                          {t.title}
+                        </h4>
                       </div>
 
                       {/* Inline Allocator Inputs */}
@@ -927,6 +940,17 @@ export default function CalendarPageClient({
           />
         )}
       </AnimatePresence>
+
+      {/* Task Detail Modal */}
+      {selectedTaskForModal && (
+        <TaskDetailModal
+          task={selectedTaskForModal}
+          currentProfile={currentProfile}
+          allProfiles={allProfiles as any}
+          onClose={() => setSelectedTaskForModal(null)}
+          onUpdate={() => router.refresh()}
+        />
+      )}
     </div>
   );
 }

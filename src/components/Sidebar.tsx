@@ -66,6 +66,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
   const links = profile.role === "client" 
     ? [
         { href: "/dashboard/client-portal", label: "Client Portal", icon: LayoutDashboard, show: true },
+        { href: "/dashboard/settings", label: "Settings", icon: UserCog, show: true },
       ]
     : [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
@@ -78,6 +79,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard/ai", label: "AI Copilot", icon: Sparkles, show: canUseAI },
         { href: "/dashboard/team", label: "Team", icon: UserCog, show: profile.role === "owner" || profile.role === "admin" },
         { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: profile.role === "owner" || profile.role === "admin" },
+        { href: "/dashboard/settings", label: "Settings", icon: UserCog, show: true },
       ];
 
   return (

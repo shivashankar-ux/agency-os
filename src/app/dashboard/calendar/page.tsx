@@ -34,7 +34,7 @@ export default async function CalendarPage() {
   // ── Parallel data fetch ──────────────────────────────────────
   let tasksQuery = supabase
     .from("tasks")
-    .select("id, title, due_date, status, priority, assigned_to, project_id, projects(name, clients(name))")
+    .select("id, title, description, due_date, status, priority, assigned_to, project_id, projects(name, clients(name)), assignee:profiles!tasks_assigned_to_fkey(id, name, role)")
     .neq("status", "done");
   tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
 
@@ -86,6 +86,7 @@ export default async function CalendarPage() {
       allProjects={(allProjects ?? []) as any}
       permissions={permissions}
       orgId={orgId}
+      currentProfile={profile as any}
     />
   );
 }

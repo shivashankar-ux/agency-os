@@ -2,19 +2,8 @@ import { getDashboardData } from "@/lib/dashboard-data";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { getPermissions } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
-import KpiCard from "./components/KpiCard";
-import QuickActions from "./components/QuickActions";
-import ActivityTimeline from "./components/ActivityTimeline";
-import TaskCharts from "./components/TaskCharts";
-import ProjectsProgressList from "./components/ProjectsProgressList";
-import TodaySchedule from "./components/TodaySchedule";
-import TeamPerformance from "./components/TeamPerformance";
-import NotificationsWidget from "./components/NotificationsWidget";
-import PerformanceWidget from "./components/PerformanceWidget";
 import { redirect } from "next/navigation";
-import { 
-  Users, Briefcase, CheckCircle, Clock, HeartHandshake, DollarSign, Receipt, BellRing, Calendar, ShieldAlert 
-} from "lucide-react";
+import DashboardClient from "./DashboardClient";
 
 export default async function DashboardPage() {
   try {
@@ -49,20 +38,9 @@ export default async function DashboardPage() {
     const canViewTeamPerformance = canViewTeam && (permissions.dashboard?.view_team_performance?.allowed || false);
     const canViewReports = permissions.reports?.view?.allowed || false;
 
-    // Load dynamic aggregations from Supabase (scoped to permission query filters)
+    // Load dynamic aggregations from Supabase
     const data = await getDashboardData();
-    const { 
-      kpis, 
-      activities, 
-      taskStatus, 
-      taskPriority, 
-      projects, 
-      mostActiveProjects,
-      mostDelayedProjects,
-      notifications,
-      schedule, 
-      teamPerformance 
-    } = data;
+    const { kpis } = data;
 
     // Formatting currency values
     const formattedRevenue = `₹${kpis.revenue.toLocaleString("en-IN")}`;
@@ -120,128 +98,25 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* SECTION 2: Dynamic KPI Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {canViewClients && (
-            <KpiCard
-              label="Total Clients"
-              value={kpis.totalClients}
-              icon={<HeartHandshake size={18} />}
-              href="/dashboard/clients"
-            />
-          )}
-          {canViewProjects && (
-            <KpiCard
-              label="Active Projects"
-              value={kpis.activeProjects}
-              icon={<Briefcase size={18} />}
-              href="/dashboard/clients"
-            />
-          )}
-          {canViewTasks && (
-            <KpiCard
-              label="Pending Tasks"
-              value={kpis.pendingTasks}
-              icon={<Clock size={18} />}
-              href="/dashboard/tasks"
-            />
-          )}
-          {canViewTasks && (
-            <KpiCard
-              label="Completed Tasks"
-              value={kpis.completedTasks}
-              icon={<CheckCircle size={18} />}
-              href="/dashboard/tasks"
-            />
-          )}
-          {canViewTasks && (
-            <KpiCard
-              label="Completed Today"
-              value={kpis.completedTodayCount}
-              icon={<CheckCircle size={18} className="text-green-400" />}
-              href="/dashboard/tasks"
-            />
-          )}
-          {canViewTeam && (
-            <KpiCard
-              label="Team Members"
-              value={kpis.teamMembers}
-              icon={<Users size={18} />}
-              trend={{ value: `${kpis.teamActive} Online`, isPositive: true }}
-              href="/dashboard/team"
-            />
-          )}
-          {canViewRevenue && (
-            <KpiCard
-              label="Paid Revenue"
-              value={formattedRevenue}
-              icon={<DollarSign size={18} />}
-              trend={{ value: kpis.growthTrend, isPositive: true }}
-              href="/dashboard/reports"
-            />
-          )}
-          {canViewRevenue && (
-            <KpiCard
-              label="Pending Invoices"
-              value={formattedPendingRevenue}
-              icon={<Receipt size={18} />}
-              trend={{ value: `${kpis.pendingInvoicesCount} Sent`, isPositive: true }}
-              href="/dashboard/reports"
-            />
-          )}
-          {canViewTasks && (
-            <KpiCard
-              label="Active Deadlines"
-              value={kpis.upcomingDeadlinesCount}
-              icon={<BellRing size={18} />}
-              href="/dashboard/calendar"
-            />
-          )}
-        </div>
-
-        {/* SECTION 7: Quick Actions */}
-        <QuickActions />
-
-        {/* GRID SECTION: Split layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Main Content Columns (8/12 width) */}
-          <div className="lg:col-span-8 space-y-6">
-            
-            {/* SECTION 4: Task Overview Charts */}
-            {canViewTasks && canViewAnalytics && (
-              <TaskCharts taskStatus={taskStatus} taskPriority={taskPriority} />
-            )}
-
-            {/* SECTION 5: Projects Overview */}
-            {canViewProjects && (
-              <ProjectsProgressList projects={projects} />
-            )}
-
-            {/* SECTION 9: Performance Leaderboards */}
-            {(canViewTeamPerformance || canViewProjects) && (
-              <PerformanceWidget 
-                teamPerformance={canViewTeamPerformance ? teamPerformance : []}
-                mostActiveProjects={canViewProjects ? mostActiveProjects : []}
-                mostDelayedProjects={canViewProjects ? mostDelayedProjects : []}
-              />
-            )}
-          </div>
-
-          {/* Sidebar Columns (4/12 width) */}
-          <div className="lg:col-span-4 space-y-6">
-            
-            {/* SECTION 8: Notifications Widget */}
-            <NotificationsWidget notifications={notifications} />
-
-            {/* SECTION 6: Today's Schedule */}
-            {canViewTasks && (
-              <TodaySchedule schedule={schedule} />
-            )}
-
-            {/* SECTION 3: Recent Activity Timeline */}
-            <ActivityTimeline activities={activities} />
-          </div>
-        </div>
+        {/* Dynamic widget grid wrapper */}
+        <DashboardClient
+          profile={profile}
+          workspaceName={workspaceName}
+          data={data}
+          permissions={{
+            canViewClients,
+            canViewProjects,
+            canViewTasks,
+            canViewTeam,
+            canViewFinance,
+            canViewRevenue,
+            canViewAnalytics,
+            canViewTeamPerformance,
+            canViewReports,
+          }}
+          formattedRevenue={formattedRevenue}
+          formattedPendingRevenue={formattedPendingRevenue}
+        />
       </div>
     );
   } catch (error: any) {
