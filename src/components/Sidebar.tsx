@@ -34,6 +34,11 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
     if (savedTheme) {
       setTheme(savedTheme);
+      if (savedTheme === "light") {
+        document.documentElement.classList.add("light-mode");
+      } else {
+        document.documentElement.classList.remove("light-mode");
+      }
     } else if (document.documentElement.classList.contains("light-mode")) {
       setTheme("light");
     }
@@ -111,7 +116,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
                 prefetch={false}
                 className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors font-medium ${
                   active
-                    ? "bg-indigo-650 text-white shadow-md shadow-indigo-900/10"
+                    ? "bg-indigo-650 text-white-literal shadow-md shadow-indigo-900/10"
                     : "text-neutral-450 hover:bg-neutral-850 hover:text-white"
                 }`}
               >
@@ -136,9 +141,9 @@ export default function Sidebar({ profile }: { profile: Profile }) {
             }`}
           >
             {theme === "light" ? (
-              <Sun size={12} className="text-white" />
+              <Sun size={12} className="text-white-literal" />
             ) : (
-              <Moon size={12} className="text-white" />
+              <Moon size={12} className="text-white-literal" />
             )}
           </div>
         </button>

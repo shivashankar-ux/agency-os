@@ -75,7 +75,7 @@ export default function AddClientButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-3.5 py-2 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal text-sm font-medium px-3.5 py-2 rounded-lg transition-colors"
       >
         <Plus size={16} />
         Add Client
@@ -176,7 +176,7 @@ export default function AddClientButton() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors"
               >
                 {loading ? "Adding..." : "Add Client"}
               </button>

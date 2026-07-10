@@ -72,7 +72,7 @@ export function getClientColorClass(clientName: string) {
 }
 
 const taskStatusColors: Record<string, string> = {
-  todo: "bg-neutral-800 text-neutral-405 border-neutral-700",
+  todo: "bg-neutral-800 text-neutral-400 border-neutral-700",
   in_progress: "bg-indigo-950 text-indigo-400 border-indigo-900",
   review: "bg-purple-950 text-purple-400 border-purple-900",
   done: "bg-green-950 text-green-400 border-green-900",
@@ -371,7 +371,7 @@ export default function TasksListClient({
               setIsCreateModalOpen(true);
               setCreateError(null);
             }}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
+            className="bg-indigo-650 hover:bg-indigo-500 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
           >
             <Plus size={14} /> Create Task
           </button>
@@ -414,7 +414,15 @@ export default function TasksListClient({
                   {task.due_date && (
                     <span className="flex items-center gap-1 font-semibold text-neutral-500">
                       <Calendar size={12} className="text-neutral-600" />
-                      {task.due_date}
+                      {(() => {
+                        const [year, month, day] = task.due_date.split("-").map(Number);
+                        const date = new Date(year, month - 1, day);
+                        return date.toLocaleDateString("en-US", {
+                          weekday: "short",
+                          month: "short",
+                          day: "numeric",
+                        });
+                      })()}
                     </span>
                   )}
                   {task.assignee && (
@@ -569,7 +577,7 @@ export default function TasksListClient({
               <button
                 type="submit"
                 disabled={createSubmitting}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-semibold rounded-lg py-2.5 transition-colors mt-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-semibold rounded-lg py-2.5 transition-colors mt-2"
               >
                 {createSubmitting ? "Creating task..." : "Create Task"}
               </button>

@@ -87,7 +87,7 @@ export default function InviteMemberModal() {
           setError(null);
           setSuccessLink(null);
         }}
-        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal text-sm font-medium px-4 py-2 rounded-lg transition-colors"
       >
         <UserPlus size={16} />
         Invite Member
@@ -229,7 +229,7 @@ export default function InviteMemberModal() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
+                    className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
                   >
                     {loading ? "Sending invitation..." : "Send Invitation"}
                   </button>

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/client";
 import { usePermissions } from "@/app/dashboard/components/PermissionProvider";
 import {
   X, Calendar, User, MessageSquare, Send, Clock, AlertCircle,
-  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy
+  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy, Trash2
 } from "lucide-react";
 import { getClientColorClass } from "@/app/dashboard/calendar/CalendarPageClient";
 
@@ -326,6 +326,28 @@ export default function TaskDetailModal({
     onUpdate();
   }
 
+  async function handleDeleteTask() {
+    if (!window.confirm("Are you sure you want to permanently delete this task?")) return;
+
+    setLoading(true);
+    setError(null);
+
+    const { error: deleteError } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", localTask.id);
+
+    if (deleteError) {
+      setError(deleteError.message);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(false);
+    onClose();
+    onUpdate();
+  }
+
   const canUpdateStatus =
     localTask.assigned_to === currentProfile.id ||
     currentProfile.role === "owner" ||
@@ -352,12 +374,24 @@ export default function TaskDetailModal({
               {localTask.title}
             </h2>
           </div>
-          <button
-            onClick={onClose}
-            className="text-neutral-500 hover:text-white p-1 rounded-lg hover:bg-neutral-800 transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {isOwnerOrManager && (
+              <button
+                onClick={handleDeleteTask}
+                disabled={loading}
+                className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-neutral-800 transition-colors mr-1 cursor-pointer"
+                title="Delete Task"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="text-neutral-500 hover:text-white p-1 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Content */}
@@ -413,7 +447,15 @@ export default function TaskDetailModal({
               ) : (
                 <span className="text-white font-medium flex items-center gap-1 mt-2">
                   <Calendar size={14} className="text-neutral-500" />
-                  {localTask.due_date || "No due date"}
+                  {localTask.due_date ? (() => {
+                    const [year, month, day] = localTask.due_date.split("-").map(Number);
+                    const date = new Date(year, month - 1, day);
+                    return date.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    });
+                  })() : "No due date"}
                 </span>
               )}
             </div>
@@ -479,7 +521,7 @@ export default function TaskDetailModal({
                   <button
                     onClick={handleSaveDescription}
                     disabled={loading}
-                    className="text-xxs bg-indigo-650 hover:bg-indigo-600 px-3 py-1.5 rounded-lg text-white font-bold"
+                    className="text-xxs bg-indigo-650 hover:bg-indigo-600 px-3 py-1.5 rounded-lg text-white-literal font-bold"
                   >
                     Save
                   </button>
@@ -571,7 +613,7 @@ export default function TaskDetailModal({
                     type="button"
                     disabled={aiLoading}
                     onClick={handleAIGenerate}
-                    className="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                    className="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white-literal rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     {aiLoading ? (
                       <>
@@ -675,7 +717,7 @@ export default function TaskDetailModal({
               <button
                 type="submit"
                 disabled={loading || !commentText.trim()}
-                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0"
+                className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal p-2 rounded-lg transition-colors flex items-center justify-center flex-shrink-0"
               >
                 <Send size={16} />
               </button>

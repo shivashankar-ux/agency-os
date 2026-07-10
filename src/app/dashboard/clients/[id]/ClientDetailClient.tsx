@@ -611,7 +611,7 @@ export default function ClientDetailClient({
               </h2>
               <button
                 onClick={() => setIsProjectModalOpen(true)}
-                className="flex items-center gap-1 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium px-3 py-2 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
               >
                 <Plus size={14} />
                 Add Project
@@ -715,7 +715,15 @@ export default function ClientDetailClient({
                                       {task.due_date && (
                                         <span className="text-xxs text-neutral-400 flex items-center gap-0.5">
                                           <Calendar size={10} />
-                                          Due {task.due_date}
+                                          Due {(() => {
+                                            const [year, month, day] = task.due_date.split("-").map(Number);
+                                            const date = new Date(year, month - 1, day);
+                                            return date.toLocaleDateString("en-US", {
+                                              weekday: "short",
+                                              month: "short",
+                                              day: "numeric",
+                                            });
+                                          })()}
                                         </span>
                                       )}
                                       <span
@@ -844,7 +852,7 @@ export default function ClientDetailClient({
                     setSelectedProjectIdForTask(projects[0].id);
                     setIsTaskModalOpen(true);
                   }}
-                  className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
+                  className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
                 >
                   <Plus size={14} /> Add Task
                 </button>
@@ -889,7 +897,7 @@ export default function ClientDetailClient({
                     {day && (
                       <>
                         <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xxs font-bold mb-1 mx-auto
-                          ${isToday ? "bg-indigo-650 text-white shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                          ${isToday ? "bg-indigo-650 text-white-literal shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
                           {day.getDate()}
                         </div>
                         <div className="space-y-1">
@@ -977,7 +985,7 @@ export default function ClientDetailClient({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
               >
                 {loading ? "Creating..." : "Create Project"}
               </button>
@@ -1069,7 +1077,7 @@ export default function ClientDetailClient({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
               >
                 {loading ? "Creating..." : "Create Task"}
               </button>
@@ -1137,7 +1145,7 @@ export default function ClientDetailClient({
               <button
                 onClick={handleSaveAssignments}
                 disabled={loading}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2 transition-colors"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2 transition-colors"
               >
                 {loading ? "Saving..." : "Save Assignments"}
               </button>

@@ -445,7 +445,7 @@ export default function ClientsTable({
               <button
                 type="submit"
                 disabled={editLoading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors"
               >
                 {editLoading ? "Saving client..." : "Save Changes"}
               </button>

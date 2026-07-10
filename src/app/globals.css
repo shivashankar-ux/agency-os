@@ -49,6 +49,10 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+.text-white-literal {
+  color: #ffffff !important;
+}
+
 /* Custom premium visual styles */
 .text-instagram-gradient {
   background: var(--instagram-gradient);

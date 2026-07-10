@@ -161,7 +161,7 @@ export default function MemberClientsCalendar({
                 {day && (
                   <>
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xxs font-bold mb-1.5 mx-auto
-                      ${isToday ? "bg-indigo-650 text-white shadow-sm font-extrabold" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                      ${isToday ? "bg-indigo-650 text-white-literal shadow-sm font-extrabold" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
                       {day.getDate()}
                     </div>
                     <div className="space-y-1">
