@@ -389,7 +389,10 @@ export default function ClientDetailClient({
     }));
   };
 
-  const isOwnerOrManager = currentProfile.role === "owner" || currentProfile.role === "manager";
+  const isOwnerOrManager =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "admin" ||
+    currentProfile.role === "manager";
 
   // Create Project
   async function handleCreateProject(e: React.FormEvent) {

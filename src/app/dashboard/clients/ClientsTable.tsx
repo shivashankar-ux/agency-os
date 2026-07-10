@@ -33,6 +33,10 @@ export default function ClientsTable({
   role?: "owner" | "admin" | "manager" | "member" | "client";
 }) {
   const isOwnerOrAdmin = role === "owner" || role === "admin";
+  const canViewDetails = role === "owner" || role === "admin" || role === "manager";
+  const canEdit = role === "owner" || role === "admin" || role === "manager";
+  const canDelete = role === "owner" || role === "admin";
+
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -156,7 +160,7 @@ export default function ClientsTable({
               <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
                 Client
               </th>
-              {isOwnerOrAdmin && (
+              {canViewDetails && (
                 <>
                   <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
                     Contact
@@ -170,10 +174,12 @@ export default function ClientsTable({
                   <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
                     Status
                   </th>
-                  <th className="px-5 py-3 text-neutral-500 font-medium text-xs text-right">
-                    Actions
-                  </th>
                 </>
+              )}
+              {(canEdit || canDelete) && (
+                <th className="px-5 py-3 text-neutral-500 font-medium text-xs text-right">
+                  Actions
+                </th>
               )}
             </tr>
           </thead>
@@ -184,7 +190,7 @@ export default function ClientsTable({
                 className="border-b border-neutral-800/50 last:border-0 hover:bg-neutral-800/30"
               >
                 <td className="px-5 py-3 font-medium">
-                  {isOwnerOrAdmin ? (
+                  {canViewDetails ? (
                     <Link
                       href={`/dashboard/clients/${client.id}`}
                       prefetch={false}
@@ -196,7 +202,7 @@ export default function ClientsTable({
                     <span className="text-white font-semibold">{client.name}</span>
                   )}
                 </td>
-                {isOwnerOrAdmin && (
+                {canViewDetails && (
                   <>
                     <td className="px-5 py-3 text-neutral-400">
                       {client.contact_person || "—"}
@@ -220,49 +226,53 @@ export default function ClientsTable({
                     </td>
                   </>
                 )}
-                {isOwnerOrAdmin && (
-                      <td className="px-5 py-3 text-right">
-                        {confirmDeleteId === client.id ? (
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-xs text-neutral-400">Are you sure?</span>
-                            <button
-                              onClick={() => handleDelete(client.id)}
-                              disabled={loadingId === client.id}
-                              className="text-red-400 hover:text-red-300 hover:bg-red-950/50 text-xs px-2 py-1 rounded border border-red-900/50 transition-colors font-medium"
-                            >
-                              {loadingId === client.id ? "..." : "Delete"}
-                            </button>
-                            <button
-                              onClick={() => setConfirmDeleteId(null)}
-                              disabled={loadingId === client.id}
-                              className="text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs px-2 py-1 rounded border border-neutral-700 transition-colors"
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => handleOpenEdit(client)}
-                              className="text-neutral-500 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800/50 transition-colors"
-                              title="Edit Client"
-                            >
-                              <Pencil size={15} />
-                            </button>
-                            <button
-                              onClick={() => {
-                                setConfirmDeleteId(client.id);
-                                setError(null);
-                              }}
-                              className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-neutral-800/50 transition-colors"
-                              title="Delete Client"
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
+                {(canEdit || canDelete) && (
+                  <td className="px-5 py-3 text-right">
+                    {confirmDeleteId === client.id ? (
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-xs text-neutral-400">Are you sure?</span>
+                        <button
+                          onClick={() => handleDelete(client.id)}
+                          disabled={loadingId === client.id}
+                          className="text-red-400 hover:text-red-300 hover:bg-red-950/50 text-xs px-2 py-1 rounded border border-red-900/50 transition-colors font-medium"
+                        >
+                          {loadingId === client.id ? "..." : "Delete"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteId(null)}
+                          disabled={loadingId === client.id}
+                          className="text-neutral-400 hover:text-white hover:bg-neutral-800 text-xs px-2 py-1 rounded border border-neutral-700 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-end gap-1">
+                        {canEdit && (
+                          <button
+                            onClick={() => handleOpenEdit(client)}
+                            className="text-neutral-500 hover:text-white p-1.5 rounded-lg hover:bg-neutral-800/50 transition-colors"
+                            title="Edit Client"
+                          >
+                            <Pencil size={15} />
+                          </button>
                         )}
-                      </td>
+                        {canDelete && (
+                          <button
+                            onClick={() => {
+                              setConfirmDeleteId(client.id);
+                              setError(null);
+                            }}
+                            className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-neutral-800/50 transition-colors"
+                            title="Delete Client"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
                     )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
