@@ -359,6 +359,10 @@ export default function TaskDetailModal({
     currentProfile.role === "admin" ||
     currentProfile.role === "manager";
 
+  const canDeleteTask =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "manager";
+
   const clientName = localTask.projects?.clients?.name || "";
 
   return (
@@ -375,7 +379,7 @@ export default function TaskDetailModal({
             </h2>
           </div>
           <div className="flex items-center gap-2">
-            {isOwnerOrManager && (
+            {canDeleteTask && (
               <button
                 onClick={handleDeleteTask}
                 disabled={loading}
