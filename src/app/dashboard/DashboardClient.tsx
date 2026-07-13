@@ -15,6 +15,8 @@ import TodaySchedule from "./components/TodaySchedule";
 import TeamPerformance from "./components/TeamPerformance";
 import NotificationsWidget from "./components/NotificationsWidget";
 import PerformanceWidget from "./components/PerformanceWidget";
+import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
+import { PushNotificationPanel } from "@/components/PushNotificationPanel";
 
 type Props = {
   profile: any;
@@ -147,6 +149,14 @@ export default function DashboardClient({
 
   return (
     <div className="space-y-6">
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt />
+      
+      {/* Push Notification Panel - Mobile first */}
+      <div className="lg:hidden mb-4">
+        <PushNotificationPanel />
+      </div>
+      
       {/* SECTION 2: Dynamic KPI Cards */}
       <AnimatePresence mode="popLayout">
         {visibleWidgets.kpis && (
@@ -363,6 +373,11 @@ export default function DashboardClient({
           {visibleWidgets.notifications && (
             <NotificationsWidget notifications={notifications} />
           )}
+
+          {/* Push Notification Panel - Desktop */}
+          <div className="hidden lg:block">
+            <PushNotificationPanel />
+          </div>
 
           {/* SECTION 6: Today's Schedule */}
           {visibleWidgets.todaySchedule && canViewTasks && (

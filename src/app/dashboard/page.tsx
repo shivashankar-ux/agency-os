@@ -4,6 +4,7 @@ import { getPermissions } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
+import Sidebar from "@/components/Sidebar";
 
 export default async function DashboardPage() {
   try {
@@ -74,60 +75,69 @@ export default async function DashboardPage() {
     };
 
     return (
-      <div className="space-y-6">
-        {/* SECTION 1: Welcome Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-neutral-850 pb-5 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">
-              {greeting}, {profile.name}
-            </h1>
-            <p className="text-neutral-500 text-xs mt-1.5 flex items-center gap-1.5">
-              <span>{formattedDate}</span>
-              <span className="text-neutral-700">·</span>
-              <span className="text-indigo-400 font-semibold">{workspaceName}</span>
-            </p>
-          </div>
-          <div className="shrink-0 flex items-center">
-            <span
-              className={`text-xxs px-3 py-1 rounded-full border font-semibold tracking-wider uppercase ${
-                roleBadges[profile.role] || roleBadges.member
-              }`}
-            >
-              {roleBadgeText[profile.role] || "Employee"}
-            </span>
-          </div>
-        </div>
+      <div className="min-h-screen bg-neutral-950 flex">
+        {/* Sidebar */}
+        <Sidebar profile={profile} />
+        
+        {/* Main Content */}
+        <main className="flex-1 min-w-0 lg:ml-64 p-4 md:p-6 lg:p-8 pb-16 md:pb-0 safe-bottom">
+          <div className="space-y-6 max-w-full mx-auto">
+            {/* SECTION 1: Welcome Header - Mobile optimized */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-neutral-850 pb-5 gap-4">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
+                  {greeting}, {profile.name}
+                </h1>
+                <p className="text-neutral-500 text-xs mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  <span>{formattedDate}</span>
+                  <span className="text-neutral-700">·</span>
+                  <span className="text-indigo-400 font-semibold truncate">{workspaceName}</span>
+                </p>
+              </div>
+              <div className="shrink-0 flex items-center">
+                <span
+                  className={`text-[10px] sm:text-xxs px-2.5 sm:px-3 py-1 rounded-full border font-semibold tracking-wider uppercase ${
+                    roleBadges[profile.role] || roleBadges.member
+                  }`}
+                >
+                  {roleBadgeText[profile.role] || "Employee"}
+                </span>
+              </div>
+            </div>
 
-        {/* Dynamic widget grid wrapper */}
-        <DashboardClient
-          profile={profile}
-          workspaceName={workspaceName}
-          data={data}
-          permissions={{
-            canViewClients,
-            canViewProjects,
-            canViewTasks,
-            canViewTeam,
-            canViewFinance,
-            canViewRevenue,
-            canViewAnalytics,
-            canViewTeamPerformance,
-            canViewReports,
-          }}
-          formattedRevenue={formattedRevenue}
-          formattedPendingRevenue={formattedPendingRevenue}
-        />
+            {/* Dynamic widget grid wrapper */}
+            <DashboardClient
+              profile={profile}
+              workspaceName={workspaceName}
+              data={data}
+              permissions={{
+                canViewClients,
+                canViewProjects,
+                canViewTasks,
+                canViewTeam,
+                canViewFinance,
+                canViewRevenue,
+                canViewAnalytics,
+                canViewTeamPerformance,
+                canViewReports,
+              }}
+              formattedRevenue={formattedRevenue}
+              formattedPendingRevenue={formattedPendingRevenue}
+            />
+          </div>
+        </main>
       </div>
     );
   } catch (error: any) {
     return (
-      <div className="bg-red-950/20 border border-red-900 text-red-400 p-6 rounded-xl text-center space-y-3">
-        <h2 className="text-white text-base font-bold">Failed to load dashboard data</h2>
-        <p className="text-xs leading-relaxed max-w-md mx-auto">
-          {error.message || "An unexpected database connectivity error occurred. Please verify your connection."}
-        </p>
+      <div className="min-h-screen bg-neutral-950 flex items-center justify-center p-4">
+        <div className="bg-red-950/20 border border-red-900 text-red-400 p-6 rounded-xl text-center space-y-3 max-w-md w-full">
+          <h2 className="text-white text-base font-bold">Failed to load dashboard data</h2>
+          <p className="text-xs leading-relaxed">
+            {error.message || "An unexpected database connectivity error occurred. Please verify your connection."}
+          </p>
+        </div>
       </div>
     );
   }
 }
-
