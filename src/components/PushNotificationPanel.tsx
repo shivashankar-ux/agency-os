@@ -20,6 +20,7 @@ export function PushNotificationPanel() {
   const { isOnline, isInstalled } = usePWA();
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
+  const VAPID_KEY = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
 
   const handleSubscribe = async () => {
     setTesting(true);
@@ -231,6 +232,26 @@ export function PushNotificationPanel() {
               <p className="text-white font-medium text-sm">Install for Better Notifications</p>
               <p className="text-xs text-neutral-400 mt-0.5">
                 Add to home screen for reliable background push notifications
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {!VAPID_KEY && isSupported && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-600/10 border border-red-600/20 rounded-2xl p-4 mt-4"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-red-600/20 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-red-400" />
+            </div>
+            <div className="flex-1">
+              <p className="text-white font-medium text-sm">Missing Environment Variables</p>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                You must add <code>NEXT_PUBLIC_VAPID_PUBLIC_KEY</code> to your Vercel project settings to enable push subscriptions.
               </p>
             </div>
           </div>
