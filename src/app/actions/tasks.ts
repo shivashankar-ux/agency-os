@@ -63,6 +63,18 @@ export async function createTask(formData: FormData) {
           .select("subscription")
           .eq("user_id", assignedTo);
 
+        // Check user preferences for siren setting
+        const { data: prefs } = await supabase
+          .from("user_notification_preferences")
+          .select("siren_enabled")
+          .eq("user_id", assignedTo)
+          .single();
+
+        const sirenEnabled = prefs?.siren_enabled !== false; // default true if not set
+        const vibrationPattern = sirenEnabled 
+          ? [500, 200, 500, 200, 500, 200, 1000] // Aggressive siren vibration
+          : [200, 100, 200, 100, 200, 100, 400]; // Standard vibration
+
         if (subscriptions && subscriptions.length > 0 && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) {
           webPush.setVapidDetails(
             "mailto:admin@thestorybuilder.in",
@@ -75,7 +87,7 @@ export async function createTask(formData: FormData) {
             body: `You have been assigned to: ${title}`,
             url: "/dashboard/tasks",
             tag: `task-${task.id}`,
-            vibrate: [200, 100, 200, 100, 200, 100, 400],
+            vibrate: vibrationPattern,
           });
 
           await Promise.allSettled(
