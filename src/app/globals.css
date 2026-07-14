@@ -18,17 +18,17 @@
 }
 
 .light-mode {
-  --bg-app: #f8fafc;
+  --bg-app: #f1f5f9;
   --bg-sidebar: #ffffff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f1f5f9;
+  --bg-card-hover: #f8fafc;
   --border-color: #e2e8f0;
   --text-title: #0f172a;
-  --text-body: #475569;
-  --text-muted: #94a3b8;
+  --text-body: #334155;
+  --text-muted: #64748b;
   
-  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.05);
-  --glass-bg: rgba(255, 255, 255, 0.75);
+  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.95);
 }
 
 @theme {

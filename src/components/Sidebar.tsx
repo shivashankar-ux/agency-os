@@ -115,8 +115,8 @@ export default function Sidebar({ profile }: { profile: Profile }) {
               onClick={() => setIsOpen(false)}
               className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm transition-colors font-medium ${
                 active
-                  ? "bg-indigo-650 text-white shadow-md shadow-indigo-900/10"
-                  : "text-neutral-450 hover:bg-neutral-850 hover:text-white"
+                  ? "bg-indigo-650 text-white-literal shadow-md shadow-indigo-900/10"
+                  : "text-neutral-400 hover:bg-neutral-850 hover:text-white"
               }`}
             >
               <Icon size={16} />
@@ -157,7 +157,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-550 hover:bg-neutral-850 hover:text-white transition-colors"
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-neutral-500 hover:bg-neutral-850 hover:text-white transition-colors"
         >
           <LogOut size={16} />
           Log out

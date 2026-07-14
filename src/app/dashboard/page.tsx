@@ -4,7 +4,6 @@ import { getPermissions } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import DashboardClient from "./DashboardClient";
-import Sidebar from "@/components/Sidebar";
 
 export default async function DashboardPage() {
   try {
@@ -75,13 +74,8 @@ export default async function DashboardPage() {
     };
 
     return (
-      <div className="min-h-screen bg-neutral-950 flex">
-        {/* Sidebar */}
-        <Sidebar profile={profile} />
-        
-        {/* Main Content */}
-        <main className="flex-1 min-w-0 lg:ml-64 p-4 md:p-6 lg:p-8 pb-16 md:pb-0 safe-bottom">
-          <div className="space-y-6 max-w-full mx-auto">
+      <div className="p-4 md:p-6 lg:p-8 pb-16 md:pb-0 safe-bottom">
+        <div className="space-y-6 max-w-full mx-auto">
             {/* SECTION 1: Welcome Header - Mobile optimized */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-neutral-850 pb-5 gap-4">
               <div className="min-w-0">
@@ -124,8 +118,7 @@ export default async function DashboardPage() {
               formattedRevenue={formattedRevenue}
               formattedPendingRevenue={formattedPendingRevenue}
             />
-          </div>
-        </main>
+        </div>
       </div>
     );
   } catch (error: any) {
