@@ -2,13 +2,32 @@
 
 import { useState } from "react";
 import { Users, Briefcase, AlertTriangle, TrendingUp, ShieldAlert, Award } from "lucide-react";
-import type { ProjectProgressItem, TeamPerformanceItem } from "@/lib/dashboard-data";
+import type { TeamPerformanceItem } from "@/lib/dashboard-data";
 import { motion } from "framer-motion";
+
+// Flexible project type that works with both DashboardProject and ProjectProgressItem
+interface ProjectData {
+  id: string;
+  name: string;
+  clientName?: string;
+  client_name?: string;
+  status: string;
+  dueDate?: string | null;
+  deadline?: string;
+  completionPercent?: number;
+  progress?: number;
+  ownerName?: string;
+  healthStatus?: "on_track" | "at_risk" | "overdue";
+  priority?: string;
+  task_count?: number;
+  completed_task_count?: number;
+  overdueTasksCount?: number;
+}
 
 interface PerformanceWidgetProps {
   teamPerformance: TeamPerformanceItem[];
-  mostActiveProjects: ProjectProgressItem[];
-  mostDelayedProjects: any[];
+  mostActiveProjects: ProjectData[];
+  mostDelayedProjects: ProjectData[];
 }
 
 export default function PerformanceWidget({
@@ -128,8 +147,8 @@ export default function PerformanceWidget({
                         <Briefcase size={13} className="text-neutral-500 shrink-0" />
                         {proj.name}
                       </h4>
-                      <p className="text-neutral-500 text-xxs mt-0.5 truncate leading-relaxed">
-                        Client: <span className="text-neutral-400 font-semibold">{proj.clientName}</span> | Lead: {proj.ownerName}
+<p className="text-neutral-500 text-xxs mt-0.5 truncate leading-relaxed">
+                          Client: <span className="text-neutral-400 font-semibold">{proj.clientName || proj.client_name}</span> | Lead: {proj.ownerName}
                       </p>
                     </div>
 
@@ -138,11 +157,11 @@ export default function PerformanceWidget({
                         <div className="w-16 h-1.5 bg-neutral-800 rounded-full overflow-hidden shrink-0">
                           <div
                             className="h-full bg-indigo-500 rounded-full"
-                            style={{ width: `${proj.completionPercent}%` }}
+                            style={{ width: `${proj.completionPercent ?? proj.progress ?? 0}%` }}
                           />
                         </div>
                         <span className="text-white font-bold text-xxs min-w-[28px]">
-                          {proj.completionPercent}%
+                          {proj.completionPercent ?? proj.progress ?? 0}%
                         </span>
                       </div>
                     </div>
@@ -170,7 +189,7 @@ export default function PerformanceWidget({
                       {proj.name}
                     </h4>
                     <p className="text-neutral-500 text-xxs mt-0.5 truncate leading-relaxed">
-                      Client: <span className="text-neutral-400 font-semibold">{proj.clientName}</span> · Due: {proj.dueDate || "Not set"}
+                      Client: <span className="text-neutral-400 font-semibold">{proj.clientName || proj.client_name}</span> · Due: {proj.dueDate || proj.deadline || "Not set"}
                     </p>
                   </div>
 

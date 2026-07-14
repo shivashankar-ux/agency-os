@@ -17,22 +17,13 @@ import NotificationsWidget from "./components/NotificationsWidget";
 import PerformanceWidget from "./components/PerformanceWidget";
 import { PWAInstallPrompt } from "@/components/PWAInstallPrompt";
 import { PushNotificationPanel } from "@/components/PushNotificationPanel";
+import type { DashboardData, DashboardPermissions, Profile } from "./types";
 
 type Props = {
-  profile: any;
+  profile: Profile;
   workspaceName: string;
-  data: any;
-  permissions: {
-    canViewClients: boolean;
-    canViewProjects: boolean;
-    canViewTasks: boolean;
-    canViewTeam: boolean;
-    canViewFinance: boolean;
-    canViewRevenue: boolean;
-    canViewAnalytics: boolean;
-    canViewTeamPerformance: boolean;
-    canViewReports: boolean;
-  };
+  data: DashboardData;
+  permissions: DashboardPermissions;
   formattedRevenue: string;
   formattedPendingRevenue: string;
 };

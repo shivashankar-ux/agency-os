@@ -1,18 +1,15 @@
-const CACHE_NAME = "agency-os-v1";
+const CACHE_VERSION = "v1.0.0";
+const CACHE_NAME = `agency-os-${CACHE_VERSION}`;
 const STATIC_ASSETS = [
   "/",
   "/dashboard",
   "/manifest.json",
   "/icons/icon-192x192.png",
   "/icons/icon-512x512.png",
+  "/offline",
 ];
 
-const CACHE_STRATEGIES = {
-  static: "cache-first",
-  api: "network-first",
-  images: "cache-first",
-  fonts: "cache-first",
-};
+const MUTATION_CACHE = "pending-mutations";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -28,7 +25,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== CACHE_NAME)
+          .filter((name) => name.startsWith("agency-os-") && name !== CACHE_NAME)
           .map((name) => caches.delete(name))
       );
     })
@@ -40,33 +37,93 @@ self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  if (request.method !== "GET") return;
-
-  if (url.pathname.startsWith("/api/")) {
-    event.respondWith(networkFirstStrategy(request));
+  // Skip non-GET requests
+  if (request.method !== "GET") {
+    // Handle mutation requests for background sync
+    if (["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
+      event.respondWith(handleMutation(request));
+    }
     return;
   }
 
+  // API requests - Network First
+  if (url.pathname.startsWith("/api/")) {
+    event.respondWith(networkFirstStrategy(request, "api"));
+    return;
+  }
+
+  // Static assets - Cache First
   if (
-    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico)$/) ||
+    url.pathname.match(/\.(png|jpg|jpeg|svg|gif|webp|ico|woff|woff2|ttf|eot)$/) ||
     url.pathname.startsWith("/icons/")
   ) {
-    event.respondWith(cacheFirstStrategy(request, "images"));
+    event.respondWith(cacheFirstStrategy(request, "static"));
     return;
   }
 
-  if (url.pathname.match(/\.(woff|woff2|ttf|eot)$/)) {
-    event.respondWith(cacheFirstStrategy(request, "fonts"));
+  // HTML/Navigation - Stale While Revalidate
+  if (request.mode === "navigate" || url.pathname.endsWith(".html")) {
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
-  event.respondWith(staleWhileRevalidate(request));
+  // Default - Network First
+  event.respondWith(networkFirstStrategy(request, "default"));
 });
 
-async function cacheFirstStrategy(request: Request, cacheName = "static") {
+async function handleMutation(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  
+  // Clone request for caching
+  const requestClone = request.clone();
+  
+  try {
+    // Try network first
+    const response = await fetch(request);
+    
+    // If successful, return response
+    if (response.ok) {
+      return response;
+    }
+  } catch (error) {
+    // Network failed, queue for background sync
+  }
+
+  // Queue mutation for background sync
+  await queueMutation(requestClone);
+  
+  // Return optimistic response
+  return new Response(
+    JSON.stringify({ 
+      queued: true, 
+      message: "Request queued for background sync" 
+    }),
+    { 
+      status: 202, 
+      headers: { "Content-Type": "application/json" } 
+    }
+  );
+}
+
+async function queueMutation(request: Request): Promise<void> {
+  const cache = await caches.open(MUTATION_CACHE);
+  const key = `${request.method} ${request.url} ${Date.now()}`;
+  
+  const body = await request.clone().arrayBuffer();
+  const headers = Object.fromEntries(request.headers.entries());
+  
+  await cache.put(key, new Response(body, { headers }));
+  
+  // Register background sync
+  if ("serviceWorker" in navigator && "sync" in self.registration) {
+    await self.registration.sync.register("sync-mutations");
+  }
+}
+
+async function cacheFirstStrategy(request: Request, cacheName: string): Promise<Response> {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
-
+  
   if (cachedResponse) {
     return cachedResponse;
   }
@@ -82,7 +139,7 @@ async function cacheFirstStrategy(request: Request, cacheName = "static") {
   }
 }
 
-async function networkFirstStrategy(request: Request) {
+async function networkFirstStrategy(request: Request, cacheName: string): Promise<Response> {
   const cache = await caches.open(CACHE_NAME);
   
   try {
@@ -96,14 +153,17 @@ async function networkFirstStrategy(request: Request) {
     if (cachedResponse) {
       return cachedResponse;
     }
-    return new Response(JSON.stringify({ error: "Offline" }), {
-      status: 503,
-      headers: { "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ error: "Offline", queued: false }),
+      { 
+        status: 503, 
+        headers: { "Content-Type": "application/json" } 
+      }
+    );
   }
 }
 
-async function staleWhileRevalidate(request: Request) {
+async function staleWhileRevalidate(request: Request): Promise<Response> {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
 
@@ -117,6 +177,54 @@ async function staleWhileRevalidate(request: Request) {
   return cachedResponse || fetchPromise;
 }
 
+// Background Sync
+self.addEventListener("sync", (event) => {
+  if (event.tag === "sync-mutations") {
+    event.waitUntil(syncMutations());
+  }
+});
+
+async function syncMutations(): Promise<void> {
+  const cache = await caches.open(MUTATION_CACHE);
+  const keys = await cache.keys();
+  
+  for (const key of keys) {
+    try {
+      const response = await cache.match(key);
+      if (!response) continue;
+      
+      const body = await response.arrayBuffer();
+      const headers = Object.fromEntries(response.headers.entries());
+      
+      // Extract method and URL from key
+      const [method, url] = key.split(" ");
+      
+      const fetchResponse = await fetch(url, {
+        method,
+        headers,
+        body,
+      });
+      
+      if (fetchResponse.ok) {
+        await cache.delete(key);
+        
+        // Notify client of success
+        const clients = await self.clients.matchAll();
+        clients.forEach((client) => {
+          client.postMessage({
+            type: "MUTATION_SYNCED",
+            key,
+            success: true,
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Sync failed for:", key, error);
+    }
+  }
+}
+
+// Push Notifications
 self.addEventListener("push", (event) => {
   if (!event.data) return;
 
@@ -127,11 +235,11 @@ self.addEventListener("push", (event) => {
     icon: data.icon || "/icons/icon-192x192.png",
     badge: "/icons/icon-96x96.png",
     vibrate: data.vibrate || [200, 100, 200, 100, 200, 100, 400],
-    tag: data.tag || "agency-os-notification",
+    tag: data.tag || `notification-${Date.now()}`,
     requireInteraction: data.requireInteraction !== false,
     actions: data.actions || [
       { action: "view", title: "View" },
-      { action: "dismiss", title: "Dismiss" },
+      { action: "dismiss", title: "Dismiss" }
     ],
     data: {
       url: data.url || "/dashboard",
@@ -169,10 +277,6 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-self.addEventListener("notificationclose", (event) => {
-  console.log("Notification closed:", event.notification.tag);
-});
-
 self.addEventListener("message", (event) => {
   if (event.data === "skipWaiting") {
     self.skipWaiting();
@@ -184,5 +288,33 @@ self.addEventListener("message", (event) => {
     });
   }
 });
+
+// Periodic background sync for deadline checks
+self.addEventListener("periodicsync", (event) => {
+  if (event.tag === "check-deadlines") {
+    event.waitUntil(checkTaskDeadlines());
+  }
+});
+
+async function checkTaskDeadlines(): Promise<void> {
+  try {
+    const response = await fetch("/api/tasks/check-deadlines", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      // Send notifications if any
+      if (data.notifications?.length) {
+        for (const notification of data.notifications) {
+          await self.registration.showNotification(notification.title, notification.options);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Deadline check failed:", error);
+  }
+}
 
 declare const self: ServiceWorkerGlobalScope;

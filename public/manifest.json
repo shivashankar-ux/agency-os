@@ -83,6 +83,22 @@
     }
   ],
   "screenshots": [],
+  "share_target": {
+    "action": "/dashboard/tasks/new",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "attachments",
+          "accept": ["image/*", "application/pdf", "text/*"]
+        }
+      ]
+    }
+  },
   "prefer_related_applications": false,
   "related_applications": []
 }

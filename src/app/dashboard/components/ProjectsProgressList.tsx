@@ -2,8 +2,25 @@
 
 import Link from "next/link";
 import { Calendar, User, ChevronRight } from "lucide-react";
-import type { ProjectProgressItem } from "@/lib/dashboard-data";
 import { motion } from "framer-motion";
+
+// Accept both ProjectProgressItem and DashboardProject types
+export interface ProjectProgressItem {
+  id: string;
+  name: string;
+  clientName?: string;
+  client_name?: string;
+  status: string;
+  dueDate?: string | null;
+  deadline?: string;
+  completionPercent?: number;
+  progress?: number;
+  ownerName?: string;
+  healthStatus?: "on_track" | "at_risk" | "overdue";
+  priority?: string;
+  task_count?: number;
+  completed_task_count?: number;
+}
 
 interface ProjectsProgressListProps {
   projects: ProjectProgressItem[];
@@ -45,6 +62,13 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
     );
   }
 
+  // Helper to get property supporting both naming conventions
+  const getClientName = (proj: ProjectProgressItem) => proj.clientName || proj.client_name || "No Client";
+  const getProgress = (proj: ProjectProgressItem) => proj.completionPercent ?? proj.progress ?? 0;
+  const getDueDate = (proj: ProjectProgressItem) => proj.dueDate || proj.deadline || "Not Set";
+  const getOwnerName = (proj: ProjectProgressItem) => proj.ownerName || "Unassigned";
+  const getStatus = (proj: ProjectProgressItem) => proj.status;
+
   return (
     <div className="card-glass rounded-2xl p-6 shadow-sm overflow-hidden flex flex-col h-full">
       <div className="flex items-center justify-between mb-5">
@@ -74,6 +98,12 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
           </thead>
           <tbody className="divide-y divide-neutral-800/40">
             {projects.map((proj, index) => {
+              const clientName = getClientName(proj);
+              const progress = getProgress(proj);
+              const dueDate = getDueDate(proj);
+              const ownerName = getOwnerName(proj);
+              const status = getStatus(proj);
+              
               return (
                 <motion.tr
                   key={proj.id}
@@ -94,8 +124,8 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
 
                   {/* Client Name (Highlighted) */}
                   <td className="py-4 px-3">
-                    <span className={`inline-block border text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${getClientColorClass(proj.clientName)}`}>
-                      {proj.clientName}
+                    <span className={`inline-block border text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${getClientColorClass(clientName)}`}>
+                      {clientName}
                     </span>
                   </td>
 
@@ -105,11 +135,11 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
                       <div className="flex-1 h-2 bg-neutral-800 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-gradient-to-r from-indigo-500 to-purple-550 rounded-full transition-all duration-500"
-                          style={{ width: `${proj.completionPercent}%` }}
+                          style={{ width: `${progress}%` }}
                         />
                       </div>
                       <span className="text-white font-bold min-w-[32px] text-right">
-                        {proj.completionPercent}%
+                        {progress}%
                       </span>
                     </div>
                   </td>
@@ -118,7 +148,7 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
                   <td className="py-4 px-3 text-neutral-400 font-semibold">
                     <div className="flex items-center gap-1.5">
                       <Calendar size={12} className="text-neutral-500" />
-                      <span>{proj.dueDate || "Not Set"}</span>
+                      <span>{dueDate}</span>
                     </div>
                   </td>
 
@@ -126,10 +156,10 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
                   <td className="py-4 px-3">
                     <span
                       className={`text-xxs px-2.5 py-0.5 rounded-full border capitalize font-bold ${
-                        statusColors[proj.status] || "bg-neutral-850 text-neutral-450 border-neutral-800"
+                        statusColors[status] || "bg-neutral-850 text-neutral-450 border-neutral-800"
                       }`}
                     >
-                      {proj.status.replace("_", " ")}
+                      {status.replace("_", " ")}
                     </span>
                   </td>
 
@@ -137,7 +167,7 @@ export default function ProjectsProgressList({ projects }: ProjectsProgressListP
                   <td className="py-4 px-3 text-right text-neutral-300 font-semibold">
                     <div className="flex items-center justify-end gap-1.5">
                       <User size={12} className="text-neutral-500" />
-                      <span>{proj.ownerName}</span>
+                      <span>{ownerName}</span>
                     </div>
                   </td>
                 </motion.tr>

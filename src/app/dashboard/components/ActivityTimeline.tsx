@@ -4,14 +4,28 @@ import {
   FolderPlus, CheckCircle, UserPlus, Users, PlusCircle, Clock 
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import type { ActivityItem } from "@/lib/dashboard-data";
 import { motion } from "framer-motion";
+
+// Flexible activity type that works with both server and client types
+interface ActivityItem {
+  id: string;
+  type: string;
+  user?: string;
+  user_name?: string;
+  action?: string;
+  title?: string;
+  description?: string;
+  time?: string;
+  created_at?: string;
+  projectName?: string;
+  metadata?: Record<string, unknown>;
+}
 
 interface ActivityTimelineProps {
   activities: ActivityItem[];
 }
 
-const typeConfig = {
+const typeConfig: Record<string, { icon: any; color: string }> = {
   project_created: {
     icon: FolderPlus,
     color: "bg-indigo-950/60 text-indigo-400 border-indigo-900/50",
@@ -58,9 +72,14 @@ export default function ActivityTimeline({ activities }: ActivityTimelineProps) 
           const Icon = config.icon;
 
           let relativeTime = "";
-          try {
-            relativeTime = formatDistanceToNow(new Date(act.time), { addSuffix: true });
-          } catch {
+          const timeStr = act.time || act.created_at;
+          if (timeStr) {
+            try {
+              relativeTime = formatDistanceToNow(new Date(timeStr), { addSuffix: true });
+            } catch {
+              relativeTime = "recently";
+            }
+          } else {
             relativeTime = "recently";
           }
 
@@ -81,8 +100,8 @@ export default function ActivityTimeline({ activities }: ActivityTimelineProps) 
 
               <div>
                 <p className="text-neutral-300 text-xs leading-relaxed">
-                  <span className="text-white font-semibold">{act.user}</span>{" "}
-                  {act.action}
+                  <span className="text-white font-semibold">{act.user || act.user_name}</span>{" "}
+                  {act.action || act.description}
                 </p>
                 
                 <div className="flex items-center gap-2 mt-1">

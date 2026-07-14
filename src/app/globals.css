@@ -301,6 +301,24 @@ body {
   padding-bottom: env(keyboard-inset-height, 0);
 }
 
+/* iOS viewport units fix */
+@supports (-webkit-touch-callout: none) {
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  .h-screen {
+    height: -webkit-fill-available;
+  }
+}
+
+/* Input focus handling for iOS */
+@media (max-width: 768px) {
+  .ios-focus-fix {
+    position: fixed;
+    width: 100%;
+  }
+}
+
 /* Pull to refresh indicator */
 .pull-to-refresh {
   position: relative;
