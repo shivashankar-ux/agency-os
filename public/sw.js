@@ -71,7 +71,7 @@ self.addEventListener("fetch", (event) => {
   event.respondWith(networkFirstStrategy(request, "default"));
 });
 
-async function handleMutation(request: Request): Promise<Response> {
+async function handleMutation(request) {
   const url = new URL(request.url);
   
   // Clone request for caching
@@ -105,7 +105,7 @@ async function handleMutation(request: Request): Promise<Response> {
   );
 }
 
-async function queueMutation(request: Request): Promise<void> {
+async function queueMutation(request) {
   const cache = await caches.open(MUTATION_CACHE);
   const key = `${request.method} ${request.url} ${Date.now()}`;
   
@@ -120,7 +120,7 @@ async function queueMutation(request: Request): Promise<void> {
   }
 }
 
-async function cacheFirstStrategy(request: Request, cacheName: string): Promise<Response> {
+async function cacheFirstStrategy(request, cacheName) {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
   
@@ -139,7 +139,7 @@ async function cacheFirstStrategy(request: Request, cacheName: string): Promise<
   }
 }
 
-async function networkFirstStrategy(request: Request, cacheName: string): Promise<Response> {
+async function networkFirstStrategy(request, cacheName) {
   const cache = await caches.open(CACHE_NAME);
   
   try {
@@ -163,7 +163,7 @@ async function networkFirstStrategy(request: Request, cacheName: string): Promis
   }
 }
 
-async function staleWhileRevalidate(request: Request): Promise<Response> {
+async function staleWhileRevalidate(request) {
   const cache = await caches.open(CACHE_NAME);
   const cachedResponse = await cache.match(request);
 
@@ -184,7 +184,7 @@ self.addEventListener("sync", (event) => {
   }
 });
 
-async function syncMutations(): Promise<void> {
+async function syncMutations() {
   const cache = await caches.open(MUTATION_CACHE);
   const keys = await cache.keys();
   
@@ -230,7 +230,7 @@ self.addEventListener("push", (event) => {
 
   const data = event.data.json();
   
-  const options: NotificationOptions = {
+  const options = {
     body: data.body,
     icon: data.icon || "/icons/icon-192x192.png",
     badge: "/icons/icon-96x96.png",
@@ -296,7 +296,7 @@ self.addEventListener("periodicsync", (event) => {
   }
 });
 
-async function checkTaskDeadlines(): Promise<void> {
+async function checkTaskDeadlines() {
   try {
     const response = await fetch("/api/tasks/check-deadlines", {
       method: "POST",
@@ -316,5 +316,4 @@ async function checkTaskDeadlines(): Promise<void> {
     console.error("Deadline check failed:", error);
   }
 }
-
-declare const self: ServiceWorkerGlobalScope;
+
