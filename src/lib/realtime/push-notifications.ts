@@ -3,12 +3,6 @@
 import { createClient } from "@/lib/supabase/server";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-  "mailto:admin@thestorybuilder.in",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 interface NotificationPayload {
   title: string;
   body: string;
@@ -26,6 +20,13 @@ async function sendPushNotification(
   subscription: webPush.PushSubscription,
   payload: NotificationPayload
 ): Promise<boolean> {
+  // Set VAPID details here (inside handler) to avoid build-time env var errors
+  webPush.setVapidDetails(
+    "mailto:admin@thestorybuilder.in",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+
   try {
     const pushPayload = JSON.stringify({
       title: payload.title,

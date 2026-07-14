@@ -3,13 +3,14 @@ import { getCurrentProfile } from "@/lib/supabase/profile";
 import { getPermissions } from "@/lib/permissions";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-  "mailto:admin@thestorybuilder.in",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function POST(request: Request) {
+  // Set VAPID details here (inside handler) to avoid build-time env var errors
+  webPush.setVapidDetails(
+    "mailto:admin@thestorybuilder.in",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+
   try {
     const profile = await getCurrentProfile();
     if (!profile) {

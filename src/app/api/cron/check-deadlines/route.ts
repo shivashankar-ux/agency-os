@@ -1,12 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import webPush from "web-push";
 
-webPush.setVapidDetails(
-  "mailto:admin@thestorybuilder.in",
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-);
-
 export async function GET(request: Request) {
   // Verify cron secret
   const authHeader = request.headers.get("authorization");
@@ -117,6 +111,13 @@ export async function GET(request: Request) {
 }
 
 async function sendNotification(subscription: any, payload: any) {
+  // Set VAPID details here (inside handler) to avoid build-time env var errors
+  webPush.setVapidDetails(
+    "mailto:admin@thestorybuilder.in",
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
+    process.env.VAPID_PRIVATE_KEY!
+  );
+
   const notificationPayload = JSON.stringify({
     title: payload.title,
     body: payload.body,
