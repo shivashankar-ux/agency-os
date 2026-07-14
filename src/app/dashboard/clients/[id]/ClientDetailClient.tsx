@@ -9,6 +9,8 @@ import {
   ChevronLeft, ChevronRight, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, CircleDot, Loader2
 } from "lucide-react";
 import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
+import CreateProjectModal from "./CreateProjectModal";
+import CreateTaskModal from "@/app/dashboard/tasks/CreateTaskModal";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -133,22 +135,6 @@ export default function ClientDetailClient({
   // Loading & error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Form states
-  const [projectForm, setProjectForm] = useState({
-    name: "",
-    description: "",
-    start_date: "",
-    end_date: "",
-  });
-
-  const [taskForm, setTaskForm] = useState({
-    title: "",
-    description: "",
-    assigned_to: "",
-    priority: "medium",
-    due_date: "",
-  });
 
   // Client assignments checklist state
   const [selectedAssignees, setSelectedAssignees] = useState<string[]>(
@@ -393,65 +379,6 @@ export default function ClientDetailClient({
     currentProfile.role === "owner" ||
     currentProfile.role === "admin" ||
     currentProfile.role === "manager";
-
-  // Create Project
-  async function handleCreateProject(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    const { error: projectError } = await supabase.from("projects").insert({
-      client_id: client.id,
-      name: projectForm.name,
-      description: projectForm.description || null,
-      start_date: projectForm.start_date || null,
-      end_date: projectForm.end_date || null,
-      created_by: currentProfile.id,
-    });
-
-    if (projectError) {
-      setError(projectError.message);
-      setLoading(false);
-      return;
-    }
-
-    setIsProjectModalOpen(false);
-    setProjectForm({ name: "", description: "", start_date: "", end_date: "" });
-    setLoading(false);
-    router.refresh();
-  }
-
-  // Create Task
-  async function handleCreateTask(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selectedProjectIdForTask) return;
-
-    setLoading(true);
-    setError(null);
-
-    const { error: taskError } = await supabase.from("tasks").insert({
-      project_id: selectedProjectIdForTask,
-      title: taskForm.title,
-      description: taskForm.description || null,
-      assigned_to: taskForm.assigned_to || null,
-      priority: taskForm.priority,
-      status: "todo",
-      due_date: taskForm.due_date || null,
-      created_by: currentProfile.id,
-    });
-
-    if (taskError) {
-      setError(taskError.message);
-      setLoading(false);
-      return;
-    }
-
-    setIsTaskModalOpen(false);
-    setSelectedProjectIdForTask(null);
-    setTaskForm({ title: "", description: "", assigned_to: "", priority: "medium", due_date: "" });
-    setLoading(false);
-    router.refresh();
-  }
 
   // Update Team Assignments
   async function handleSaveAssignments() {
@@ -885,7 +812,6 @@ export default function ClientDetailClient({
                           return;
                         }
                         const formattedDate = dateKey(day);
-                        setTaskForm((prev) => ({ ...prev, due_date: formattedDate }));
                         setSelectedProjectIdForTask(projects[0].id);
                         setIsTaskModalOpen(true);
                       }
@@ -925,166 +851,23 @@ export default function ClientDetailClient({
       )}
 
       {/* MODAL 1: ADD PROJECT */}
-      {isProjectModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold text-base">Add Project</h2>
-              <button
-                onClick={() => setIsProjectModalOpen(false)}
-                className="text-neutral-500 hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateProject} className="space-y-4">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Project Name *</label>
-                <input
-                  required
-                  placeholder="e.g. Website Redesign"
-                  value={projectForm.name}
-                  onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Description</label>
-                <textarea
-                  rows={3}
-                  placeholder="Brief description of the project..."
-                  value={projectForm.description}
-                  onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Start Date</label>
-                  <input
-                    type="date"
-                    value={projectForm.start_date}
-                    onChange={(e) => setProjectForm({ ...projectForm, start_date: e.target.value })}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">End Date</label>
-                  <input
-                    type="date"
-                    value={projectForm.end_date}
-                    onChange={(e) => setProjectForm({ ...projectForm, end_date: e.target.value })}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
-              >
-                {loading ? "Creating..." : "Create Project"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateProjectModal
+        isOpen={isProjectModalOpen}
+        onClose={() => setIsProjectModalOpen(false)}
+        clientId={client.id}
+      />
 
       {/* MODAL 2: ADD TASK */}
-      {isTaskModalOpen && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-white font-semibold text-base">Add Task</h2>
-              <button
-                onClick={() => {
-                  setIsTaskModalOpen(false);
-                  setSelectedProjectIdForTask(null);
-                }}
-                className="text-neutral-500 hover:text-white"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateTask} className="space-y-4">
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Task Title *</label>
-                <input
-                  required
-                  placeholder="e.g. Setup analytics tracking"
-                  value={taskForm.title}
-                  onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Description</label>
-                <textarea
-                  rows={2}
-                  placeholder="Task details..."
-                  value={taskForm.description}
-                  onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-neutral-400 mb-1">Assignee</label>
-                <select
-                  value={taskForm.assigned_to}
-                  onChange={(e) => setTaskForm({ ...taskForm, assigned_to: e.target.value })}
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="">Unassigned</option>
-                  {allProfiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.role})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Priority</label>
-                  <select
-                    value={taskForm.priority}
-                    onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <option value="low">Low</option>
-                    <option value="medium">Medium</option>
-                    <option value="high">High</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-neutral-400 mb-1">Due Date</label>
-                  <input
-                    type="date"
-                    value={taskForm.due_date}
-                    onChange={(e) => setTaskForm({ ...taskForm, due_date: e.target.value })}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
-              >
-                {loading ? "Creating..." : "Create Task"}
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      <CreateTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedProjectIdForTask(null);
+        }}
+        projects={projects}
+        profiles={allProfiles}
+        defaultProjectId={selectedProjectIdForTask || undefined}
+      />
 
       {/* MODAL 3: MANAGE TEAM ASSIGNMENTS */}
       {isTeamModalOpen && (
