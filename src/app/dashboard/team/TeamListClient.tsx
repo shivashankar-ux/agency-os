@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Pencil, Trash2, X, AlertCircle, ShieldAlert } from "lucide-react";
+import { updateTeamMember } from "@/app/actions/team";
 
 type Profile = {
   id: string;
@@ -58,25 +59,22 @@ export default function TeamListClient({
     setLoading(true);
     setError(null);
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        name: editForm.name,
-        role: editForm.role,
-        job_title: editForm.job_title || null,
-        is_active: editForm.is_active,
-      })
-      .eq("id", editingMember.id);
+    const res = await updateTeamMember(editingMember.id, {
+      name: editForm.name,
+      role: editForm.role,
+      job_title: editForm.job_title || "",
+      is_active: editForm.is_active,
+    });
 
-    if (updateError) {
-      setError(updateError.message);
+    if (res.error) {
+      setError(res.error);
       setLoading(false);
       return;
     }
 
     setEditingMember(null);
     setLoading(false);
-    router.refresh();
+    // The server action handles revalidation.
   }
 
   async function handleDeleteMember() {

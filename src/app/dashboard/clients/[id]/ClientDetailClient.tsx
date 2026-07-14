@@ -9,7 +9,7 @@ import {
   ChevronLeft, ChevronRight, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, CircleDot, Loader2
 } from "lucide-react";
 import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
-import CreateProjectModal from "./CreateProjectModal";
+import CreateProjectModal from "../CreateProjectModal";
 import CreateTaskModal from "@/app/dashboard/tasks/CreateTaskModal";
 
 const MONTHS = [
