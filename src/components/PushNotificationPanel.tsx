@@ -47,17 +47,28 @@ export function PushNotificationPanel() {
   };
 
   if (!isSupported) {
+    // Detect iOS/iPadOS
+    const isIOS = typeof window !== "undefined" && 
+      (/iPad|iPhone|iPod/.test(navigator.userAgent) || 
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1));
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-neutral-900/50 border border-neutral-800 rounded-2xl p-4"
       >
-        <div className="flex items-center gap-3 text-neutral-500">
-          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0" />
+        <div className="flex items-start gap-3 text-neutral-500">
+          <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-neutral-300">Push Notifications Unavailable</p>
-            <p className="text-xs mt-0.5">Your browser doesn't support push notifications</p>
+            <p className="text-sm font-medium text-neutral-300">
+              {isIOS ? "App Installation Required" : "Push Notifications Unavailable"}
+            </p>
+            <p className="text-xs mt-1 text-neutral-400 leading-relaxed">
+              {isIOS 
+                ? "Apple requires you to install this app to receive push notifications. Tap the Share button in Safari and select 'Add to Home Screen', then open the app from your home screen."
+                : "Your browser doesn't support push notifications. Try using Chrome or Edge."}
+            </p>
           </div>
         </div>
       </motion.div>
