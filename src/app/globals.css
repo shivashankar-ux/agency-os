@@ -11,6 +11,10 @@
   --text-body: #cbd5e1;
   --text-muted: #94a3b8;
   
+  --color-primary: #4f46e5;
+  --color-primary-hover: #6366f1;
+  --color-primary-dark: #3730a3;
+  
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   --instagram-gradient: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
   --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.15);
@@ -40,6 +44,12 @@
   --color-neutral-400: var(--text-body);
   --color-neutral-500: var(--text-muted);
   --font-sans: 'Plus Jakarta Sans', sans-serif;
+  
+  --color-indigo-500: var(--color-primary-hover);
+  --color-indigo-600: var(--color-primary);
+  --color-indigo-700: var(--color-primary-dark);
+  --color-indigo-800: var(--color-primary-dark);
+  --color-indigo-900: var(--color-primary-dark);
 }
 
 body {
@@ -311,12 +321,45 @@ body {
   }
 }
 
-/* Input focus handling for iOS */
+/*iOS focus fix*/
 @media (max-width: 768px) {
   .ios-focus-fix {
     position: fixed;
     width: 100%;
   }
+}
+
+/* Ensure text is white in light mode on solid primary/colored backgrounds */
+.light-mode button[class*="bg-indigo-"],
+.light-mode a[class*="bg-indigo-"],
+.light-mode button[class*="bg-emerald-"],
+.light-mode a[class*="bg-emerald-"],
+.light-mode button[class*="bg-red-"],
+.light-mode a[class*="bg-red-"],
+.light-mode button[class*="bg-blue-"],
+.light-mode a[class*="bg-blue-"],
+.light-mode button[class*="bg-violet-"],
+.light-mode a[class*="bg-violet-"],
+.light-mode button[class*="bg-green-"],
+.light-mode a[class*="bg-green-"],
+.light-mode span[class*="bg-indigo-"],
+.light-mode span[class*="bg-emerald-"],
+.light-mode span[class*="bg-red-"],
+.light-mode span[class*="bg-blue-"],
+.light-mode span[class*="bg-violet-"],
+.light-mode span[class*="bg-green-"] {
+  color: #ffffff !important;
+}
+
+/* SVG icons inside colored background elements should remain white */
+.light-mode button[class*="bg-indigo-"] svg,
+.light-mode a[class*="bg-indigo-"] svg,
+.light-mode button[class*="bg-emerald-"] svg,
+.light-mode a[class*="bg-emerald-"] svg,
+.light-mode button[class*="bg-red-"] svg,
+.light-mode a[class*="bg-red-"] svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
 }
 
 /* Pull to refresh indicator */

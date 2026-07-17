@@ -67,6 +67,15 @@ export default function RootLayout({
                   } else {
                     document.documentElement.classList.remove('light-mode');
                   }
+                  
+                  const primary = localStorage.getItem('primary_color');
+                  const primaryHover = localStorage.getItem('primary_color_hover');
+                  const primaryDark = localStorage.getItem('primary_color_dark');
+                  if (primary && primaryHover && primaryDark) {
+                    document.documentElement.style.setProperty('--color-primary', primary);
+                    document.documentElement.style.setProperty('--color-primary-hover', primaryHover);
+                    document.documentElement.style.setProperty('--color-primary-dark', primaryDark);
+                  }
                 } catch (e) {}
               })();
               

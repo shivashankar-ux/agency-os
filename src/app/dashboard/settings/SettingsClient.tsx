@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle
+  Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle, Sparkles
 } from "lucide-react";
 
 type Profile = {
@@ -21,6 +21,32 @@ type ChecklistItem = {
 type SettingsClientProps = {
   profile: Profile;
 };
+
+const COLOR_PRESETS = [
+  { name: "Indigo (Default)", value: "indigo", primary: "#4f46e5", hover: "#6366f1", dark: "#3730a3", bg: "bg-indigo-600" },
+  { name: "Emerald", value: "emerald", primary: "#059669", hover: "#10b981", dark: "#047857", bg: "bg-emerald-600" },
+  { name: "Violet", value: "violet", primary: "#7c3aed", hover: "#8b5cf6", dark: "#6d28d9", bg: "bg-violet-600" },
+  { name: "Rose", value: "rose", primary: "#e11d48", hover: "#f43f5e", dark: "#be123c", bg: "bg-rose-600" },
+  { name: "Amber", value: "amber", primary: "#d97706", hover: "#f59e0b", dark: "#b45309", bg: "bg-amber-600" },
+  { name: "Blue", value: "blue", primary: "#2563eb", hover: "#3b82f6", dark: "#1d4ed8", bg: "bg-blue-600" },
+  { name: "Cyan", value: "cyan", primary: "#0891b2", hover: "#06b6d4", dark: "#0e7490", bg: "bg-cyan-600" }
+];
+
+function adjustColorBrightness(hex: string, percent: number) {
+  let R = parseInt(hex.substring(1, 3), 16);
+  let G = parseInt(hex.substring(3, 5), 16);
+  let B = parseInt(hex.substring(5, 7), 16);
+
+  R = Math.max(0, Math.min(255, R + percent));
+  G = Math.max(0, Math.min(255, G + percent));
+  B = Math.max(0, Math.min(255, B + percent));
+
+  const rHex = R.toString(16).padStart(2, '0');
+  const gHex = G.toString(16).padStart(2, '0');
+  const bHex = B.toString(16).padStart(2, '0');
+
+  return `#${rHex}${gHex}${bHex}`;
+}
 
 export default function SettingsClient({ profile }: SettingsClientProps) {
   // 1. Dashboard Widget Visibility Settings (State & Initialization)
@@ -43,7 +69,11 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newTodoText, setNewTodoText] = useState("");
 
-  const [activeSubTab, setActiveSubTab] = useState<"widgets" | "notes">("widgets");
+  const [activeSubTab, setActiveSubTab] = useState<"widgets" | "notes" | "theme">("widgets");
+
+  // 4. Accent Theme Color Settings State
+  const [selectedPreset, setSelectedPreset] = useState("indigo");
+  const [customColor, setCustomColor] = useState("#4f46e5");
 
   // Load from local storage
   useEffect(() => {
@@ -72,6 +102,13 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         console.error("Failed to parse checklist:", e);
       }
     }
+
+    // Theme Color Preset
+    const savedPreset = localStorage.getItem("primary_color_name") || "indigo";
+    setSelectedPreset(savedPreset);
+
+    const savedColor = localStorage.getItem("primary_color") || "#4f46e5";
+    setCustomColor(savedColor);
   }, []);
 
   // Save widgets settings
@@ -118,6 +155,37 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
     localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
   };
 
+  const handleApplyPreset = (preset: typeof COLOR_PRESETS[0]) => {
+    setSelectedPreset(preset.value);
+    localStorage.setItem("primary_color_name", preset.value);
+    localStorage.setItem("primary_color", preset.primary);
+    localStorage.setItem("primary_color_hover", preset.hover);
+    localStorage.setItem("primary_color_dark", preset.dark);
+    
+    document.documentElement.style.setProperty('--color-primary', preset.primary);
+    document.documentElement.style.setProperty('--color-primary-hover', preset.hover);
+    document.documentElement.style.setProperty('--color-primary-dark', preset.dark);
+  };
+
+  const handleCustomColorChange = (hex: string) => {
+    setCustomColor(hex);
+    if (!/^#[0-9A-F]{6}$/i.test(hex)) {
+      return;
+    }
+    setSelectedPreset("custom");
+    localStorage.setItem("primary_color_name", "custom");
+    localStorage.setItem("primary_color", hex);
+    
+    const hover = adjustColorBrightness(hex, 25);
+    const dark = adjustColorBrightness(hex, -25);
+    localStorage.setItem("primary_color_hover", hover);
+    localStorage.setItem("primary_color_dark", dark);
+    
+    document.documentElement.style.setProperty('--color-primary', hex);
+    document.documentElement.style.setProperty('--color-primary-hover', hover);
+    document.documentElement.style.setProperty('--color-primary-dark', dark);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       {/* Sub navigation column */}
@@ -143,6 +211,17 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
         >
           <CheckSquare size={14} className={activeSubTab === "notes" ? "text-indigo-400" : ""} />
           Personal Notes & Checklist
+        </button>
+        <button
+          onClick={() => setActiveSubTab("theme")}
+          className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left border ${
+            activeSubTab === "theme"
+              ? "bg-neutral-900 text-white border-neutral-800 shadow"
+              : "text-neutral-500 hover:bg-neutral-900/50 hover:text-white border-transparent"
+          }`}
+        >
+          <Sparkles size={14} className={activeSubTab === "theme" ? "text-indigo-400" : ""} />
+          Dashboard Accent Color
         </button>
       </div>
 
@@ -185,7 +264,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                     onClick={() => toggleWidget(widgetKey)}
                     className={`flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer select-none ${
                       isChecked
-                        ? "bg-neutral-950/80 border-neutral-800 shadow-inner"
+                        ? "bg-neutral-955/80 border-neutral-800 shadow-inner"
                         : "bg-neutral-950/20 border-neutral-900/60 opacity-60 hover:opacity-85 hover:border-neutral-850"
                     }`}
                   >
@@ -211,7 +290,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
               })}
             </div>
           </motion.div>
-        ) : (
+        ) : activeSubTab === "notes" ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -273,7 +352,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                       key={item.id}
                       className={`flex items-center justify-between p-3 rounded-xl border transition-colors ${
                         item.completed
-                          ? "bg-neutral-950/30 border-neutral-850/50 opacity-60"
+                          ? "bg-neutral-955/30 border-neutral-850/50 opacity-60"
                           : "bg-neutral-950 border-neutral-800/80"
                       }`}
                     >
@@ -299,6 +378,77 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                     </div>
                   ))
                 )}
+              </div>
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-6"
+          >
+            <div>
+              <h2 className="text-white font-bold text-sm uppercase tracking-wider flex items-center gap-2">
+                <Sparkles size={16} className="text-indigo-450" />
+                Customize Dashboard Theme Color
+              </h2>
+              <p className="text-neutral-500 text-[11px] mt-1">
+                Change the main color theme of your dashboard overview links, buttons, borders, and graphs. Settings apply instantly.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {COLOR_PRESETS.map((preset) => {
+                const isSelected = selectedPreset === preset.value;
+                return (
+                  <button
+                    key={preset.value}
+                    onClick={() => handleApplyPreset(preset)}
+                    className={`flex flex-col items-center gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                      isSelected
+                        ? "bg-neutral-955 border-neutral-800 shadow-inner ring-2 ring-indigo-500/20"
+                        : "bg-neutral-950/40 border-neutral-900/60 hover:border-neutral-800"
+                    }`}
+                  >
+                    <div className={`w-8 h-8 rounded-full ${preset.bg} shadow-md flex items-center justify-center`}>
+                      {isSelected && (
+                        <div className="w-2.5 h-2.5 rounded-full bg-white shadow-inner" />
+                      )}
+                    </div>
+                    <span className={`text-xs font-bold ${isSelected ? "text-white" : "text-neutral-400"}`}>
+                      {preset.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="border-t border-neutral-800/80 pt-6 space-y-4">
+              <div>
+                <h3 className="text-neutral-300 text-xs font-bold uppercase tracking-wider">
+                  Custom Hex Color
+                </h3>
+                <p className="text-neutral-500 text-[10px] mt-0.5">
+                  Select a custom primary accent color. The hover and dark states will be generated automatically.
+                </p>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <input
+                  type="color"
+                  value={customColor}
+                  onChange={(e) => handleCustomColorChange(e.target.value)}
+                  className="w-10 h-10 rounded border border-neutral-800 bg-transparent cursor-pointer"
+                />
+                <div>
+                  <input
+                    type="text"
+                    value={customColor}
+                    onChange={(e) => handleCustomColorChange(e.target.value)}
+                    placeholder="#4f46e5"
+                    className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase focus:outline-none focus:border-neutral-700 w-32 font-mono"
+                  />
+                </div>
               </div>
             </div>
           </motion.div>
