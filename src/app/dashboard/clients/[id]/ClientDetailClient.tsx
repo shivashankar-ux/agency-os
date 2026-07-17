@@ -380,6 +380,12 @@ export default function ClientDetailClient({
     currentProfile.role === "admin" ||
     currentProfile.role === "manager";
 
+  const canManageClientTasks =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "admin" ||
+    currentProfile.role === "manager" ||
+    currentProfile.role === "member";
+
   const isOwnerOrAdmin =
     currentProfile.role === "owner" ||
     currentProfile.role === "admin";
@@ -768,7 +774,7 @@ export default function ClientDetailClient({
               </div>
             </div>
 
-            {isOwnerOrManager && (
+            {canManageClientTasks && (
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setIsCsvModalOpen(true)}

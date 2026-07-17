@@ -24,35 +24,7 @@ export default async function ClientsPage() {
 
   const supabase = await createClient();
 
-  // If standard member, render their client tasks calendar directly
-  if (profile.role === "member") {
-    const { data: memberTasks } = await supabase
-      .from("tasks")
-      .select("id, title, description, status, priority, due_date, assigned_to, project_id, projects(name, clients(name)), assignee:profiles!tasks_assigned_to_fkey(id, name, role)")
-      .eq("assigned_to", profile.id)
-      .order("due_date", { ascending: true });
 
-    const { data: allProfiles } = await supabase
-      .from("profiles")
-      .select("id, name, role")
-      .order("name");
-
-    return (
-      <div>
-        <div className="mb-6">
-          <h1 className="text-xl font-semibold text-white">My Client Schedule</h1>
-          <p className="text-neutral-500 text-sm mt-1">
-            View your assigned client tasks and calendar milestones
-          </p>
-        </div>
-        <MemberClientsCalendar
-          tasks={(memberTasks ?? []) as any}
-          currentProfile={profile as any}
-          allProfiles={(allProfiles ?? []) as any}
-        />
-      </div>
-    );
-  }
 
   let query = supabase.from("clients").select("*").order("created_at", { ascending: false });
   query = await applyClientFilters(query, profile.id, clientScope);
