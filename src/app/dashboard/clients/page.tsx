@@ -71,7 +71,7 @@ export default async function ClientsPage() {
             {clients?.length ?? 0} client{clients?.length === 1 ? "" : "s"}
           </p>
         </div>
-        {canCreateClients && <AddClientButton />}
+        {canCreateClients && <AddClientButton role={profile.role as any} />}
       </div>
 
       <ClientsTable clients={clients ?? []} role={profile.role as any} />

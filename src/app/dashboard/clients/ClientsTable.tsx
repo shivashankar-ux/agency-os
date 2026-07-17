@@ -168,9 +168,11 @@ export default function ClientsTable({
                   <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
                     Type
                   </th>
-                  <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
-                    Retainer (₹)
-                  </th>
+                  {isOwnerOrAdmin && (
+                    <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
+                      Retainer (₹)
+                    </th>
+                  )}
                   <th className="px-5 py-3 text-neutral-500 font-medium text-xs">
                     Status
                   </th>
@@ -210,11 +212,13 @@ export default function ClientsTable({
                     <td className="px-5 py-3 text-neutral-400 capitalize">
                       {client.contract_type.replace("_", " ")}
                     </td>
-                    <td className="px-5 py-3 text-neutral-400">
-                      {client.monthly_retainer_value
-                        ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
-                        : "—"}
-                    </td>
+                    {isOwnerOrAdmin && (
+                      <td className="px-5 py-3 text-neutral-400">
+                        {client.monthly_retainer_value
+                          ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
+                          : "—"}
+                      </td>
+                    )}
                     <td className="px-5 py-3">
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full border capitalize ${
@@ -367,7 +371,7 @@ export default function ClientsTable({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className={isOwnerOrAdmin ? "" : "col-span-2"}>
                   <label className="block text-xs font-medium text-neutral-400 mb-1.5">
                     Contract Type
                   </label>
@@ -384,24 +388,26 @@ export default function ClientsTable({
                     <option value="one_time">One-time</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                    Retainer Value (₹)
-                  </label>
-                  <input
-                    placeholder="Monthly value (₹)"
-                    type="number"
-                    value={editForm.monthly_retainer_value}
-                    onChange={(e) =>
-                      setEditForm({
-                        ...editForm,
-                        monthly_retainer_value: e.target.value,
-                      })
-                    }
-                    disabled={editLoading}
-                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  />
-                </div>
+                {isOwnerOrAdmin && (
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+                      Retainer Value (₹)
+                    </label>
+                    <input
+                      placeholder="Monthly value (₹)"
+                      type="number"
+                      value={editForm.monthly_retainer_value}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          monthly_retainer_value: e.target.value,
+                        })
+                      }
+                      disabled={editLoading}
+                      className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">

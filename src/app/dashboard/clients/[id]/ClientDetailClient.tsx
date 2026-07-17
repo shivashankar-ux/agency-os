@@ -380,6 +380,10 @@ export default function ClientDetailClient({
     currentProfile.role === "admin" ||
     currentProfile.role === "manager";
 
+  const isOwnerOrAdmin =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "admin";
+
   // Update Team Assignments
   async function handleSaveAssignments() {
     setLoading(true);
@@ -471,17 +475,19 @@ export default function ClientDetailClient({
               {client.contract_type.replace("_", " ")}
             </span>
           </div>
-          <div>
-            <span className="text-neutral-500 block mb-1">Monthly Retainer</span>
-            <div className="flex items-center text-white font-medium">
-              <DollarSign size={14} className="text-neutral-500 mr-0.5" />
-              <span>
-                {client.monthly_retainer_value
-                  ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
-                  : "0"}
-              </span>
+          {isOwnerOrAdmin && (
+            <div>
+              <span className="text-neutral-500 block mb-1">Monthly Retainer</span>
+              <div className="flex items-center text-white font-medium">
+                <DollarSign size={14} className="text-neutral-500 mr-0.5" />
+                <span>
+                  {client.monthly_retainer_value
+                    ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
+                    : "0"}
+                </span>
+              </div>
             </div>
-          </div>
+          )}
           <div>
             <span className="text-neutral-500 block mb-1">Start Date</span>
             <div className="flex items-center text-white font-medium">

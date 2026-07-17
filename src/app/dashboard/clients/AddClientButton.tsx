@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X } from "lucide-react";
 
-export default function AddClientButton() {
+export default function AddClientButton({ 
+  role 
+}: { 
+  role?: "owner" | "admin" | "manager" | "member" | "client";
+}) {
+  const isOwnerOrAdmin = role === "owner" || role === "admin";
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -134,29 +139,33 @@ export default function AddClientButton() {
                 className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
               <div className="grid grid-cols-2 gap-3">
-                <select
-                  value={form.contract_type}
-                  onChange={(e) =>
-                    setForm({ ...form, contract_type: e.target.value })
-                  }
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                >
-                  <option value="project">Project</option>
-                  <option value="retainer">Retainer</option>
-                  <option value="one_time">One-time</option>
-                </select>
-                <input
-                  placeholder="Monthly value (₹)"
-                  type="number"
-                  value={form.monthly_retainer_value}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      monthly_retainer_value: e.target.value,
-                    })
-                  }
-                  className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
+                <div className={isOwnerOrAdmin ? "" : "col-span-2"}>
+                  <select
+                    value={form.contract_type}
+                    onChange={(e) =>
+                      setForm({ ...form, contract_type: e.target.value })
+                    }
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="project">Project</option>
+                    <option value="retainer">Retainer</option>
+                    <option value="one_time">One-time</option>
+                  </select>
+                </div>
+                {isOwnerOrAdmin && (
+                  <input
+                    placeholder="Monthly value (₹)"
+                    type="number"
+                    value={form.monthly_retainer_value}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        monthly_retainer_value: e.target.value,
+                      })
+                    }
+                    className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                )}
               </div>
               <input
                 type="date"
