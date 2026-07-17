@@ -132,11 +132,97 @@ export default function DashboardClient({
     localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
   };
 
-  const handleDeleteTodo = (id: string) => {
-    const updated = checklist.filter(t => t.id !== id);
-    setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
-  };
+  const renderNotesChecklist = () => (
+    <AnimatePresence mode="popLayout">
+      {visibleWidgets.notesChecklist && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm"
+        >
+          <div className="flex items-center gap-2 border-b border-neutral-800 pb-3 justify-between">
+            <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+              <CheckSquare size={14} className="text-indigo-400" />
+              My Notes & Checklist
+            </h3>
+            <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Scratchpad</span>
+          </div>
+
+          <div className="space-y-3 text-xs">
+            {/* Notepad summary */}
+            <div className="space-y-1">
+              <label className="text-[10px] text-neutral-500 font-semibold flex items-center gap-1 uppercase tracking-wider">
+                <FileText size={11} /> Quick Notepad
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => handleNotesChange(e.target.value)}
+                placeholder="Type personal notes here..."
+                className="w-full h-20 bg-neutral-950/60 border border-neutral-800 rounded-lg p-2.5 text-xxs text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-neutral-700 resize-none font-sans"
+              />
+            </div>
+
+            {/* Todo list summary */}
+            <div className="space-y-2">
+              <label className="text-[10px] text-neutral-500 font-semibold flex items-center gap-1 uppercase tracking-wider">
+                <CheckSquare size={11} /> Checklist ({checklist.filter(t => !t.completed).length} remaining)
+              </label>
+              <form onSubmit={handleAddTodo} className="flex gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Add quick task..."
+                  value={newTodo}
+                  onChange={(e) => setNewTodo(e.target.value)}
+                  className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xxs text-white focus:outline-none focus:border-neutral-700 font-sans"
+                />
+                <button
+                  type="submit"
+                  disabled={!newTodo.trim()}
+                  className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white-literal px-2.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <Plus size={12} />
+                </button>
+              </form>
+
+              <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
+                {checklist.length === 0 ? (
+                  <div className="text-center py-4 text-[10px] text-neutral-500 italic">No checklist items</div>
+                ) : (
+                  checklist.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between bg-neutral-950/40 p-2 rounded-lg border border-neutral-850/40 group transition-all"
+                    >
+                      <button
+                        onClick={() => handleToggleTodo(item.id)}
+                        className="flex items-center gap-2 text-left flex-1 select-none cursor-pointer"
+                      >
+                        {item.completed ? (
+                          <CheckCircle2 size={13} className="text-indigo-400 shrink-0" />
+                        ) : (
+                          <Circle size={13} className="text-neutral-600 hover:text-indigo-400 shrink-0" />
+                        )}
+                        <span className={`text-[11px] truncate max-w-[160px] ${item.completed ? "line-through text-neutral-500" : "text-neutral-300"}`}>
+                          {item.text}
+                        </span>
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTodo(item.id)}
+                        className="text-neutral-600 hover:text-red-400 p-0.5 rounded transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
+                      >
+                        <Trash2 size={11} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
 
   return (
     <div className="space-y-6">
@@ -236,9 +322,20 @@ export default function DashboardClient({
         )}
       </AnimatePresence>
 
-      {/* SECTION 7: Quick Actions */}
-      {visibleWidgets.quickActions && (
-        <QuickActions />
+      {/* SECTION 7: Quick Actions & Notes (Second Row) */}
+      {(profile.role === "owner" || profile.role === "admin") ? (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className={`${visibleWidgets.notesChecklist && visibleWidgets.quickActions ? "lg:col-span-8" : "lg:col-span-12"}`}>
+            {visibleWidgets.quickActions && <QuickActions />}
+          </div>
+          {visibleWidgets.notesChecklist && (
+            <div className={`${visibleWidgets.quickActions ? "lg:col-span-4" : "lg:col-span-12"}`}>
+              {renderNotesChecklist()}
+            </div>
+          )}
+        </div>
+      ) : (
+        visibleWidgets.quickActions && <QuickActions />
       )}
 
       {/* GRID SECTION: Split layout */}
@@ -269,96 +366,8 @@ export default function DashboardClient({
         {/* Sidebar Columns (4/12 width) */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* PERSONAL NOTES & CHECKLIST WIDGET */}
-          <AnimatePresence mode="popLayout">
-            {visibleWidgets.notesChecklist && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm"
-              >
-                <div className="flex items-center gap-2 border-b border-neutral-800 pb-3 justify-between">
-                  <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
-                    <CheckSquare size={14} className="text-indigo-400" />
-                    My Notes & Checklist
-                  </h3>
-                  <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Scratchpad</span>
-                </div>
-
-                <div className="space-y-3 text-xs">
-                  {/* Notepad summary */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] text-neutral-500 font-semibold flex items-center gap-1 uppercase tracking-wider">
-                      <FileText size={11} /> Quick Notepad
-                    </label>
-                    <textarea
-                      value={notes}
-                      onChange={(e) => handleNotesChange(e.target.value)}
-                      placeholder="Type personal notes here..."
-                      className="w-full h-20 bg-neutral-950/60 border border-neutral-800 rounded-lg p-2.5 text-xxs text-neutral-200 placeholder-neutral-600 focus:outline-none focus:border-neutral-700 resize-none font-sans"
-                    />
-                  </div>
-
-                  {/* Todo list summary */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] text-neutral-500 font-semibold flex items-center gap-1 uppercase tracking-wider">
-                      <CheckSquare size={11} /> Checklist ({checklist.filter(t => !t.completed).length} remaining)
-                    </label>
-                    <form onSubmit={handleAddTodo} className="flex gap-1.5">
-                      <input
-                        type="text"
-                        placeholder="Add quick task..."
-                        value={newTodo}
-                        onChange={(e) => setNewTodo(e.target.value)}
-                        className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xxs text-white focus:outline-none focus:border-neutral-700 font-sans"
-                      />
-                      <button
-                        type="submit"
-                        disabled={!newTodo.trim()}
-                        className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white-literal px-2.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-                      >
-                        <Plus size={12} />
-                      </button>
-                    </form>
-
-                    <div className="space-y-1.5 max-h-[160px] overflow-y-auto pr-1">
-                      {checklist.length === 0 ? (
-                        <div className="text-center py-4 text-[10px] text-neutral-500 italic">No checklist items</div>
-                      ) : (
-                        checklist.map((item) => (
-                          <div
-                            key={item.id}
-                            className="flex items-center justify-between bg-neutral-950/40 p-2 rounded-lg border border-neutral-850/40 group transition-all"
-                          >
-                            <button
-                              onClick={() => handleToggleTodo(item.id)}
-                              className="flex items-center gap-2 text-left flex-1 select-none cursor-pointer"
-                            >
-                              {item.completed ? (
-                                <CheckCircle2 size={13} className="text-indigo-400 shrink-0" />
-                              ) : (
-                                <Circle size={13} className="text-neutral-600 hover:text-indigo-400 shrink-0" />
-                              )}
-                              <span className={`text-[11px] truncate max-w-[160px] ${item.completed ? "line-through text-neutral-500" : "text-neutral-300"}`}>
-                                {item.text}
-                              </span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteTodo(item.id)}
-                              className="text-neutral-600 hover:text-red-400 p-0.5 rounded transition-colors cursor-pointer opacity-0 group-hover:opacity-100"
-                            >
-                              <Trash2 size={11} />
-                            </button>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {/* PERSONAL NOTES & CHECKLIST WIDGET - only for non-owners/non-admins */}
+          {(profile.role !== "owner" && profile.role !== "admin") && renderNotesChecklist()}
 
           {/* SECTION 8: Notifications Widget */}
           {visibleWidgets.notifications && (

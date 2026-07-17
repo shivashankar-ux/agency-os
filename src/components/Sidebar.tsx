@@ -22,11 +22,6 @@ import {
   Moon,
   Menu,
   X,
-  FileText,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Circle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -37,9 +32,6 @@ export default function Sidebar({ profile }: { profile: Profile }) {
   const { canView, hasPermission } = usePermissions();
   const [isOpen, setIsOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [notes, setNotes] = useState("");
-  const [checklist, setChecklist] = useState<{ id: string; text: string; completed: boolean }[]>([]);
-  const [newTodo, setNewTodo] = useState("");
 
   // Close drawer on route change
   useEffect(() => {
@@ -50,46 +42,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     if (typeof document !== 'undefined' && document.documentElement.classList.contains("light-mode")) {
       setTheme("light");
     }
-
-    // Load Notepad
-    const storedNotes = localStorage.getItem("personal_dashboard_notes");
-    if (storedNotes) setNotes(storedNotes);
-
-    // Load Checklist
-    const storedChecklist = localStorage.getItem("personal_dashboard_checklist");
-    if (storedChecklist) {
-      try {
-        setChecklist(JSON.parse(storedChecklist));
-      } catch (e) {}
-    }
   }, []);
-
-  const handleNotesChange = (val: string) => {
-    setNotes(val);
-    localStorage.setItem("personal_dashboard_notes", val);
-  };
-
-  const handleAddTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTodo.trim()) return;
-    const newItem = { id: Date.now().toString(), text: newTodo.trim(), completed: false };
-    const updated = [...checklist, newItem];
-    setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
-    setNewTodo("");
-  };
-
-  const handleToggleTodo = (id: string) => {
-    const updated = checklist.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t));
-    setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
-  };
-
-  const handleDeleteTodo = (id: string) => {
-    const updated = checklist.filter((t) => t.id !== id);
-    setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
-  };
 
   const toggleTheme = () => {
     if (theme === "dark") {
@@ -163,69 +116,6 @@ export default function Sidebar({ profile }: { profile: Profile }) {
             </Link>
           );
         })}
-
-        {/* Quick Notepad & Checklist */}
-        <div className="mt-6 px-1">
-          <div className="flex items-center gap-1.5 mb-2 text-neutral-500">
-            <FileText size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Quick Notes</span>
-          </div>
-          <textarea
-            value={notes}
-            onChange={(e) => handleNotesChange(e.target.value)}
-            placeholder="Type notes here..."
-            className="w-full h-20 bg-neutral-950/40 border border-neutral-800 rounded-lg p-2 text-xs text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-indigo-500/50 resize-none font-sans"
-          />
-
-          <div className="flex items-center gap-1.5 mt-4 mb-2 text-neutral-500">
-            <CheckSquare size={12} />
-            <span className="text-[10px] font-bold uppercase tracking-wider">Todos</span>
-          </div>
-          <form onSubmit={handleAddTodo} className="flex gap-1.5 mb-2">
-            <input
-              type="text"
-              placeholder="Add task..."
-              value={newTodo}
-              onChange={(e) => setNewTodo(e.target.value)}
-              className="flex-1 bg-neutral-950/40 border border-neutral-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500/50 font-sans"
-            />
-            <button
-              type="submit"
-              disabled={!newTodo.trim()}
-              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal px-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <Plus size={12} />
-            </button>
-          </form>
-          <div className="space-y-1 max-h-32 overflow-y-auto">
-            {checklist.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center justify-between bg-neutral-950/30 p-1.5 rounded-md group"
-              >
-                <button
-                  onClick={() => handleToggleTodo(item.id)}
-                  className="flex items-center gap-2 text-left flex-1 select-none cursor-pointer overflow-hidden"
-                >
-                  {item.completed ? (
-                    <CheckCircle2 size={12} className="text-indigo-400 shrink-0" />
-                  ) : (
-                    <Circle size={12} className="text-neutral-600 hover:text-indigo-400 shrink-0" />
-                  )}
-                  <span className={`text-[10px] truncate ${item.completed ? "line-through text-neutral-500" : "text-neutral-300"}`}>
-                    {item.text}
-                  </span>
-                </button>
-                <button
-                  onClick={() => handleDeleteTodo(item.id)}
-                  className="text-neutral-600 hover:text-red-400 p-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer shrink-0"
-                >
-                  <Trash2 size={10} />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </nav>
 
       {/* Theme Toggle */}
