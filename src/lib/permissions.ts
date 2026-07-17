@@ -32,7 +32,7 @@ export const getPermissions = cache(async (userId: string): Promise<PermissionMa
 
   // Helper to force finance permissions to false for non-owner and non-admin
   const enforceFinanceGating = (map: PermissionMap) => {
-    if (role !== "owner" && role !== "admin") {
+    if (role !== "owner") {
       if (map.finance) {
         for (const action in map.finance) {
           map.finance[action] = { allowed: false, scope: "own" };

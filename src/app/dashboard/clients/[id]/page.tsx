@@ -75,11 +75,21 @@ export default async function ClientDetailPage({ params }: Props) {
     .select("*, profiles(id, name, email, role)")
     .eq("client_id", id);
 
-  // Fetch all profiles in the org
   const { data: allProfiles } = await supabase
     .from("profiles")
-    .select("id, name, email, role, job_title")
+    .select("id, org_id, name, email, role, job_title")
     .order("name", { ascending: true });
+
+  // Fetch files (scoped to client)
+  const { data: clientFiles } = await supabase
+    .from("files")
+    .select(`
+      *,
+      uploader:profiles!files_created_by_fkey(name),
+      project:projects!files_project_id_fkey(name)
+    `)
+    .eq("client_id", id)
+    .order("created_at", { ascending: false });
 
   return (
     <ClientDetailClient
@@ -90,6 +100,7 @@ export default async function ClientDetailPage({ params }: Props) {
       allProfiles={allProfiles || []}
       currentProfile={profile}
       permissions={permissions}
+      initialFiles={clientFiles || []}
     />
   );
 }

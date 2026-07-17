@@ -6,7 +6,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { 
   Plus, X, Calendar, User, DollarSign, ChevronDown, ChevronUp, Users, ArrowLeft, Briefcase, ExternalLink,
-  ChevronLeft, ChevronRight, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, CircleDot, Loader2
+  ChevronLeft, ChevronRight, Upload, FileSpreadsheet, AlertTriangle, CheckCircle2, CircleDot, Loader2,
+  Copy, Trash2, ArrowUpRight, FolderOpen, Image as ImageIcon, FileArchive, FileCode, File, FileText
 } from "lucide-react";
 import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
 import CreateProjectModal from "../CreateProjectModal";
@@ -80,6 +81,7 @@ type Assignment = {
 
 type Profile = {
   id: string;
+  org_id: string;
   name: string;
   email: string;
   role: "owner" | "admin" | "manager" | "member" | "client";
@@ -105,6 +107,23 @@ const priorityColors: Record<string, string> = {
   high: "bg-red-950/60 text-red-400 border-red-900/50",
 };
 
+function fmtBytes(bytes: number) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+function getFileIcon(mime: string | null) {
+  if (!mime) return File;
+  if (mime.includes("pdf")) return FileText;
+  if (mime.includes("image")) return ImageIcon;
+  if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar")) return FileArchive;
+  if (mime.includes("javascript") || mime.includes("typescript") || mime.includes("json") || mime.includes("html") || mime.includes("css")) return FileCode;
+  return File;
+}
+
 export default function ClientDetailClient({
   client,
   projects,
@@ -113,6 +132,7 @@ export default function ClientDetailClient({
   allProfiles,
   currentProfile,
   permissions,
+  initialFiles = [],
 }: {
   client: Client;
   projects: Project[];
@@ -121,6 +141,7 @@ export default function ClientDetailClient({
   allProfiles: Profile[];
   currentProfile: Profile;
   permissions: any;
+  initialFiles?: any[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -147,7 +168,16 @@ export default function ClientDetailClient({
   );
 
   // Tab view selector
-  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar">("list");
+  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar" | "files">(
+    currentProfile.role === "member" ? "calendar" : "list"
+  );
+
+  // Files states
+  const [files, setFiles] = useState<any[]>(initialFiles);
+  const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [fileProjectId, setFileProjectId] = useState("");
 
   // Client calendar month navigation state
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -427,6 +457,82 @@ export default function ClientDetailClient({
     }
   }
 
+  // ── Client File Upload Handler ───────────────────────────────────────────
+  async function handleUploadFile(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedFile) return;
+
+    setUploadingFile(true);
+    setError(null);
+    try {
+      const bucketName = "agency-files";
+      const cleanedName = selectedFile.name.replace(/[^a-zA-Z0-9.]/g, "_");
+      const filePath = `${currentProfile.org_id}/${client.id}/${fileProjectId || "general"}/${Date.now()}_${cleanedName}`;
+
+      const { error: storageError } = await supabase.storage
+        .from(bucketName)
+        .upload(filePath, selectedFile, { cacheControl: "3600", upsert: true });
+
+      if (storageError) throw storageError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(filePath);
+
+      const { data: dbFile, error: dbError } = await supabase
+        .from("files")
+        .insert({
+          org_id: currentProfile.org_id,
+          client_id: client.id,
+          project_id: fileProjectId || null,
+          name: selectedFile.name,
+          file_path: filePath,
+          file_url: publicUrl,
+          file_size: selectedFile.size,
+          mime_type: selectedFile.type || null,
+        })
+        .select(`
+          *,
+          uploader:profiles!files_created_by_fkey(name),
+          project:projects!files_project_id_fkey(name)
+        `)
+        .single();
+
+      if (dbError) throw dbError;
+
+      setFiles((prev) => [dbFile as any, ...prev]);
+      setIsUploadOpen(false);
+      setSelectedFile(null);
+      setFileProjectId("");
+    } catch (err: any) {
+      setError(err.message || "Failed to upload file");
+    } finally {
+      setUploadingFile(false);
+    }
+  }
+
+  // ── Client File Delete Handler ───────────────────────────────────────────
+  async function handleDeleteFile(id: string, path: string) {
+    if (!confirm("Are you sure you want to permanently delete this file?")) return;
+
+    setError(null);
+    try {
+      await supabase.storage.from("agency-files").remove([path]);
+
+      const { error } = await supabase.from("files").delete().eq("id", id);
+      if (error) throw error;
+
+      setFiles((prev) => prev.filter((f) => f.id !== id));
+    } catch (err: any) {
+      setError(err.message || "Failed to delete file");
+    }
+  }
+
+  function handleCopyLink(url: string) {
+    navigator.clipboard.writeText(url);
+    alert("Public download link copied to clipboard!");
+  }
+
   return (
     <div className="space-y-6">
       {/* Top Breadcrumb Header */}
@@ -456,56 +562,58 @@ export default function ClientDetailClient({
           </span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
-          <div>
-            <span className="text-neutral-500 block mb-1">Contact Person</span>
-            <span className="text-white font-medium">{client.contact_person || "—"}</span>
-          </div>
-          <div>
-            <span className="text-neutral-500 block mb-1">Email Address</span>
-            {client.email ? (
-              <a href={`mailto:${client.email}`} className="text-indigo-400 hover:underline">
-                {client.email}
-              </a>
-            ) : (
-              <span className="text-white font-medium">—</span>
-            )}
-          </div>
-          <div>
-            <span className="text-neutral-500 block mb-1">Phone Number</span>
-            <span className="text-white font-medium">{client.phone || "—"}</span>
-          </div>
-          <div>
-            <span className="text-neutral-500 block mb-1">Contract Type</span>
-            <span className="text-white font-medium capitalize">
-              {client.contract_type.replace("_", " ")}
-            </span>
-          </div>
-          {isOwnerOrAdmin && (
+        {isOwnerOrManager && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm">
             <div>
-              <span className="text-neutral-500 block mb-1">Monthly Retainer</span>
+              <span className="text-neutral-500 block mb-1">Contact Person</span>
+              <span className="text-white font-medium">{client.contact_person || "—"}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 block mb-1">Email Address</span>
+              {client.email ? (
+                <a href={`mailto:${client.email}`} className="text-indigo-400 hover:underline">
+                  {client.email}
+                </a>
+              ) : (
+                <span className="text-white font-medium">—</span>
+              )}
+            </div>
+            <div>
+              <span className="text-neutral-500 block mb-1">Phone Number</span>
+              <span className="text-white font-medium">{client.phone || "—"}</span>
+            </div>
+            <div>
+              <span className="text-neutral-500 block mb-1">Contract Type</span>
+              <span className="text-white font-medium capitalize">
+                {client.contract_type.replace("_", " ")}
+              </span>
+            </div>
+            {isOwnerOrAdmin && (
+              <div>
+                <span className="text-neutral-500 block mb-1">Monthly Retainer</span>
+                <div className="flex items-center text-white font-medium">
+                  <DollarSign size={14} className="text-neutral-500 mr-0.5" />
+                  <span>
+                    {client.monthly_retainer_value
+                      ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
+                      : "0"}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div>
+              <span className="text-neutral-500 block mb-1">Start Date</span>
               <div className="flex items-center text-white font-medium">
-                <DollarSign size={14} className="text-neutral-500 mr-0.5" />
-                <span>
-                  {client.monthly_retainer_value
-                    ? `₹${Number(client.monthly_retainer_value).toLocaleString("en-IN")}`
-                    : "0"}
-                </span>
+                <Calendar size={14} className="text-neutral-500 mr-1" />
+                <span>{client.start_date || "—"}</span>
               </div>
             </div>
-          )}
-          <div>
-            <span className="text-neutral-500 block mb-1">Start Date</span>
-            <div className="flex items-center text-white font-medium">
-              <Calendar size={14} className="text-neutral-500 mr-1" />
-              <span>{client.start_date || "—"}</span>
+            <div className="sm:col-span-2">
+              <span className="text-neutral-500 block mb-1">GST Number</span>
+              <span className="text-white font-medium">{client.gst_number || "—"}</span>
             </div>
           </div>
-          <div className="sm:col-span-2">
-            <span className="text-neutral-500 block mb-1">GST Number</span>
-            <span className="text-white font-medium">{client.gst_number || "—"}</span>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Inline Global Error Banner */}
@@ -520,14 +628,16 @@ export default function ClientDetailClient({
 
       {/* View Tabs Selector */}
       <div className="flex border-b border-neutral-800 gap-6">
-        <button
-          onClick={() => setActiveViewTab("list")}
-          className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
-            activeViewTab === "list" ? "text-indigo-400 border-b-2 border-indigo-500 font-semibold" : "text-neutral-500 hover:text-white"
-          }`}
-        >
-          Projects & Tasks List
-        </button>
+        {isOwnerOrManager && (
+          <button
+            onClick={() => setActiveViewTab("list")}
+            className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+              activeViewTab === "list" ? "text-indigo-400 border-b-2 border-indigo-500 font-semibold" : "text-neutral-500 hover:text-white"
+            }`}
+          >
+            Projects & Tasks List
+          </button>
+        )}
         <button
           onClick={() => setActiveViewTab("calendar")}
           className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
@@ -536,6 +646,16 @@ export default function ClientDetailClient({
         >
           Client Calendar View
         </button>
+        {canManageClientTasks && (
+          <button
+            onClick={() => setActiveViewTab("files")}
+            className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+              activeViewTab === "files" ? "text-indigo-400 border-b-2 border-indigo-500 font-semibold" : "text-neutral-500 hover:text-white"
+            }`}
+          >
+            Shared Files
+          </button>
+        )}
       </div>
 
       {activeViewTab === "list" ? (
@@ -818,18 +938,17 @@ export default function ClientDetailClient({
                   <div
                     key={idx}
                     onClick={() => {
-                      if (day && isOwnerOrManager) {
+                      if (day && canManageClientTasks) {
                         if (projects.length === 0) {
                           alert("Please create a project first before adding tasks.");
                           return;
                         }
-                        const formattedDate = dateKey(day);
                         setSelectedProjectIdForTask(projects[0].id);
                         setIsTaskModalOpen(true);
                       }
                     }}
                     className={`min-h-[105px] p-2 border-b border-r border-neutral-800/40 transition-colors relative select-none
-                      ${day ? (isOwnerOrManager ? "cursor-pointer hover:bg-neutral-850/15" : "cursor-default") : "bg-neutral-950/10"}
+                      ${day ? (canManageClientTasks ? "cursor-pointer hover:bg-neutral-850/15" : "cursor-default") : "bg-neutral-950/10"}
                       ${idx % 7 === 6 ? "border-r-0" : ""}`}
                   >
                     {day && (
@@ -858,6 +977,97 @@ export default function ClientDetailClient({
                 );
               })}
             </div>
+          </div>
+        </div>
+      )}
+
+      {activeViewTab === "files" && canManageClientTasks && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
+            <div>
+              <h2 className="text-white text-base font-bold flex items-center gap-2">
+                <FolderOpen size={18} className="text-indigo-400" />
+                Shared Client Files
+              </h2>
+              <p className="text-neutral-500 text-xxs mt-0.5">
+                Assets and PDFs shared with {client.name}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsUploadOpen(true)}
+              className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer"
+            >
+              <Upload size={14} /> Upload File
+            </button>
+          </div>
+
+          {/* Files Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {files.map((file) => {
+              const Icon = getFileIcon(file.mime_type);
+              const fileProjectName = file.project?.name || "General Assets";
+              return (
+                <div
+                  key={file.id}
+                  className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between hover:border-neutral-700 transition-all group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-850 group-hover:border-indigo-900 transition-colors">
+                        <Icon size={22} className="text-indigo-400" />
+                      </div>
+                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => handleCopyLink(file.file_url)}
+                          title="Copy Link"
+                          className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-950 rounded-lg transition-all cursor-pointer"
+                        >
+                          <Copy size={13} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteFile(file.id, file.file_path)}
+                          title="Delete File"
+                          className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-neutral-955 rounded-lg transition-all cursor-pointer"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="text-white text-xs font-bold truncate" title={file.name}>
+                        {file.name}
+                      </h3>
+                      <p className="text-neutral-500 text-xxs mt-0.5">{fmtBytes(file.file_size)}</p>
+                    </div>
+
+                    <div className="flex items-center gap-1 text-xxs text-neutral-400">
+                      <span className="text-neutral-600">Project:</span>
+                      <span className="font-semibold truncate max-w-32">{fileProjectName}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-neutral-850/50 mt-4 pt-3 flex items-center justify-between text-xxs text-neutral-500">
+                    <span>{new Date(file.created_at).toLocaleDateString("en-IN")}</span>
+                    <a
+                      href={file.file_url}
+                      download={file.name}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-bold"
+                    >
+                      Download <ArrowUpRight size={11} />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+            {files.length === 0 && (
+              <div className="col-span-full py-16 text-center border border-dashed border-neutral-800 rounded-3xl">
+                <FolderOpen size={32} className="text-neutral-700 mx-auto mb-3" />
+                <p className="text-neutral-500 text-xs italic">No shared files found for this client.</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -945,6 +1155,79 @@ export default function ClientDetailClient({
                 {loading ? "Saving..." : "Save Assignments"}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 4: UPLOAD CLIENT ASSET */}
+      {isUploadOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl w-full max-w-md p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-4 mb-4">
+              <h3 className="text-white font-bold text-sm uppercase tracking-wider">Upload Client Asset</h3>
+              <button
+                onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }}
+                className="text-neutral-500 hover:text-white transition-colors"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleUploadFile} className="space-y-4 text-xs">
+              {/* File Dropzone */}
+              <div className="border-2 border-dashed border-neutral-800 hover:border-neutral-700 bg-neutral-950 p-6 rounded-2xl text-center cursor-pointer transition-colors relative">
+                <input
+                  type="file"
+                  required
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <Upload size={22} className="text-neutral-600 mx-auto mb-2" />
+                {selectedFile ? (
+                  <div>
+                    <p className="text-white font-semibold">{selectedFile.name}</p>
+                    <p className="text-neutral-500 text-xxs mt-0.5">{fmtBytes(selectedFile.size)}</p>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-neutral-400 font-medium">Click or drag file here to upload</p>
+                    <p className="text-neutral-600 text-xxs mt-0.5">Maximum size: 50MB</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Project association */}
+              <div className="space-y-1.5">
+                <label className="text-neutral-400 font-semibold">Project Association</label>
+                <select
+                  value={fileProjectId}
+                  onChange={(e) => setFileProjectId(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none"
+                >
+                  <option value="">None (General Client Asset)</option>
+                  {projects.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2.5 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => { setIsUploadOpen(false); setSelectedFile(null); }}
+                  className="flex-1 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-xl py-2.5 font-semibold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={uploadingFile || !selectedFile}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white-literal rounded-xl py-2.5 font-semibold transition-all"
+                >
+                  {uploadingFile ? "Uploading..." : "Confirm Upload"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
