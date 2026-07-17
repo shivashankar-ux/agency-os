@@ -105,13 +105,13 @@ export async function POST(req: NextRequest) {
         subject: `You have been invited to join Agency OS`,
         html: `
           <div style="font-family: sans-serif; background-color: #0a0a0a; color: #ffffff; padding: 30px; border-radius: 12px; border: 1px solid #1f1f1f; max-width: 500px; margin: 0 auto;">
-            <h1 style="color: #6366f1; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">Welcome to the Agency!</h1>
+            <h1 style="color: #F59E0B; font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center;">Welcome to the Agency!</h1>
             <p style="font-size: 15px; line-height: 1.6; color: #a3a3a3; margin-bottom: 25px;">
               Hello <strong>${name}</strong>,<br /><br />
               You have been invited to join <strong>Agency OS</strong> as a <strong>${role}</strong>. Set your password to accept the invitation and access your dashboard.
             </p>
             <div style="text-align: center; margin-bottom: 25px;">
-              <a href="${inviteData.properties.action_link}" style="background-color: #4f46e5; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; display: inline-block; transition: background-color 0.2s;">
+              <a href="${inviteData.properties.action_link}" style="background-color: #F59E0B; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; display: inline-block; transition: background-color 0.2s;">
                 Set Account Password
               </a>
             </div>

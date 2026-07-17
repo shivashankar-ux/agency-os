@@ -23,11 +23,11 @@ type SettingsClientProps = {
 };
 
 const COLOR_PRESETS = [
-  { name: "Indigo (Default)", value: "indigo", primary: "#4f46e5", hover: "#6366f1", dark: "#3730a3", bg: "bg-indigo-600" },
+  { name: "Amber (Default)", value: "amber", primary: "#F59E0B", hover: "#D97706", dark: "#B45309", bg: "bg-amber-600" },
+  { name: "Indigo", value: "indigo", primary: "#4f46e5", hover: "#6366f1", dark: "#3730a3", bg: "bg-indigo-600" },
   { name: "Emerald", value: "emerald", primary: "#059669", hover: "#10b981", dark: "#047857", bg: "bg-emerald-600" },
   { name: "Violet", value: "violet", primary: "#7c3aed", hover: "#8b5cf6", dark: "#6d28d9", bg: "bg-violet-600" },
   { name: "Rose", value: "rose", primary: "#e11d48", hover: "#f43f5e", dark: "#be123c", bg: "bg-rose-600" },
-  { name: "Amber", value: "amber", primary: "#d97706", hover: "#f59e0b", dark: "#b45309", bg: "bg-amber-600" },
   { name: "Blue", value: "blue", primary: "#2563eb", hover: "#3b82f6", dark: "#1d4ed8", bg: "bg-blue-600" },
   { name: "Cyan", value: "cyan", primary: "#0891b2", hover: "#06b6d4", dark: "#0e7490", bg: "bg-cyan-600" }
 ];
@@ -72,8 +72,8 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
   const [activeSubTab, setActiveSubTab] = useState<"widgets" | "notes" | "theme">("widgets");
 
   // 4. Accent Theme Color Settings State
-  const [selectedPreset, setSelectedPreset] = useState("indigo");
-  const [customColor, setCustomColor] = useState("#4f46e5");
+  const [selectedPreset, setSelectedPreset] = useState("amber");
+  const [customColor, setCustomColor] = useState("#F59E0B");
 
   // Load from local storage
   useEffect(() => {
@@ -104,10 +104,10 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
     }
 
     // Theme Color Preset
-    const savedPreset = localStorage.getItem("primary_color_name") || "indigo";
+    const savedPreset = localStorage.getItem("primary_color_name") || "amber";
     setSelectedPreset(savedPreset);
 
-    const savedColor = localStorage.getItem("primary_color") || "#4f46e5";
+    const savedColor = localStorage.getItem("primary_color") || "#F59E0B";
     setCustomColor(savedColor);
   }, [profile.id]);
 
@@ -445,7 +445,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                     type="text"
                     value={customColor}
                     onChange={(e) => handleCustomColorChange(e.target.value)}
-                    placeholder="#4f46e5"
+                    placeholder="#F59E0B"
                     className="bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-xs text-white uppercase focus:outline-none focus:border-neutral-700 w-32 font-mono"
                   />
                 </div>

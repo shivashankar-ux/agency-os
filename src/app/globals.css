@@ -1,84 +1,85 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg-app: #030712;
-  --bg-sidebar: #090d16;
-  --bg-card: #0f172a;
-  --bg-card-hover: #1e293b;
-  --border-color: #1e293b;
-  --text-title: #ffffff;
-  --text-body: #cbd5e1;
-  --text-muted: #94a3b8;
+  --bg-app: #0F172A;
+  --bg-sidebar: #111827;
+  --bg-card: #1E293B;
+  --bg-card-hover: #273449;
+  --border-color: #334155;
+  --text-title: #F8FAFC;
+  --text-body: #CBD5E1;
+  --text-muted: #94A3B8;
   
-  --color-primary: #4f46e5;
-  --color-primary-hover: #6366f1;
-  --color-primary-dark: #3730a3;
+  --color-primary: #F59E0B;
+  --color-primary-hover: #D97706;
+  --color-primary-dark: #B45309;
   
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
   --instagram-gradient: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
-  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.15);
-  --glass-bg: rgba(15, 23, 42, 0.65);
+  --neon-glow: 0 4px 20px rgba(245, 158, 11, 0.15);
+  --glass-bg: #1E293B;
 
   /* Derived color variables for Dark Mode */
-  --primary-light: color-mix(in srgb, var(--color-primary) 85%, white);
-  --primary-dark-border: color-mix(in srgb, var(--color-primary) 30%, black);
-  --primary-dark-bg: color-mix(in srgb, var(--color-primary) 12%, black);
+  --primary-light: #FBBF24;
+  --primary-dark-border: #475569;
+  --primary-dark-bg: #2B3548;
 
-  --color-emerald-base: #10b981;
-  --emerald-light: color-mix(in srgb, var(--color-emerald-base) 85%, white);
-  --emerald-dark-border: color-mix(in srgb, var(--color-emerald-base) 30%, black);
-  --emerald-dark-bg: color-mix(in srgb, var(--color-emerald-base) 12%, black);
+  --color-emerald-base: #22C55E;
+  --emerald-light: #4ADE80;
+  --emerald-dark-border: #14532D;
+  --emerald-dark-bg: #14532D;
 
-  --color-amber-base: #f59e0b;
-  --amber-light: color-mix(in srgb, var(--color-amber-base) 85%, white);
-  --amber-dark-border: color-mix(in srgb, var(--color-amber-base) 30%, black);
-  --amber-dark-bg: color-mix(in srgb, var(--color-amber-base) 12%, black);
+  --color-amber-base: #F59E0B;
+  --amber-light: #FBBF24;
+  --amber-dark-border: #78350F;
+  --amber-dark-bg: #78350F;
 
-  --color-red-base: #ef4444;
-  --red-light: color-mix(in srgb, var(--color-red-base) 85%, white);
-  --red-dark-border: color-mix(in srgb, var(--color-red-base) 30%, black);
-  --red-dark-bg: color-mix(in srgb, var(--color-red-base) 12%, black);
+  --color-red-base: #EF4444;
+  --red-light: #F87171;
+  --red-dark-border: #7F1D1D;
+  --red-dark-bg: #7F1D1D;
 
-  --color-purple-base: #8b5cf6;
-  --purple-light: color-mix(in srgb, var(--color-purple-base) 85%, white);
-  --purple-dark-border: color-mix(in srgb, var(--color-purple-base) 30%, black);
-  --purple-dark-bg: color-mix(in srgb, var(--color-purple-base) 12%, black);
+  --color-purple-base: #8B5CF6;
+  --purple-light: #C084FC;
+  --purple-dark-border: #581C87;
+  --purple-dark-bg: #3B0764;
 }
 
 .light-mode {
-  --bg-app: #f1f5f9;
-  --bg-sidebar: #ffffff;
-  --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-title: #0f172a;
-  --text-body: #1e293b;
-  --text-muted: #475569;
+  --bg-app: #F6F8FC;
+  --bg-sidebar: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FAFBFD;
+  --border-color: #E5E7EB;
+  --text-title: #111827;
+  --text-body: #4B5563;
+  --text-muted: #6B7280;
   
-  --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.08);
-  --glass-bg: rgba(255, 255, 255, 0.95);
+  --neon-glow: 0 4px 20px rgba(245, 158, 11, 0.08);
+  --glass-bg: #FFFFFF;
 
   /* Derived color variables for Light Mode */
-  --primary-light: color-mix(in srgb, var(--color-primary) 85%, black);
-  --primary-dark-border: color-mix(in srgb, var(--color-primary) 20%, white);
-  --primary-dark-bg: color-mix(in srgb, var(--color-primary) 8%, white);
+  --primary-light: #F59E0B;
+  --primary-dark-border: #E5E7EB;
+  --primary-dark-bg: #FFF7ED;
 
-  --emerald-light: color-mix(in srgb, var(--color-emerald-base) 85%, black);
-  --emerald-dark-border: color-mix(in srgb, var(--color-emerald-base) 20%, white);
-  --emerald-dark-bg: color-mix(in srgb, var(--color-emerald-base) 8%, white);
+  --emerald-light: #15803D;
+  --emerald-dark-border: #DCFCE7;
+  --emerald-dark-bg: #DCFCE7;
 
-  --amber-light: color-mix(in srgb, var(--color-amber-base) 85%, black);
-  --amber-dark-border: color-mix(in srgb, var(--color-amber-base) 20%, white);
-  --amber-dark-bg: color-mix(in srgb, var(--color-amber-base) 8%, white);
+  --amber-light: #B45309;
+  --amber-dark-border: #FEF3C7;
+  --amber-dark-bg: #FEF3C7;
 
-  --red-light: color-mix(in srgb, var(--color-red-base) 85%, black);
-  --red-dark-border: color-mix(in srgb, var(--color-red-base) 20%, white);
-  --red-dark-bg: color-mix(in srgb, var(--color-red-base) 8%, white);
+  --red-light: #B91C1C;
+  --red-dark-border: #FEE2E2;
+  --red-dark-bg: #FEE2E2;
 
-  --purple-light: color-mix(in srgb, var(--color-purple-base) 85%, black);
-  --purple-dark-border: color-mix(in srgb, var(--color-purple-base) 20%, white);
-  --purple-dark-bg: color-mix(in srgb, var(--color-purple-base) 8%, white);
+  --purple-light: #6D28D9;
+  --purple-dark-border: #F3E8FF;
+  --purple-dark-bg: #F3E8FF;
 }
 
 @theme {
@@ -89,7 +90,8 @@
   --color-white: var(--text-title);
   --color-neutral-400: var(--text-body);
   --color-neutral-500: var(--text-muted);
-  --font-sans: 'Plus Jakarta Sans', sans-serif;
+  --font-sans: 'Inter', sans-serif;
+  --font-heading: 'Plus Jakarta Sans', sans-serif;
   
   --color-indigo-400: var(--primary-light);
   --color-indigo-500: var(--color-primary-hover);
@@ -123,7 +125,7 @@
 body {
   background-color: var(--bg-app);
   color: var(--text-body);
-  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-family: var(--font-sans);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
