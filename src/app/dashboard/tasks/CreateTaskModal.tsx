@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { createTask } from "@/app/actions/tasks";
@@ -8,20 +8,57 @@ import { createTask } from "@/app/actions/tasks";
 interface CreateTaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  projects: { id: string; name: string }[];
+  projects: { id: string; name: string; client_id?: string }[];
   profiles: { id: string; name: string; role: string }[];
   defaultProjectId?: string;
+  clients?: { id: string; name: string }[];
 }
 
-export default function CreateTaskModal({ isOpen, onClose, projects, profiles, defaultProjectId }: CreateTaskModalProps) {
+export default function CreateTaskModal({ 
+  isOpen, 
+  onClose, 
+  projects, 
+  profiles, 
+  defaultProjectId,
+  clients = []
+}: CreateTaskModalProps) {
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+
+  const [selectedClientId, setSelectedClientId] = useState<string>("");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+
+  useEffect(() => {
+    if (isOpen) {
+      if (defaultProjectId) {
+        const defaultProj = projects.find(p => p.id === defaultProjectId);
+        setSelectedClientId(defaultProj?.client_id || "");
+        setSelectedProjectId(defaultProjectId);
+      } else {
+        setSelectedClientId("");
+        setSelectedProjectId("");
+      }
+      setError(null);
+    }
+  }, [isOpen, defaultProjectId, projects]);
+
+  const handleClientChange = (clientId: string) => {
+    setSelectedClientId(clientId);
+    setSelectedProjectId("");
+  };
+
+  const filteredProjects = projects.filter(p => p.client_id === selectedClientId);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
     
+    if (!selectedProjectId) {
+      setError("Please select a project.");
+      return;
+    }
+
     startTransition(async () => {
       const result = await createTask(formData);
       if (result.error) {
@@ -80,20 +117,41 @@ export default function CreateTaskModal({ isOpen, onClose, projects, profiles, d
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-neutral-300">Client <span className="text-red-400">*</span></label>
+                  <select
+                    required
+                    value={selectedClientId}
+                    onChange={(e) => handleClientChange(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none"
+                  >
+                    <option value="" disabled>Select Client...</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
                   <label className="text-sm font-medium text-neutral-300">Project <span className="text-red-400">*</span></label>
                   <select
                     name="project_id"
                     required
-                    defaultValue={defaultProjectId || ""}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none"
+                    value={selectedProjectId}
+                    onChange={(e) => setSelectedProjectId(e.target.value)}
+                    disabled={!selectedClientId}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 appearance-none disabled:opacity-50"
                   >
-                    <option value="" disabled>Select Project...</option>
-                    {projects.map(p => (
+                    <option value="" disabled>
+                      {!selectedClientId ? "Select Client first..." : "Select Project..."}
+                    </option>
+                    {filteredProjects.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
                 </div>
-                
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-neutral-300">Assign To</label>
                   <select
@@ -106,6 +164,15 @@ export default function CreateTaskModal({ isOpen, onClose, projects, profiles, d
                       <option key={p.id} value={p.id}>{p.name} ({p.role})</option>
                     ))}
                   </select>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium text-neutral-300">Due Date</label>
+                  <input
+                    type="date"
+                    name="due_date"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+                  />
                 </div>
               </div>
 
@@ -121,15 +188,6 @@ export default function CreateTaskModal({ isOpen, onClose, projects, profiles, d
                     <option value="medium">Medium</option>
                     <option value="high">High</option>
                   </select>
-                </div>
-                
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium text-neutral-300">Due Date</label>
-                  <input
-                    type="date"
-                    name="due_date"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  />
                 </div>
               </div>
 

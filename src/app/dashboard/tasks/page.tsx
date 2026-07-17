@@ -29,11 +29,12 @@ export default async function TasksPage() {
 
   tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
 
-  // 2. Fetch tasks, profiles, and projects in parallel
+  // 2. Fetch tasks, profiles, projects, and clients in parallel
   const [
     tasksRes,
     profilesRes,
-    projectsRes
+    projectsRes,
+    clientsRes
   ] = await Promise.all([
     tasksQuery,
     supabase
@@ -42,6 +43,10 @@ export default async function TasksPage() {
       .order("name", { ascending: true }),
     supabase
       .from("projects")
+      .select("id, name, client_id")
+      .order("name", { ascending: true }),
+    supabase
+      .from("clients")
       .select("id, name")
       .order("name", { ascending: true })
   ]);
@@ -55,10 +60,14 @@ export default async function TasksPage() {
   if (projectsRes.error) {
     console.error("Failed to load projects:", projectsRes.error.message);
   }
+  if (clientsRes.error) {
+    console.error("Failed to load clients:", clientsRes.error.message);
+  }
 
   const tasks = tasksRes.data || [];
   const allProfiles = profilesRes.data || [];
   const allProjects = projectsRes.data || [];
+  const allClients = clientsRes.data || [];
 
   return (
     <div>
@@ -68,10 +77,11 @@ export default async function TasksPage() {
       </p>
 
       <TasksListClient 
-        tasks={tasks as any[]} 
-        currentProfile={profile as any} 
-        allProfiles={allProfiles as any}
-        allProjects={allProjects as any}
+        tasks={JSON.parse(JSON.stringify(tasks as any[]))} 
+        currentProfile={JSON.parse(JSON.stringify(profile as any))} 
+        allProfiles={JSON.parse(JSON.stringify(allProfiles as any))}
+        allProjects={JSON.parse(JSON.stringify(allProjects as any))}
+        allClients={JSON.parse(JSON.stringify(allClients as any))}
       />
     </div>
   );

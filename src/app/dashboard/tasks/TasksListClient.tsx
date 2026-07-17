@@ -90,11 +90,13 @@ export default function TasksListClient({
   currentProfile,
   allProfiles = [],
   allProjects = [],
+  allClients = [],
 }: {
   tasks: Task[];
   currentProfile: Profile;
   allProfiles?: { id: string; name: string; role: string }[];
-  allProjects?: { id: string; name: string }[];
+  allProjects?: { id: string; name: string; client_id?: string }[];
+  allClients?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const supabase = createClient();
@@ -421,6 +423,7 @@ export default function TasksListClient({
         onClose={() => setIsCreateModalOpen(false)}
         projects={allProjects}
         profiles={allProfiles}
+        clients={allClients}
       />
     </div>
   );
