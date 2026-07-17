@@ -88,13 +88,13 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
     }
 
     // Notes
-    const storedNotes = localStorage.getItem("personal_dashboard_notes");
+    const storedNotes = localStorage.getItem(`personal_dashboard_notes_${profile.id}`);
     if (storedNotes) {
       setPersonalNotes(storedNotes);
     }
 
     // Checklist
-    const storedChecklist = localStorage.getItem("personal_dashboard_checklist");
+    const storedChecklist = localStorage.getItem(`personal_dashboard_checklist_${profile.id}`);
     if (storedChecklist) {
       try {
         setChecklist(JSON.parse(storedChecklist));
@@ -109,7 +109,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
 
     const savedColor = localStorage.getItem("primary_color") || "#4f46e5";
     setCustomColor(savedColor);
-  }, []);
+  }, [profile.id]);
 
   // Save widgets settings
   const toggleWidget = (key: keyof typeof widgets) => {
@@ -121,7 +121,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
   // Autosave notes on change
   const handleNotesChange = (val: string) => {
     setPersonalNotes(val);
-    localStorage.setItem("personal_dashboard_notes", val);
+    localStorage.setItem(`personal_dashboard_notes_${profile.id}`, val);
   };
 
   // Checklist utilities
@@ -137,7 +137,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
 
     const updated = [...checklist, newItem];
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
     setNewTodoText("");
   };
 
@@ -146,13 +146,13 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
       item.id === id ? { ...item, completed: !item.completed } : item
     );
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
   };
 
   const deleteTodo = (id: string) => {
     const updated = checklist.filter(item => item.id !== id);
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
   };
 
   const handleApplyPreset = (preset: typeof COLOR_PRESETS[0]) => {

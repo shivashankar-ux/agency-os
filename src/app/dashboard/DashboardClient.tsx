@@ -93,23 +93,23 @@ export default function DashboardClient({
     }
 
     // Load Notepad
-    const storedNotes = localStorage.getItem("personal_dashboard_notes");
+    const storedNotes = localStorage.getItem(`personal_dashboard_notes_${profile.id}`);
     if (storedNotes) {
       setNotes(storedNotes);
     }
 
     // Load Checklist
-    const storedChecklist = localStorage.getItem("personal_dashboard_checklist");
+    const storedChecklist = localStorage.getItem(`personal_dashboard_checklist_${profile.id}`);
     if (storedChecklist) {
       try {
         setChecklist(JSON.parse(storedChecklist));
       } catch (e) {}
     }
-  }, []);
+  }, [profile.id]);
 
   const handleNotesChange = (val: string) => {
     setNotes(val);
-    localStorage.setItem("personal_dashboard_notes", val);
+    localStorage.setItem(`personal_dashboard_notes_${profile.id}`, val);
   };
 
   const handleAddTodo = (e: React.FormEvent) => {
@@ -122,20 +122,20 @@ export default function DashboardClient({
     };
     const updated = [...checklist, newItem];
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
     setNewTodo("");
   };
 
   const handleToggleTodo = (id: string) => {
     const updated = checklist.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
   };
 
   const handleDeleteTodo = (id: string) => {
     const updated = checklist.filter(t => t.id !== id);
     setChecklist(updated);
-    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+    localStorage.setItem(`personal_dashboard_checklist_${profile.id}`, JSON.stringify(updated));
   };
 
   const renderNotesChecklist = () => (
