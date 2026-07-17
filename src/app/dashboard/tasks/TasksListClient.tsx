@@ -7,7 +7,7 @@ import { usePermissions } from "@/app/dashboard/components/PermissionProvider";
 import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
 import { 
   X, Calendar, User, MessageSquare, Send, Clock, AlertCircle,
-  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy, Plus
+  Sparkles, ChevronDown, ChevronUp, Loader2, Check, Copy, Plus, Trash2
 } from "lucide-react";
 import CreateTaskModal from "./CreateTaskModal";
 
@@ -103,6 +103,12 @@ export default function TasksListClient({
 
   const { hasPermission } = usePermissions();
 
+  const [localTasks, setLocalTasks] = useState(tasks);
+
+  useEffect(() => {
+    setLocalTasks(tasks);
+  }, [tasks]);
+
   // State for active task modal
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
@@ -178,6 +184,24 @@ export default function TasksListClient({
       status: newStatus,
     });
     setLoading(false);
+    router.refresh();
+  }
+
+  // Handle direct task deletion (Optimistic)
+  async function handleDeleteTaskDirect(id: string) {
+    setLocalTasks((prev) => prev.filter((t) => t.id !== id));
+
+    const { error: deleteError } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      alert(`Failed to delete task: ${deleteError.message}`);
+      router.refresh();
+      return;
+    }
+
     router.refresh();
   }
 
@@ -312,6 +336,11 @@ export default function TasksListClient({
     currentProfile.role === "admin" ||
     currentProfile.role === "manager";
 
+  const canDeleteTasks =
+    currentProfile.role === "owner" ||
+    currentProfile.role === "admin" ||
+    currentProfile.role === "manager";
+
   return (
     <div className="space-y-4">
       {canCreateTasks && (
@@ -326,7 +355,7 @@ export default function TasksListClient({
       )}
 
       {/* Task List Grid */}
-      {tasks.length === 0 ? (
+      {localTasks.length === 0 ? (
         <div className="card-glass rounded-2xl p-10 text-center">
           <p className="text-neutral-500 text-sm">
             No tasks yet. Tasks live under projects — add a client and project first, then tasks.
@@ -334,7 +363,7 @@ export default function TasksListClient({
         </div>
       ) : (
         <div className="card-glass rounded-2xl divide-y divide-neutral-800/40 overflow-hidden">
-          {tasks.map((task) => (
+          {localTasks.map((task) => (
             <div
               key={task.id}
               onClick={() => {
@@ -399,6 +428,20 @@ export default function TasksListClient({
                 >
                   {task.status.replace("_", " ")}
                 </span>
+                {canDeleteTasks && (
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (window.confirm(`Are you sure you want to permanently delete task "${task.title}"?`)) {
+                        await handleDeleteTaskDirect(task.id);
+                      }
+                    }}
+                    className="p-1.5 text-neutral-500 hover:text-red-400 rounded-lg hover:bg-neutral-800 transition-colors cursor-pointer shrink-0 ml-1"
+                    title="Delete Task"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
             </div>
           ))}

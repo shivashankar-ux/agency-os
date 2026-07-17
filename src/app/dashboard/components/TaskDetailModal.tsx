@@ -361,6 +361,7 @@ export default function TaskDetailModal({
 
   const canDeleteTask =
     currentProfile.role === "owner" ||
+    currentProfile.role === "admin" ||
     currentProfile.role === "manager";
 
   const clientName = localTask.projects?.clients?.name || "";
