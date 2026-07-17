@@ -132,6 +132,12 @@ export default function DashboardClient({
     localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
   };
 
+  const handleDeleteTodo = (id: string) => {
+    const updated = checklist.filter(t => t.id !== id);
+    setChecklist(updated);
+    localStorage.setItem("personal_dashboard_checklist", JSON.stringify(updated));
+  };
+
   const renderNotesChecklist = () => (
     <AnimatePresence mode="popLayout">
       {visibleWidgets.notesChecklist && (
