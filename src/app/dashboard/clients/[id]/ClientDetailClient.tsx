@@ -538,7 +538,7 @@ export default function ClientDetailClient({
               </h2>
               <button
                 onClick={() => setIsProjectModalOpen(true)}
-                className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
+                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
               >
                 <Plus size={14} />
                 Add Project

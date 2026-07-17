@@ -525,7 +525,7 @@ export default function TaskDetailModal({
                   <button
                     onClick={handleSaveDescription}
                     disabled={loading}
-                    className="text-xxs bg-indigo-650 hover:bg-indigo-600 px-3 py-1.5 rounded-lg text-white-literal font-bold"
+                    className="text-xxs bg-indigo-600 hover:bg-indigo-600 px-3 py-1.5 rounded-lg text-white-literal font-bold"
                   >
                     Save
                   </button>
@@ -573,7 +573,7 @@ export default function TaskDetailModal({
                         }}
                         className={`flex-1 text-center py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
                           aiPromptType === type.id
-                            ? "bg-indigo-650 text-white shadow-sm"
+                            ? "bg-indigo-600 text-white shadow-sm"
                             : "text-neutral-400 hover:text-white"
                         }`}
                       >
@@ -617,7 +617,7 @@ export default function TaskDetailModal({
                     type="button"
                     disabled={aiLoading}
                     onClick={handleAIGenerate}
-                    className="w-full py-2 bg-indigo-650 hover:bg-indigo-600 text-white-literal rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
+                    className="w-full py-2 bg-indigo-600 hover:bg-indigo-600 text-white-literal rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors disabled:opacity-50"
                   >
                     {aiLoading ? (
                       <>

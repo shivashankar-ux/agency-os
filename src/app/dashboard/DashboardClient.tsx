@@ -316,7 +316,7 @@ export default function DashboardClient({
                       <button
                         type="submit"
                         disabled={!newTodo.trim()}
-                        className="bg-indigo-650 hover:bg-indigo-600 disabled:opacity-50 text-white px-2.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+                        className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white px-2.5 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
                       >
                         <Plus size={12} />
                       </button>

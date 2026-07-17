@@ -193,7 +193,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                     <button
                       type="button"
                       className={`relative w-8 h-4.5 rounded-full p-0.5 shrink-0 mt-0.5 transition-colors duration-250 cursor-pointer ${
-                        isChecked ? "bg-indigo-650" : "bg-neutral-800"
+                        isChecked ? "bg-indigo-600" : "bg-neutral-800"
                       }`}
                     >
                       <div
@@ -255,7 +255,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                 <button
                   type="submit"
                   disabled={!newTodoText.trim()}
-                  className="bg-indigo-650 hover:bg-indigo-600 disabled:opacity-50 text-white px-3 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white px-3 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <Plus size={16} />
                 </button>

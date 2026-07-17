@@ -316,7 +316,7 @@ export default function TasksListClient({
         <div className="flex justify-end mb-2">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="bg-indigo-650 hover:bg-indigo-500 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
+            className="bg-indigo-600 hover:bg-indigo-500 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg flex items-center gap-1.5"
           >
             <Plus size={14} /> Create Task
           </button>

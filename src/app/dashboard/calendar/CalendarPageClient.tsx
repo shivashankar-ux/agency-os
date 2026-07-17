@@ -598,7 +598,7 @@ export default function CalendarPageClient({
           <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-xl p-1">
             {(["month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)}
-                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${view === v ? "bg-indigo-650 text-white shadow" : "text-neutral-500 hover:text-white"}`}>
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${view === v ? "bg-indigo-600 text-white shadow" : "text-neutral-500 hover:text-white"}`}>
                 {v}
               </button>
             ))}
@@ -664,7 +664,7 @@ export default function CalendarPageClient({
                       {day && (
                         <>
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1.5 text-xs font-bold mx-auto
-                            ${isToday ? "bg-indigo-650 text-white shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                            ${isToday ? "bg-indigo-600 text-white shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
                             {day.getDate()}
                           </div>
                           <div className="space-y-1">
@@ -711,7 +711,7 @@ export default function CalendarPageClient({
                         className={`p-3.5 text-center border-b border-neutral-800/40 cursor-pointer hover:bg-neutral-850/10 transition-colors`}>
                         <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider">{DAYS[day.getDay()]}</p>
                         <div className={`w-8 h-8 rounded-full mx-auto mt-1 flex items-center justify-center text-sm font-bold
-                          ${isToday ? "bg-indigo-650 text-white shadow-sm" : "text-white"}`}>
+                          ${isToday ? "bg-indigo-600 text-white shadow-sm" : "text-white"}`}>
                           {day.getDate()}
                         </div>
                       </div>
