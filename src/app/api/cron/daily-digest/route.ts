@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import webPush from "web-push";
 
 export async function GET(request: Request) {
-  // Verify cron secret
   const authHeader = request.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -14,7 +13,6 @@ export async function GET(request: Request) {
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const weekStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Get all users with push subscriptions
     const { data: subscriptions, error: subError } = await supabase
       .from("push_subscriptions")
       .select("user_id, subscription");
@@ -23,42 +21,43 @@ export async function GET(request: Request) {
       return Response.json({ success: true, sent: 0 });
     }
 
+    const userIds = subscriptions.map((s) => s.user_id);
+
+    // Batch fetch pending tasks
+    const { data: pendingTasksData } = await supabase
+      .from("tasks")
+      .select("id, title, project_id, due_date, status, completed_at, assignee_id")
+      .in("assignee_id", userIds)
+      .in("status", ["pending", "overdue", "in_progress"])
+      .lte("due_date", tomorrow.toISOString())
+      .order("due_date", { ascending: true });
+
+    // Batch fetch completed tasks
+    const { data: completedTasksData } = await supabase
+      .from("tasks")
+      .select("id, assignee_id")
+      .in("assignee_id", userIds)
+      .eq("status", "completed")
+      .gte("completed_at", weekStart.toISOString());
+
+    const pendingByAssignee = groupBy(pendingTasksData || [], "assignee_id");
+    const completedByAssignee = groupBy(completedTasksData || [], "assignee_id");
+
     let sentCount = 0;
 
     for (const { user_id, subscription } of subscriptions) {
-      // Check if user wants daily digest
-      const { data: prefs } = await supabase
-        .from("notification_preferences")
-        .select("*")
-        .eq("user_id", user_id)
-        .single();
+      const pendingTasks = pendingByAssignee[user_id] || [];
+      const completedThisWeek = completedByAssignee[user_id] || [];
 
-      // Only send if user has pending tasks
-      const { data: pendingTasks } = await supabase
-        .from("tasks")
-        .select("id, title, project_id, due_date, status, completed_at")
-        .eq("assignee_id", user_id)
-        .in("status", ["pending", "overdue", "in_progress"])
-        .lte("due_date", tomorrow.toISOString())
-        .order("due_date", { ascending: true })
-        .limit(10);
-
-      const { data: completedThisWeek } = await supabase
-        .from("tasks")
-        .select("id")
-        .eq("assignee_id", user_id)
-        .eq("status", "completed")
-        .gte("completed_at", weekStart.toISOString());
-
-      const hasTasks = (pendingTasks?.length || 0) > 0 || (completedThisWeek?.length || 0) > 0;
+      const hasTasks = pendingTasks.length > 0 || completedThisWeek.length > 0;
       if (!hasTasks) continue;
 
-      const overdueCount = pendingTasks?.filter(t => new Date(t.due_date) < now).length || 0;
-      const dueTodayCount = pendingTasks?.filter(t => 
+      const overdueCount = pendingTasks.filter((t: any) => new Date(t.due_date) < now).length;
+      const dueTodayCount = pendingTasks.filter((t: any) => 
         t.due_date && new Date(t.due_date).toDateString() === now.toDateString()
-      ).length || 0;
-      const dueSoonCount = (pendingTasks?.length || 0) - overdueCount - dueTodayCount;
-      const completedCount = completedThisWeek?.length || 0;
+      ).length;
+      const dueSoonCount = pendingTasks.length - overdueCount - dueTodayCount;
+      const completedCount = completedThisWeek.length;
 
       const body = [
         overdueCount > 0 && `${overdueCount} overdue`,
@@ -73,7 +72,7 @@ export async function GET(request: Request) {
         tag: `daily_digest_${user_id}_${now.toDateString()}`,
         url: "/dashboard",
         data: { type: "daily_digest", date: now.toISOString() },
-        siren: false // No siren for daily digest
+        siren: false
       });
       sentCount++;
     }
@@ -85,8 +84,14 @@ export async function GET(request: Request) {
   }
 }
 
+function groupBy(array: any[], key: string) {
+  return array.reduce((result, currentValue) => {
+    (result[currentValue[key]] = result[currentValue[key]] || []).push(currentValue);
+    return result;
+  }, {});
+}
+
 async function sendNotification(subscription: any, payload: any) {
-  // Set VAPID details here (inside handler) to avoid build-time env var errors
   webPush.setVapidDetails(
     "mailto:admin@thestorybuilder.in",
     process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,

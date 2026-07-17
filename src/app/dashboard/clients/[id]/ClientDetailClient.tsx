@@ -1063,7 +1063,7 @@ export default function ClientDetailClient({
               <button
                 onClick={handleConfirmImport}
                 disabled={importing || csvPreview.length === 0}
-                className="flex-1 bg-emerald-650 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 bg-emerald-650 hover:bg-emerald-600 disabled:opacity-50 text-white-literal text-xs font-semibold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 {importing ? (
                   <>

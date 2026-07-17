@@ -20,7 +20,7 @@ export default function OfflinePage() {
           <div className="space-y-3">
             <button
               onClick={() => window.location.reload()}
-              className="w-full btn-touch bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
+              className="w-full btn-touch bg-indigo-600 hover:bg-indigo-500 text-white-literal font-medium py-3 px-4 rounded-xl transition-colors flex items-center justify-center gap-2"
             >
               <RefreshCw className="w-4 h-4 animate-spin" />
               Try Again

@@ -108,7 +108,7 @@ export default function CreateProjectModal({ isOpen, onClose, clientId }: Create
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shadow-lg shadow-indigo-900/20"
+                  className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white-literal text-sm font-medium rounded-xl transition-colors disabled:opacity-50 shadow-lg shadow-indigo-900/20"
                 >
                   {isPending ? (
                     <>

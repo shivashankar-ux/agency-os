@@ -175,7 +175,7 @@ export function PushNotificationSubscription() {
           className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all ${
             isSubscribed
               ? "bg-red-900/30 text-red-400 border border-red-900/50 hover:bg-red-900/50"
-              : "bg-indigo-600 hover:bg-indigo-500 text-white"
+              : "bg-indigo-600 hover:bg-indigo-500 text-white-literal"
           } disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2`}
         >
           {isLoading ? (

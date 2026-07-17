@@ -48,7 +48,7 @@ export default function PerformanceWidget({
           <button
             onClick={() => setActiveTab("team")}
             className={`px-2.5 py-1 text-xxs font-semibold rounded-md transition-all ${
-              activeTab === "team" ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"
+              activeTab === "team" ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"
             }`}
           >
             Team Leaderboard
@@ -56,7 +56,7 @@ export default function PerformanceWidget({
           <button
             onClick={() => setActiveTab("active_projects")}
             className={`px-2.5 py-1 text-xxs font-semibold rounded-md transition-all ${
-              activeTab === "active_projects" ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"
+              activeTab === "active_projects" ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"
             }`}
           >
             Active Projects
@@ -65,7 +65,7 @@ export default function PerformanceWidget({
             <button
               onClick={() => setActiveTab("delayed_projects")}
               className={`px-2.5 py-1 text-xxs font-semibold rounded-md transition-all ${
-                activeTab === "delayed_projects" ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"
+                activeTab === "delayed_projects" ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"
               }`}
             >
               Delayed

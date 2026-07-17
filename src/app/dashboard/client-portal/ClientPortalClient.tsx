@@ -348,7 +348,7 @@ export default function ClientPortalClient({
                         <button
                           disabled={submittingId === d.id}
                           onClick={() => handleApproveDeliverable(d.id, true)}
-                          className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xxs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-emerald-950/40"
+                          className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white-literal text-xxs font-bold px-3 py-1.5 rounded-lg transition-colors shadow-lg shadow-emerald-950/40"
                         >
                           <ThumbsUp size={11} /> Approve Deliverable
                         </button>

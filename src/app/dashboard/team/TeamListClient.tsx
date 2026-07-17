@@ -248,7 +248,7 @@ export default function TeamListClient({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
               >
                 {loading ? "Updating member..." : "Save Changes"}
               </button>
@@ -300,7 +300,7 @@ export default function TeamListClient({
                 <button
                   onClick={handleDeleteMember}
                   disabled={loading}
-                  className="flex-1 bg-red-650 hover:bg-red-600 disabled:opacity-50 text-white text-sm font-medium rounded-lg py-2 transition-colors"
+                  className="flex-1 bg-red-650 hover:bg-red-600 disabled:opacity-50 text-white-literal text-sm font-medium rounded-lg py-2 transition-colors"
                 >
                   {loading ? "Deleting..." : "Delete Member"}
                 </button>

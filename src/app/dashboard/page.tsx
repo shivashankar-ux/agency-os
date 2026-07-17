@@ -101,9 +101,9 @@ export default async function DashboardPage() {
 
             {/* Dynamic widget grid wrapper */}
             <DashboardClient
-              profile={profile}
+              profile={JSON.parse(JSON.stringify(profile))}
               workspaceName={workspaceName}
-              data={data}
+              data={JSON.parse(JSON.stringify(data))}
               permissions={{
                 canViewClients,
                 canViewProjects,

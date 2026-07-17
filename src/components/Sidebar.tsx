@@ -47,15 +47,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
   }, [pathname]);
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("theme") as "dark" | "light" | null;
-    if (savedTheme) {
-      setTheme(savedTheme);
-      if (savedTheme === "light") {
-        document.documentElement.classList.add("light-mode");
-      } else {
-        document.documentElement.classList.remove("light-mode");
-      }
-    } else if (document.documentElement.classList.contains("light-mode")) {
+    if (typeof document !== 'undefined' && document.documentElement.classList.contains("light-mode")) {
       setTheme("light");
     }
 
@@ -200,7 +192,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
             <button
               type="submit"
               disabled={!newTodo.trim()}
-              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white px-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
+              className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal px-2 rounded-lg flex items-center justify-center transition-colors cursor-pointer"
             >
               <Plus size={12} />
             </button>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,12 +21,18 @@ export async function POST(req: NextRequest) {
     // Check if the user role is Owner
     const { data: profile, error: profileError } = await supabaseUserClient
       .from("profiles")
-      .select("role")
+      .select("role, org_id")
       .eq("id", user.id)
       .single();
 
     if (profileError || profile?.role !== "owner") {
       return NextResponse.json({ error: "Only owners can invite team members" }, { status: 403 });
+    }
+
+    // Rate limit: 20 invites per day (24 hours)
+    const { allowed } = await checkRateLimit(user.id, "invite-team-member", 20, 24);
+    if (!allowed) {
+      return NextResponse.json({ error: "Too many invites sent today. Please try again tomorrow." }, { status: 429 });
     }
 
     // Read the request body
@@ -64,6 +71,7 @@ export async function POST(req: NextRequest) {
         data: {
           name: name,
           role: role,
+          org_id: profile.org_id,
         },
       },
     });

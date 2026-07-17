@@ -186,7 +186,7 @@ export default function FilesPageClient({
           {canUpload && (
             <button
               onClick={() => setIsUploadOpen(true)}
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/30"
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/30"
             >
               <Upload size={14} /> Upload File
             </button>
@@ -386,7 +386,7 @@ export default function FilesPageClient({
                   <button
                     type="submit"
                     disabled={uploading || !selectedFile}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white rounded-xl py-2.5 font-semibold transition-all"
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal rounded-xl py-2.5 font-semibold transition-all"
                   >
                     {uploading ? "Uploading..." : "Confirm Upload"}
                   </button>

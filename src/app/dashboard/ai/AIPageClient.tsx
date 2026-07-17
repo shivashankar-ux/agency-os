@@ -164,7 +164,7 @@ export default function AIPageClient({ profile }: { profile: Profile }) {
                 key={tab.id}
                 onClick={() => { setActiveTab(tab.id as any); setOutput(""); }}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xxs font-bold rounded-lg transition-colors
-                  ${activeTab === tab.id ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-neutral-300"}`}
+                  ${activeTab === tab.id ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-neutral-300"}`}
               >
                 <tab.icon size={12} />
                 {tab.label}
@@ -407,7 +407,7 @@ export default function AIPageClient({ profile }: { profile: Profile }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 text-white rounded-xl py-3 font-bold transition-all shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-1.5"
+                className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 text-white-literal rounded-xl py-3 font-bold transition-all shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-1.5"
               >
                 {loading ? (
                   <>
@@ -440,7 +440,7 @@ export default function AIPageClient({ profile }: { profile: Profile }) {
                 <button
                   type="submit"
                   disabled={chatLoading || !chatInput.trim()}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 text-white rounded-xl py-3 font-bold transition-all shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-1.5"
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-900 text-white-literal rounded-xl py-3 font-bold transition-all shadow-lg shadow-indigo-950/50 flex items-center justify-center gap-1.5"
                 >
                   {chatLoading ? (
                     <>
@@ -542,7 +542,7 @@ export default function AIPageClient({ profile }: { profile: Profile }) {
                         key={idx}
                         className={`flex flex-col max-w-[85%] rounded-xl p-3 text-xs leading-relaxed ${
                           msg.role === "user"
-                            ? "bg-indigo-600 text-white self-end rounded-br-none"
+                            ? "bg-indigo-600 text-white-literal self-end rounded-br-none"
                             : "bg-neutral-900 border border-neutral-800 text-neutral-200 self-start rounded-bl-none whitespace-pre-wrap select-text font-sans"
                         }`}
                       >

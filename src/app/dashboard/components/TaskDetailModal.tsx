@@ -573,7 +573,7 @@ export default function TaskDetailModal({
                         }}
                         className={`flex-1 text-center py-1.5 px-3 rounded-md text-xs font-medium transition-colors ${
                           aiPromptType === type.id
-                            ? "bg-indigo-600 text-white shadow-sm"
+                            ? "bg-indigo-600 text-white-literal shadow-sm"
                             : "text-neutral-400 hover:text-white"
                         }`}
                       >

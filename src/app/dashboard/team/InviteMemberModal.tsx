@@ -148,7 +148,7 @@ export default function InviteMemberModal() {
 
                 <button
                   onClick={handleCloseSuccess}
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white-literal text-sm font-medium rounded-lg py-2.5 transition-colors mt-2"
                 >
                   Close & Refresh
                 </button>

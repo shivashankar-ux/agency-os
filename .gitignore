@@ -6,3 +6,8 @@ node_modules
 *.log
 
 .vercel
+
+# Local scratch and logs
+scratch/
+logs.json
+

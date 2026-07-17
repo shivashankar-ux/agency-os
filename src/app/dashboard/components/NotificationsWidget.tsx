@@ -56,7 +56,7 @@ export default function NotificationsWidget({ notifications: initialNotification
           <Bell size={15} className="text-indigo-400" />
           Workspace Alerts
           {unreadCount > 0 && (
-            <span className="bg-indigo-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+            <span className="bg-indigo-600 text-white-literal text-[10px] font-bold px-1.5 py-0.5 rounded-full">
               {unreadCount}
             </span>
           )}

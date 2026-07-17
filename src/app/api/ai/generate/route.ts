@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
     const profile = await getCurrentProfile();
     if (!profile) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit: 10 AI generations per hour
+    const { allowed } = await checkRateLimit(profile.id, "ai-generate", 10, 1);
+    if (!allowed) {
+      return NextResponse.json({ error: "Rate limit exceeded. Please try again later." }, { status: 429 });
     }
 
     const body = await req.json();

@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <div className="space-y-3">
               <button
                 onClick={this.handleRetry}
-                className="btn-touch w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-colors"
+                className="btn-touch w-full flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white-literal font-medium rounded-xl transition-colors"
               >
                 <RefreshCw className="w-4 h-4" />
                 Try Again

@@ -167,7 +167,7 @@ export default function CreateInvoiceModal({ isOpen, onClose, clients }: CreateI
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+                  className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal px-4 py-2 rounded-lg font-semibold transition-colors"
                 >
                   {submitting ? "Creating..." : "Save Invoice"}
                 </button>

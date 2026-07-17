@@ -19,8 +19,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="h-screen bg-neutral-950 flex overflow-hidden">
-      <PermissionProvider initialPermissions={permissions} initialRole={profile.role}>
-        <Sidebar profile={profile} />
+      <PermissionProvider initialPermissions={JSON.parse(JSON.stringify(permissions))} initialRole={profile.role}>
+        <Sidebar profile={JSON.parse(JSON.stringify(profile))} />
         <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">{children}</main>
       </PermissionProvider>
     </div>

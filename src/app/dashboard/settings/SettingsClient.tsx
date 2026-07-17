@@ -255,7 +255,7 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
                 <button
                   type="submit"
                   disabled={!newTodoText.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white px-3 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
+                  className="bg-indigo-600 hover:bg-indigo-600 disabled:opacity-50 text-white-literal px-3 rounded-xl flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <Plus size={16} />
                 </button>

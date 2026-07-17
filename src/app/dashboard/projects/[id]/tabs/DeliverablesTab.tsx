@@ -97,7 +97,7 @@ export default function DeliverablesTab({ projectId, initialDeliverables, milest
         </p>
         {canCreate && (
           <button onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
+            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal px-3 py-1.5 rounded-lg text-xs font-semibold transition-all">
             <Plus size={14} /> Add Deliverable
           </button>
         )}
@@ -222,7 +222,7 @@ export default function DeliverablesTab({ projectId, initialDeliverables, milest
                   <button type="button" onClick={() => setIsModalOpen(false)}
                     className="flex-1 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-lg py-2 font-semibold transition-colors">Cancel</button>
                   <button type="submit" disabled={submitting}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white rounded-lg py-2 font-semibold transition-colors">
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal rounded-lg py-2 font-semibold transition-colors">
                     {submitting ? "Saving..." : "Add Deliverable"}
                   </button>
                 </div>

@@ -128,7 +128,7 @@ export function PushNotificationPanel() {
             <button
               onClick={handleSubscribe}
               disabled={testing}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-sm font-medium rounded-xl transition-colors flex items-center gap-2"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal text-sm font-medium rounded-xl transition-colors flex items-center gap-2"
             >
               {testing ? "Enabling..." : "Enable"}
             </button>

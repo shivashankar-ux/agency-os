@@ -137,7 +137,7 @@ export default function FinancePageClient({ initialInvoices, clients }: FinanceP
         {canCreate("finance") && (
           <button
             onClick={() => setIsModalOpen(true)}
-            className="shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs px-3.5 py-2 rounded-lg transition-all"
+            className="shrink-0 flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white-literal font-semibold text-xs px-3.5 py-2 rounded-lg transition-all"
           >
             <FilePlus size={14} />
             Create Invoice
@@ -250,7 +250,7 @@ export default function FinancePageClient({ initialInvoices, clients }: FinanceP
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`px-3 py-1 text-xxs font-semibold rounded-md capitalize transition-all whitespace-nowrap ${
-                  statusFilter === status ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"
+                  statusFilter === status ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"
                 }`}
               >
                 {status}

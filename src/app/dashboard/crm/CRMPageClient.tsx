@@ -156,7 +156,7 @@ function LeadCard({
 
       {lead.assignee && (
         <div className="flex items-center gap-1 mt-2 pt-2 border-t border-neutral-800">
-          <div className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xxs font-bold">
+          <div className="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center text-white-literal text-xxs font-bold">
             {lead.assignee.name[0]}
           </div>
           <span className="text-neutral-600 text-xxs">{lead.assignee.name}</span>
@@ -271,7 +271,7 @@ function LeadDrawer({
         <div className="flex items-center gap-2 shrink-0">
           {canEdit && (
             <button onClick={() => setEditMode(!editMode)}
-              className={`p-1.5 rounded-lg text-xs font-semibold transition-colors ${editMode ? "bg-indigo-600 text-white" : "text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800"}`}>
+              className={`p-1.5 rounded-lg text-xs font-semibold transition-colors ${editMode ? "bg-indigo-600 text-white-literal" : "text-neutral-400 hover:text-white bg-neutral-900 border border-neutral-800"}`}>
               <Edit3 size={14} />
             </button>
           )}
@@ -363,7 +363,7 @@ function LeadDrawer({
                 <div className="flex gap-2 pt-2">
                   <button onClick={() => setEditMode(false)} className="flex-1 bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white rounded-lg py-2 font-semibold transition-colors text-xs">Cancel</button>
                   <button onClick={handleSave} disabled={saving}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white rounded-lg py-2 font-semibold transition-colors text-xs">
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal rounded-lg py-2 font-semibold transition-colors text-xs">
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
                 </div>
@@ -424,7 +424,7 @@ function LeadDrawer({
                     <div>
                       <p className="text-neutral-500 text-xxs">Assigned To</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-white text-xxs font-bold">
+                        <div className="w-5 h-5 rounded-full bg-indigo-600 flex items-center justify-center text-white-literal text-xxs font-bold">
                           {lead.assignee.name[0]}
                         </div>
                         <span className="text-white text-xs">{lead.assignee.name}</span>
@@ -483,7 +483,7 @@ function LeadDrawer({
                 </div>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setAddingActivity(false)} className="flex-1 bg-neutral-950 border border-neutral-800 text-neutral-400 rounded-lg py-1.5 font-semibold">Cancel</button>
-                  <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg py-1.5 font-semibold">Log It</button>
+                  <button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white-literal rounded-lg py-1.5 font-semibold">Log It</button>
                 </div>
               </form>
             )}
@@ -657,7 +657,7 @@ export default function CRMPageClient({
             </div>
             {canCreate && (
               <button onClick={() => setIsCreateModalOpen(true)}
-                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/30">
+                className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/30">
                 <Plus size={14} /> Add Lead
               </button>
             )}
@@ -696,11 +696,11 @@ export default function CRMPageClient({
             </select>
             <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-lg p-1">
               <button onClick={() => setView("kanban")}
-                className={`p-1.5 rounded-md transition-colors ${view === "kanban" ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"}`}>
+                className={`p-1.5 rounded-md transition-colors ${view === "kanban" ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"}`}>
                 <LayoutGrid size={13} />
               </button>
               <button onClick={() => setView("list")}
-                className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-indigo-600 text-white" : "text-neutral-500 hover:text-white"}`}>
+                className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-indigo-600 text-white-literal" : "text-neutral-500 hover:text-white"}`}>
                 <List size={13} />
               </button>
             </div>
@@ -892,7 +892,7 @@ export default function CRMPageClient({
                   <button type="button" onClick={() => setIsCreateModalOpen(false)}
                     className="flex-1 bg-neutral-950 border border-neutral-800 text-neutral-400 hover:text-white rounded-xl py-2.5 font-semibold transition-colors">Cancel</button>
                   <button type="submit" disabled={creating}
-                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white rounded-xl py-2.5 font-semibold transition-all shadow-lg">
+                    className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal rounded-xl py-2.5 font-semibold transition-all shadow-lg">
                     {creating ? "Creating..." : "Add Lead"}
                   </button>
                 </div>

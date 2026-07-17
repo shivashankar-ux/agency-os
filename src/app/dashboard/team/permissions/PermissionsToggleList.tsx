@@ -715,7 +715,7 @@ export default function PermissionsToggleList({
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 px-4 py-1.5 rounded-lg text-white font-medium text-xs flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer"
+                    className="bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 px-4 py-1.5 rounded-lg text-white-literal font-medium text-xs flex items-center gap-2 hover:shadow-lg hover:shadow-indigo-500/10 transition-all cursor-pointer"
                   >
                     {saving ? (
                       <>

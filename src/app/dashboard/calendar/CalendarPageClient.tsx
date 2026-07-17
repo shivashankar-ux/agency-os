@@ -320,7 +320,7 @@ function EventModal({
                 Cancel
               </button>
               <button type="submit" disabled={saving}
-                className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white rounded-xl py-2.5 font-semibold transition-all">
+                className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 text-white-literal rounded-xl py-2.5 font-semibold transition-all">
                 {saving ? "Saving..." : mode === "create" ? "Create Event" : "Save Changes"}
               </button>
             </div>
@@ -598,7 +598,7 @@ export default function CalendarPageClient({
           <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-xl p-1">
             {(["month", "week"] as const).map((v) => (
               <button key={v} onClick={() => setView(v)}
-                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${view === v ? "bg-indigo-600 text-white shadow" : "text-neutral-500 hover:text-white"}`}>
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg capitalize transition-all ${view === v ? "bg-indigo-600 text-white-literal shadow" : "text-neutral-500 hover:text-white"}`}>
                 {v}
               </button>
             ))}
@@ -617,7 +617,7 @@ export default function CalendarPageClient({
 
           {canCreate && (
             <button onClick={() => { setSelectedDate(today); setSelectedEvent(null); setModalMode("create"); }}
-              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/10">
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white-literal px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-lg shadow-indigo-900/10">
               <Plus size={14} /> New Event
             </button>
           )}
@@ -664,7 +664,7 @@ export default function CalendarPageClient({
                       {day && (
                         <>
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center mb-1.5 text-xs font-bold mx-auto
-                            ${isToday ? "bg-indigo-600 text-white shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                            ${isToday ? "bg-indigo-600 text-white-literal shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
                             {day.getDate()}
                           </div>
                           <div className="space-y-1">
@@ -711,7 +711,7 @@ export default function CalendarPageClient({
                         className={`p-3.5 text-center border-b border-neutral-800/40 cursor-pointer hover:bg-neutral-850/10 transition-colors`}>
                         <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-wider">{DAYS[day.getDay()]}</p>
                         <div className={`w-8 h-8 rounded-full mx-auto mt-1 flex items-center justify-center text-sm font-bold
-                          ${isToday ? "bg-indigo-600 text-white shadow-sm" : "text-white"}`}>
+                          ${isToday ? "bg-indigo-600 text-white-literal shadow-sm" : "text-white"}`}>
                           {day.getDate()}
                         </div>
                       </div>
@@ -796,7 +796,7 @@ export default function CalendarPageClient({
                 <button
                   type="submit"
                   disabled={allocatorLoading || !quickTitle.trim() || !quickProject}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold px-4 rounded-lg flex items-center justify-center transition-all shrink-0"
+                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white-literal font-bold px-4 rounded-lg flex items-center justify-center transition-all shrink-0"
                 >
                   Add
                 </button>
