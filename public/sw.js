@@ -172,7 +172,14 @@ async function staleWhileRevalidate(request) {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;
-  }).catch(() => cachedResponse);
+  }).catch(async () => {
+    if (cachedResponse) return cachedResponse;
+    if (request.mode === "navigate") {
+      const offlineResponse = await cache.match("/offline");
+      if (offlineResponse) return offlineResponse;
+    }
+    return new Response("Offline", { status: 503 });
+  });
 
   return cachedResponse || fetchPromise;
 }
