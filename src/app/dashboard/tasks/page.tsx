@@ -25,6 +25,7 @@ export default async function TasksPage() {
   let tasksQuery = supabase
     .from("tasks")
     .select("*, projects(name, clients(name)), assignee:profiles!tasks_assigned_to_fkey(id, name, role)")
+    .neq("status", "done")
     .order("created_at", { ascending: false });
 
   tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
