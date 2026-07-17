@@ -206,15 +206,20 @@ export default function PermissionsToggleList({
     );
   }, [team, memberSearch]);
 
-  // Filter modules/permissions based on permission search keyword
+  // Filter modules/permissions based on permission search keyword and user role
   const filteredModuleDefs = useMemo(() => {
-    if (!permSearch.trim()) return MODULE_DEFS;
+    const baseDefs = { ...MODULE_DEFS };
+    if (selectedUser && selectedUser.role !== "owner" && selectedUser.role !== "admin") {
+      delete baseDefs.finance;
+    }
+
+    if (!permSearch.trim()) return baseDefs;
 
     const query = permSearch.toLowerCase();
     const result: typeof MODULE_DEFS = {};
 
-    for (const key in MODULE_DEFS) {
-      const mod = MODULE_DEFS[key];
+    for (const key in baseDefs) {
+      const mod = baseDefs[key];
       const matchingPerms = mod.permissions.filter(
         (p) => p.label.toLowerCase().includes(query) || p.action.toLowerCase().includes(query)
       );
@@ -227,7 +232,7 @@ export default function PermissionsToggleList({
       }
     }
     return result;
-  }, [permSearch]);
+  }, [permSearch, selectedUser]);
 
   // Enable/Disable Custom Overrides switch
   function handleCustomToggle(enable: boolean) {

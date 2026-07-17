@@ -30,6 +30,26 @@ export const getPermissions = cache(async (userId: string): Promise<PermissionMa
   const role = profile.role || "member";
   const defaults = JSON.parse(JSON.stringify(ROLE_DEFAULTS[role] || ROLE_DEFAULTS.member));
 
+  // Helper to force finance permissions to false for non-owner and non-admin
+  const enforceFinanceGating = (map: PermissionMap) => {
+    if (role !== "owner" && role !== "admin") {
+      if (map.finance) {
+        for (const action in map.finance) {
+          map.finance[action] = { allowed: false, scope: "own" };
+        }
+      }
+      if (map.dashboard) {
+        if (map.dashboard.view_revenue) {
+          map.dashboard.view_revenue = { allowed: false, scope: "own" };
+        }
+        if (map.dashboard.view_financial_cards) {
+          map.dashboard.view_financial_cards = { allowed: false, scope: "own" };
+        }
+      }
+    }
+    return map;
+  };
+
   // 2. Fetch user custom permission overrides from database
   const { data: overrides, error: overridesError } = await supabase
     .from("user_permissions")
@@ -37,13 +57,13 @@ export const getPermissions = cache(async (userId: string): Promise<PermissionMa
     .eq("user_id", userId);
 
   if (overridesError || !overrides || overrides.length === 0) {
-    return defaults;
+    return enforceFinanceGating(defaults);
   }
 
   // 3. Check for the special custom configuration core flag
   const hasCustom = overrides.some((ov) => ov.module === "_core" && ov.action === "custom");
   if (!hasCustom) {
-    return defaults;
+    return enforceFinanceGating(defaults);
   }
 
   // 4. Since the user has custom configuration, initialize empty map and populate only overrides
@@ -57,7 +77,7 @@ export const getPermissions = cache(async (userId: string): Promise<PermissionMa
     }
   });
 
-  return customMap;
+  return enforceFinanceGating(customMap);
 });
 
 // Check helper
