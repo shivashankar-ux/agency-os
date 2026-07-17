@@ -283,12 +283,11 @@ export default function FilesPageClient({
                 <span>{new Date(file.created_at).toLocaleDateString("en-IN")}</span>
                 <a
                   href={file.file_url}
-                  download={file.name}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-bold"
                 >
-                  Download <ArrowUpRight size={11} />
+                  View File <ArrowUpRight size={11} />
                 </a>
               </div>
             </motion.div>
