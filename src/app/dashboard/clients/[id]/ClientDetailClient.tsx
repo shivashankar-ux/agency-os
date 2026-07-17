@@ -168,7 +168,7 @@ export default function ClientDetailClient({
   );
 
   // Tab view selector
-  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar" | "files">(
+  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar">(
     currentProfile.role === "member" ? "calendar" : "list"
   );
 
@@ -646,19 +646,9 @@ export default function ClientDetailClient({
         >
           Client Calendar View
         </button>
-        {canManageClientTasks && (
-          <button
-            onClick={() => setActiveViewTab("files")}
-            className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
-              activeViewTab === "files" ? "text-indigo-400 border-b-2 border-indigo-500 font-semibold" : "text-neutral-500 hover:text-white"
-            }`}
-          >
-            Shared Files
-          </button>
-        )}
       </div>
 
-      {activeViewTab === "list" ? (
+      {activeViewTab === "list" && isOwnerOrManager && (
         /* Two Column Section: Projects on Left, Team on Right */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Projects & Tasks (2/3 width) */}
@@ -863,213 +853,218 @@ export default function ClientDetailClient({
             </div>
           </div>
         </div>
-      ) : (
-        /* Calendar View Tab */
-        <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
-            <div className="flex items-center gap-3">
-              <h2 className="text-white text-base font-bold flex items-center gap-2">
-                <Calendar size={18} className="text-indigo-400" />
-                {MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
-              </h2>
-              <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-xl p-1">
-                <button
-                  onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
-                  className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() => setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))}
-                  className="text-xxs px-2 py-0.5 text-neutral-450 hover:text-white font-bold cursor-pointer"
-                >
-                  Today
-                </button>
-                <button
-                  onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
-                  className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {canManageClientTasks && (
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsCsvModalOpen(true)}
-                  className="flex items-center gap-1.5 border border-neutral-700 hover:border-neutral-500 bg-neutral-850 hover:bg-neutral-800 text-neutral-300 text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md cursor-pointer"
-                >
-                  <Upload size={14} className="text-emerald-450" /> Import CSV Tasks
-                </button>
-                <button
-                  onClick={() => {
-                    if (projects.length === 0) {
-                      alert("Please create a project first before adding tasks.");
-                      return;
-                    }
-                    setSelectedProjectIdForTask(projects[0].id);
-                    setIsTaskModalOpen(true);
-                  }}
-                  className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
-                >
-                  <Plus size={14} /> Add Task
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-neutral-900 border border-neutral-855 rounded-xl overflow-hidden shadow-sm">
-            <div className="grid grid-cols-7 border-b border-neutral-800 bg-neutral-950/20">
-              {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
-                <div key={d} className="py-2.5 text-center text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
-                  {d}
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {monthDays.map((day, idx) => {
-                const key = day ? dateKey(day) : null;
-                const dayTasks = key ? (eventsByDay[key] ?? []) : [];
-                const isToday = day ? isSameDay(day, today) : false;
-                const isCurrentMonth = day ? day.getMonth() === viewDate.getMonth() : false;
-
-                return (
-                  <div
-                    key={idx}
-                    onClick={() => {
-                      if (day && canManageClientTasks) {
-                        if (projects.length === 0) {
-                          alert("Please create a project first before adding tasks.");
-                          return;
-                        }
-                        setSelectedProjectIdForTask(projects[0].id);
-                        setIsTaskModalOpen(true);
-                      }
-                    }}
-                    className={`min-h-[105px] p-2 border-b border-r border-neutral-800/40 transition-colors relative select-none
-                      ${day ? (canManageClientTasks ? "cursor-pointer hover:bg-neutral-850/15" : "cursor-default") : "bg-neutral-950/10"}
-                      ${idx % 7 === 6 ? "border-r-0" : ""}`}
-                  >
-                    {day && (
-                      <>
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xxs font-bold mb-1 mx-auto
-                          ${isToday ? "bg-indigo-650 text-white-literal shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
-                          {day.getDate()}
-                        </div>
-                        <div className="space-y-1">
-                          {dayTasks.map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedTaskForModal(t);
-                              }}
-                              className="w-full bg-neutral-955 border border-neutral-800 hover:bg-neutral-800 text-[10px] text-left text-neutral-300 hover:text-white px-2 py-0.5 rounded truncate block transition-colors font-medium cursor-pointer"
-                            >
-                              {t.title}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
       )}
 
-      {activeViewTab === "files" && canManageClientTasks && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
-            <div>
-              <h2 className="text-white text-base font-bold flex items-center gap-2">
-                <FolderOpen size={18} className="text-indigo-400" />
-                Shared Client Files
-              </h2>
-              <p className="text-neutral-500 text-xxs mt-0.5">
-                Assets and PDFs shared with {client.name}
-              </p>
-            </div>
-            <button
-              onClick={() => setIsUploadOpen(true)}
-              className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer"
-            >
-              <Upload size={14} /> Upload File
-            </button>
-          </div>
-
-          {/* Files Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {files.map((file) => {
-              const Icon = getFileIcon(file.mime_type);
-              const fileProjectName = file.project?.name || "General Assets";
-              return (
-                <div
-                  key={file.id}
-                  className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between hover:border-neutral-700 transition-all group"
+      {activeViewTab === "calendar" && (
+        <div className="space-y-6">
+          {/* Shared Client Files */}
+          {canManageClientTasks && (
+            <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
+                <div>
+                  <h2 className="text-white text-base font-bold flex items-center gap-2">
+                    <FolderOpen size={18} className="text-indigo-400" />
+                    Shared Client Files
+                  </h2>
+                  <p className="text-neutral-500 text-xxs mt-0.5">
+                    Assets and PDFs shared with {client.name}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsUploadOpen(true)}
+                  className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-lg cursor-pointer"
                 >
-                  <div className="space-y-3">
-                    <div className="flex items-start justify-between">
-                      <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-850 group-hover:border-indigo-900 transition-colors">
-                        <Icon size={22} className="text-indigo-400" />
-                      </div>
-                      <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleCopyLink(file.file_url)}
-                          title="Copy Link"
-                          className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-950 rounded-lg transition-all cursor-pointer"
-                        >
-                          <Copy size={13} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFile(file.id, file.file_path)}
-                          title="Delete File"
-                          className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-neutral-955 rounded-lg transition-all cursor-pointer"
-                        >
-                          <Trash2 size={13} />
-                        </button>
-                      </div>
-                    </div>
+                  <Upload size={14} /> Upload File
+                </button>
+              </div>
 
-                    <div>
-                      <h3 className="text-white text-xs font-bold truncate" title={file.name}>
-                        {file.name}
-                      </h3>
-                      <p className="text-neutral-500 text-xxs mt-0.5">{fmtBytes(file.file_size)}</p>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-xxs text-neutral-400">
-                      <span className="text-neutral-600">Project:</span>
-                      <span className="font-semibold truncate max-w-32">{fileProjectName}</span>
-                    </div>
-                  </div>
-
-                  <div className="border-t border-neutral-850/50 mt-4 pt-3 flex items-center justify-between text-xxs text-neutral-500">
-                    <span>{new Date(file.created_at).toLocaleDateString("en-IN")}</span>
-                    <a
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-bold"
+              {/* Files Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {files.map((file) => {
+                  const Icon = getFileIcon(file.mime_type);
+                  const fileProjectName = file.project?.name || "General Assets";
+                  return (
+                    <div
+                      key={file.id}
+                      className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4 flex flex-col justify-between hover:border-neutral-700 transition-all group"
                     >
-                      View File <ArrowUpRight size={11} />
-                    </a>
+                      <div className="space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div className="p-3 bg-neutral-955 rounded-xl border border-neutral-850 group-hover:border-indigo-900 transition-colors">
+                            <Icon size={22} className="text-indigo-400" />
+                          </div>
+                          <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => handleCopyLink(file.file_url)}
+                              title="Copy Link"
+                              className="p-1.5 text-neutral-500 hover:text-white hover:bg-neutral-955 rounded-lg transition-all cursor-pointer"
+                            >
+                              <Copy size={13} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteFile(file.id, file.file_path)}
+                              title="Delete File"
+                              className="p-1.5 text-neutral-500 hover:text-red-400 hover:bg-neutral-955 rounded-lg transition-all cursor-pointer"
+                            >
+                              <Trash2 size={13} />
+                            </button>
+                          </div>
+                        </div>
+
+                        <div>
+                          <h3 className="text-white text-xs font-bold truncate" title={file.name}>
+                            {file.name}
+                          </h3>
+                          <p className="text-neutral-500 text-xxs mt-0.5">{fmtBytes(file.file_size)}</p>
+                        </div>
+
+                        <div className="flex items-center gap-1 text-xxs text-neutral-400">
+                          <span className="text-neutral-600">Project:</span>
+                          <span className="font-semibold truncate max-w-32">{fileProjectName}</span>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-neutral-850/50 mt-4 pt-3 flex items-center justify-between text-xxs text-neutral-500">
+                        <span>{new Date(file.created_at).toLocaleDateString("en-IN")}</span>
+                        <a
+                          href={file.file_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-indigo-400 hover:text-indigo-300 font-bold"
+                        >
+                          View File <ArrowUpRight size={11} />
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
+                {files.length === 0 && (
+                  <div className="col-span-full py-16 text-center border border-dashed border-neutral-800 rounded-3xl">
+                    <FolderOpen size={32} className="text-neutral-700 mx-auto mb-3" />
+                    <p className="text-neutral-500 text-xs italic">No shared files found for this client.</p>
                   </div>
-                </div>
-              );
-            })}
-            {files.length === 0 && (
-              <div className="col-span-full py-16 text-center border border-dashed border-neutral-800 rounded-3xl">
-                <FolderOpen size={32} className="text-neutral-700 mx-auto mb-3" />
-                <p className="text-neutral-500 text-xs italic">No shared files found for this client.</p>
+                )}
               </div>
-            )}
+            </div>
+          )}
+
+          {/* Calendar View */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between flex-wrap gap-4 border-b border-neutral-850 pb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-white text-base font-bold flex items-center gap-2">
+                  <Calendar size={18} className="text-indigo-400" />
+                  {MONTHS[viewDate.getMonth()]} {viewDate.getFullYear()}
+                </h2>
+                <div className="flex items-center gap-1.5 bg-neutral-900 border border-neutral-800 rounded-xl p-1">
+                  <button
+                    onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
+                    className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                  >
+                    <ChevronLeft size={16} />
+                  </button>
+                  <button
+                    onClick={() => setViewDate(new Date(today.getFullYear(), today.getMonth(), 1))}
+                    className="text-xxs px-2 py-0.5 text-neutral-450 hover:text-white font-bold cursor-pointer"
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
+                    className="p-1 text-neutral-400 hover:text-white rounded-lg transition-colors cursor-pointer"
+                  >
+                    <ChevronRight size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {canManageClientTasks && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setIsCsvModalOpen(true)}
+                    className="flex items-center gap-1.5 border border-neutral-700 hover:border-neutral-500 bg-neutral-850 hover:bg-neutral-800 text-neutral-300 text-xs font-bold px-3 py-2 rounded-xl transition-all shadow-md cursor-pointer"
+                  >
+                    <Upload size={14} className="text-emerald-450" /> Import CSV Tasks
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (projects.length === 0) {
+                        alert("Please create a project first before adding tasks.");
+                        return;
+                      }
+                      setSelectedProjectIdForTask(projects[0].id);
+                      setIsTaskModalOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 bg-indigo-650 hover:bg-indigo-600 text-white-literal text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md cursor-pointer"
+                  >
+                    <Plus size={14} /> Add Task
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-neutral-900 border border-neutral-855 rounded-xl overflow-hidden shadow-sm">
+              <div className="grid grid-cols-7 border-b border-neutral-800 bg-neutral-950/20">
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+                  <div key={d} className="py-2.5 text-center text-neutral-500 text-[10px] font-bold uppercase tracking-wider">
+                    {d}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7">
+                {monthDays.map((day, idx) => {
+                  const key = day ? dateKey(day) : null;
+                  const dayTasks = key ? (eventsByDay[key] ?? []) : [];
+                  const isToday = day ? isSameDay(day, today) : false;
+                  const isCurrentMonth = day ? day.getMonth() === viewDate.getMonth() : false;
+
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => {
+                        if (day && canManageClientTasks) {
+                          if (projects.length === 0) {
+                            alert("Please create a project first before adding tasks.");
+                            return;
+                          }
+                          setSelectedProjectIdForTask(projects[0].id);
+                          setIsTaskModalOpen(true);
+                        }
+                      }}
+                      className={`min-h-[105px] p-2 border-b border-r border-neutral-800/40 transition-colors relative select-none
+                        ${day ? (canManageClientTasks ? "cursor-pointer hover:bg-neutral-850/15" : "cursor-default") : "bg-neutral-950/10"}
+                        ${idx % 7 === 6 ? "border-r-0" : ""}`}
+                    >
+                      {day && (
+                        <>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xxs font-bold mb-1 mx-auto
+                            ${isToday ? "bg-indigo-650 text-white-literal shadow-sm" : isCurrentMonth ? "text-white" : "text-neutral-700"}`}>
+                            {day.getDate()}
+                          </div>
+                          <div className="space-y-1">
+                            {dayTasks.map((t) => (
+                              <button
+                                key={t.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedTaskForModal(t);
+                                }}
+                                className="w-full bg-neutral-955 border border-neutral-800 hover:bg-neutral-800 text-[10px] text-left text-neutral-300 hover:text-white px-2 py-0.5 rounded truncate block transition-colors font-medium cursor-pointer"
+                              >
+                                {t.title}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
 
       {/* MODAL 1: ADD PROJECT */}
       <CreateProjectModal

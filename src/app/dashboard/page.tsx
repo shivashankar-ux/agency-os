@@ -42,6 +42,18 @@ export default async function DashboardPage() {
     const data = await getDashboardData();
     const { kpis } = data;
 
+    // Fetch recent shared files
+    const { data: recentFiles } = await supabase
+      .from("files")
+      .select(`
+        *,
+        uploader:profiles!files_created_by_fkey(name),
+        client:clients!files_client_id_fkey(name),
+        project:projects!files_project_id_fkey(name)
+      `)
+      .order("created_at", { ascending: false })
+      .limit(6);
+
     // Formatting currency values
     const formattedRevenue = `₹${kpis.revenue.toLocaleString("en-IN")}`;
     const formattedPendingRevenue = `₹${kpis.pendingRevenue.toLocaleString("en-IN")}`;
@@ -117,6 +129,7 @@ export default async function DashboardPage() {
               }}
               formattedRevenue={formattedRevenue}
               formattedPendingRevenue={formattedPendingRevenue}
+              recentFiles={recentFiles || []}
             />
         </div>
       </div>

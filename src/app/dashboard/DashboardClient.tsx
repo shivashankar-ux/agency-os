@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   HeartHandshake, Briefcase, Clock, CheckCircle, Users, DollarSign, Receipt, BellRing, 
-  FileText, CheckSquare, Plus, Trash2, CheckCircle2, Circle, Eye, EyeOff
+  FileText, CheckSquare, Plus, Trash2, CheckCircle2, Circle, Eye, EyeOff,
+  FolderOpen, Image as ImageIcon, FileArchive, FileCode, File
 } from "lucide-react";
 import KpiCard from "./components/KpiCard";
 import QuickActions from "./components/QuickActions";
@@ -26,7 +27,25 @@ type Props = {
   permissions: DashboardPermissions;
   formattedRevenue: string;
   formattedPendingRevenue: string;
+  recentFiles?: any[];
 };
+
+function fmtBytes(bytes: number) {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+function getFileIcon(mime: string | null) {
+  if (!mime) return File;
+  if (mime.includes("pdf")) return FileText;
+  if (mime.includes("image")) return ImageIcon;
+  if (mime.includes("zip") || mime.includes("rar") || mime.includes("tar")) return FileArchive;
+  if (mime.includes("javascript") || mime.includes("typescript") || mime.includes("json") || mime.includes("html") || mime.includes("css")) return FileCode;
+  return File;
+}
 
 type ChecklistItem = {
   id: string;
@@ -41,6 +60,7 @@ export default function DashboardClient({
   permissions,
   formattedRevenue,
   formattedPendingRevenue,
+  recentFiles = [],
 }: Props) {
   const { 
     kpis, 
@@ -367,6 +387,57 @@ export default function DashboardClient({
               mostDelayedProjects={canViewProjects ? mostDelayedProjects : []}
             />
           )}
+          {/* Recent Shared Files Widget */}
+          <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <h3 className="text-white font-bold text-xs uppercase tracking-wider flex items-center gap-2">
+                <FolderOpen size={14} className="text-indigo-400" />
+                Shared Documents & Assets
+              </h3>
+              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-wider">Latest Shared Files</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              {recentFiles.map((file) => {
+                const Icon = getFileIcon(file.mime_type);
+                const clientName = file.client?.name || "General Asset";
+                return (
+                  <div 
+                    key={file.id} 
+                    className="bg-neutral-950/40 border border-neutral-850/40 hover:border-neutral-750 p-3 flex items-center justify-between gap-3 group transition-all rounded-xl"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="p-2 bg-neutral-900 rounded-lg border border-neutral-800">
+                        <Icon size={14} className="text-indigo-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-neutral-200 font-semibold truncate text-[11px]" title={file.name}>
+                          {file.name}
+                        </p>
+                        <p className="text-neutral-500 text-xxs mt-0.5 truncate">
+                          Client: <span className="font-bold text-neutral-450">{clientName}</span> · {fmtBytes(file.file_size)}
+                        </p>
+                      </div>
+                    </div>
+                    <a
+                      href={file.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-455 hover:text-indigo-300 text-xxs font-bold flex items-center gap-0.5 shrink-0 px-2 py-1 rounded bg-indigo-950/20 hover:bg-indigo-900/10 transition-colors border border-indigo-900/30 cursor-pointer"
+                    >
+                      View
+                    </a>
+                  </div>
+                );
+              })}
+              {recentFiles.length === 0 && (
+                <div className="col-span-full py-8 text-center border border-dashed border-neutral-800 rounded-xl">
+                  <FolderOpen size={24} className="text-neutral-700 mx-auto mb-2" />
+                  <p className="text-neutral-500 text-[11px] italic">No documents shared yet.</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Sidebar Columns (4/12 width) */}
