@@ -19,6 +19,31 @@
   --instagram-gradient: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7);
   --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.15);
   --glass-bg: rgba(15, 23, 42, 0.65);
+
+  /* Derived color variables for Dark Mode */
+  --primary-light: color-mix(in srgb, var(--color-primary) 85%, white);
+  --primary-dark-border: color-mix(in srgb, var(--color-primary) 30%, black);
+  --primary-dark-bg: color-mix(in srgb, var(--color-primary) 12%, black);
+
+  --color-emerald-base: #10b981;
+  --emerald-light: color-mix(in srgb, var(--color-emerald-base) 85%, white);
+  --emerald-dark-border: color-mix(in srgb, var(--color-emerald-base) 30%, black);
+  --emerald-dark-bg: color-mix(in srgb, var(--color-emerald-base) 12%, black);
+
+  --color-amber-base: #f59e0b;
+  --amber-light: color-mix(in srgb, var(--color-amber-base) 85%, white);
+  --amber-dark-border: color-mix(in srgb, var(--color-amber-base) 30%, black);
+  --amber-dark-bg: color-mix(in srgb, var(--color-amber-base) 12%, black);
+
+  --color-red-base: #ef4444;
+  --red-light: color-mix(in srgb, var(--color-red-base) 85%, white);
+  --red-dark-border: color-mix(in srgb, var(--color-red-base) 30%, black);
+  --red-dark-bg: color-mix(in srgb, var(--color-red-base) 12%, black);
+
+  --color-purple-base: #8b5cf6;
+  --purple-light: color-mix(in srgb, var(--color-purple-base) 85%, white);
+  --purple-dark-border: color-mix(in srgb, var(--color-purple-base) 30%, black);
+  --purple-dark-bg: color-mix(in srgb, var(--color-purple-base) 12%, black);
 }
 
 .light-mode {
@@ -33,6 +58,27 @@
   
   --neon-glow: 0 4px 20px rgba(99, 102, 241, 0.08);
   --glass-bg: rgba(255, 255, 255, 0.95);
+
+  /* Derived color variables for Light Mode */
+  --primary-light: color-mix(in srgb, var(--color-primary) 85%, black);
+  --primary-dark-border: color-mix(in srgb, var(--color-primary) 20%, white);
+  --primary-dark-bg: color-mix(in srgb, var(--color-primary) 8%, white);
+
+  --emerald-light: color-mix(in srgb, var(--color-emerald-base) 85%, black);
+  --emerald-dark-border: color-mix(in srgb, var(--color-emerald-base) 20%, white);
+  --emerald-dark-bg: color-mix(in srgb, var(--color-emerald-base) 8%, white);
+
+  --amber-light: color-mix(in srgb, var(--color-amber-base) 85%, black);
+  --amber-dark-border: color-mix(in srgb, var(--color-amber-base) 20%, white);
+  --amber-dark-bg: color-mix(in srgb, var(--color-amber-base) 8%, white);
+
+  --red-light: color-mix(in srgb, var(--color-red-base) 85%, black);
+  --red-dark-border: color-mix(in srgb, var(--color-red-base) 20%, white);
+  --red-dark-bg: color-mix(in srgb, var(--color-red-base) 8%, white);
+
+  --purple-light: color-mix(in srgb, var(--color-purple-base) 85%, black);
+  --purple-dark-border: color-mix(in srgb, var(--color-purple-base) 20%, white);
+  --purple-dark-bg: color-mix(in srgb, var(--color-purple-base) 8%, white);
 }
 
 @theme {
@@ -45,11 +91,33 @@
   --color-neutral-500: var(--text-muted);
   --font-sans: 'Plus Jakarta Sans', sans-serif;
   
+  --color-indigo-400: var(--primary-light);
   --color-indigo-500: var(--color-primary-hover);
   --color-indigo-600: var(--color-primary);
   --color-indigo-700: var(--color-primary-dark);
   --color-indigo-800: var(--color-primary-dark);
-  --color-indigo-900: var(--color-primary-dark);
+  --color-indigo-900: var(--primary-dark-border);
+  --color-indigo-950: var(--primary-dark-bg);
+
+  --color-emerald-400: var(--emerald-light);
+  --color-emerald-900: var(--emerald-dark-border);
+  --color-emerald-950: var(--emerald-dark-bg);
+
+  --color-amber-400: var(--amber-light);
+  --color-amber-900: var(--amber-dark-border);
+  --color-amber-950: var(--amber-dark-bg);
+
+  --color-red-400: var(--red-light);
+  --color-red-900: var(--red-dark-border);
+  --color-red-950: var(--red-dark-bg);
+
+  --color-purple-400: var(--purple-light);
+  --color-purple-900: var(--purple-dark-border);
+  --color-purple-950: var(--purple-dark-bg);
+
+  --color-neutral-750: var(--border-color);
+  --color-neutral-700: var(--border-color);
+  --color-neutral-600: var(--text-muted);
 }
 
 body {
@@ -83,6 +151,14 @@ body {
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid var(--border-color);
+}
+
+.kpi-icon-container {
+  color: var(--color-primary-hover) !important;
+}
+
+.light-mode .kpi-icon-container {
+  color: var(--color-primary) !important;
 }
 
 .instagram-avatar-ring {

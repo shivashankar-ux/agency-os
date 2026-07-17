@@ -123,7 +123,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         <span className="text-neutral-500 text-xs font-semibold">Appearance</span>
         <button
           onClick={toggleTheme}
-          className="relative w-12 h-6 rounded-full bg-neutral-800 p-0.5 transition-colors duration-300 focus:outline-none flex items-center cursor-pointer border border-neutral-700"
+          className="relative w-12 h-6 rounded-full bg-neutral-800 p-0.5 transition-colors duration-300 focus:outline-none flex items-center cursor-pointer border border-neutral-800"
           aria-label="Toggle Theme"
         >
           <motion.div
@@ -184,7 +184,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         {/* Theme toggle right side */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-xl bg-neutral-800 border border-neutral-700 text-neutral-400 hover:text-white transition-colors"
+          className="p-2 rounded-xl bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-white transition-colors"
           aria-label="Toggle Theme"
         >
           {theme === "light" ? <Sun size={16} /> : <Moon size={16} />}

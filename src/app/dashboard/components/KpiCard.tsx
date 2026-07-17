@@ -30,7 +30,7 @@ export default function KpiCard({
         <span className="text-neutral-500 text-xs font-bold tracking-wider uppercase">
           {label}
         </span>
-        <div className="bg-indigo-600/10 border border-indigo-500/20 p-2.5 rounded-xl text-indigo-450 shadow-inner">
+        <div className="bg-indigo-600/10 border border-indigo-500/20 p-2.5 rounded-xl kpi-icon-container shadow-inner">
           {icon}
         </div>
       </div>
