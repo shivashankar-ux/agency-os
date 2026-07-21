@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle, Sparkles
+  Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle, Sparkles, Building2
 } from "lucide-react";
 
 type Profile = {
