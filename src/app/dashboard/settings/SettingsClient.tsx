@@ -20,6 +20,7 @@ type ChecklistItem = {
 
 type SettingsClientProps = {
   profile: Profile;
+  initialBranding?: any;
 };
 
 const COLOR_PRESETS = [
