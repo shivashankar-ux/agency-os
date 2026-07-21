@@ -58,21 +58,25 @@ export async function POST(req: NextRequest) {
         });
 
       pdfBuffer = await renderToBuffer(
-        React.createElement(InvoicePdfDocument, {
-          branding,
-          client,
-          fieldData,
-          invoiceNumber,
-        })
+        (
+          <InvoicePdfDocument
+            branding={branding}
+            client={client}
+            fieldData={fieldData}
+            invoiceNumber={invoiceNumber}
+          />
+        ) as any
       );
     } else {
       // Welcome or Onboarding PDF
       pdfBuffer = await renderToBuffer(
-        React.createElement(WelcomePdfDocument, {
-          branding,
-          client,
-          fieldData,
-        })
+        (
+          <WelcomePdfDocument
+            branding={branding}
+            client={client}
+            fieldData={fieldData}
+          />
+        ) as any
       );
     }
 
