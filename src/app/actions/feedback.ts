@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 
@@ -122,13 +123,13 @@ export async function submitFeedbackBatch(
   }[],
   selectedGiverUserId?: string
 ) {
-  const supabase = await createClient();
+  const adminSupabase = createAdminClient();
 
   let giverUserId: string | null = null;
   let round: any = null;
 
   // Try finding by token first
-  const { data: tokenData } = await supabase
+  const { data: tokenData } = await adminSupabase
     .from("feedback_tokens")
     .select("*, feedback_rounds(*)")
     .eq("token", token)
@@ -139,7 +140,7 @@ export async function submitFeedbackBatch(
     giverUserId = tokenData.giver_user_id;
   } else {
     // Single shared link mode: token is round_id
-    const { data: roundData } = await supabase
+    const { data: roundData } = await adminSupabase
       .from("feedback_rounds")
       .select("*")
       .eq("id", token)
@@ -170,7 +171,7 @@ export async function submitFeedbackBatch(
     answers: r.answers,
   }));
 
-  const { data: insertedResponses, error: insertErr } = await supabase
+  const { data: insertedResponses, error: insertErr } = await adminSupabase
     .from("feedback_responses")
     .insert(insertRows)
     .select("*, receiver:profiles!feedback_responses_receiver_user_id_fkey(email, name)");
