@@ -43,7 +43,7 @@ export default async function FeedbackTokenPage({
     const { data: roundData } = await adminSupabase
       .from("feedback_rounds")
       .select(`
-        id, title, questions, status,
+        id, title, org_id, questions, status,
         feedback_round_participants ( user_id )
       `)
       .eq("id", token)
@@ -69,7 +69,7 @@ export default async function FeedbackTokenPage({
     );
   }
 
-  // Fetch all participants for this round using admin client (bypasses RLS for public link)
+  // Fetch participants for this round (or fallback to org profiles if none specified)
   const participantUserIds = (round.feedback_round_participants || []).map(
     (p: any) => p.user_id
   );
@@ -80,6 +80,13 @@ export default async function FeedbackTokenPage({
       .from("profiles")
       .select("id, name, role")
       .in("id", participantUserIds);
+
+    allParticipants = profiles || [];
+  } else if (round.org_id) {
+    const { data: profiles } = await adminSupabase
+      .from("profiles")
+      .select("id, name, role")
+      .eq("org_id", round.org_id);
 
     allParticipants = profiles || [];
   }
