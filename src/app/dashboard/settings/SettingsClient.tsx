@@ -48,7 +48,7 @@ function adjustColorBrightness(hex: string, percent: number) {
   return `#${rHex}${gHex}${bHex}`;
 }
 
-export default function SettingsClient({ profile }: SettingsClientProps) {
+export default function SettingsClient({ profile, initialBranding }: SettingsClientProps) {
   // 1. Dashboard Widget Visibility Settings (State & Initialization)
   const [widgets, setWidgets] = useState({
     kpis: true,
@@ -69,11 +69,12 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newTodoText, setNewTodoText] = useState("");
 
-  const [activeSubTab, setActiveSubTab] = useState<"widgets" | "notes" | "theme">("widgets");
+  const [activeSubTab, setActiveSubTab] = useState<"branding" | "widgets" | "notes" | "theme">("branding");
 
   // 4. Accent Theme Color Settings State
   const [selectedPreset, setSelectedPreset] = useState("amber");
   const [customColor, setCustomColor] = useState("#F59E0B");
+  const isOwnerOrAdmin = profile.role === "owner" || profile.role === "admin";
 
   // Load from local storage
   useEffect(() => {
@@ -191,6 +192,17 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
       {/* Sub navigation column */}
       <div className="lg:col-span-3 space-y-2">
         <button
+          onClick={() => setActiveSubTab("branding")}
+          className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left border ${
+            activeSubTab === "branding"
+              ? "bg-neutral-900 text-white border-neutral-800 shadow"
+              : "text-neutral-500 hover:bg-neutral-900/50 hover:text-white border-transparent"
+          }`}
+        >
+          <Building2 size={14} className={activeSubTab === "branding" ? "text-indigo-400" : ""} />
+          Agency Branding & PDF Setup
+        </button>
+        <button
           onClick={() => setActiveSubTab("widgets")}
           className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left border ${
             activeSubTab === "widgets"
@@ -227,7 +239,14 @@ export default function SettingsClient({ profile }: SettingsClientProps) {
 
       {/* Main Settings Panel */}
       <div className="lg:col-span-9">
-        {activeSubTab === "widgets" ? (
+        {activeSubTab === "branding" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <BrandingSettings initialBranding={initialBranding} isOwnerOrAdmin={isOwnerOrAdmin} />
+          </motion.div>
+        ) : activeSubTab === "widgets" ? (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

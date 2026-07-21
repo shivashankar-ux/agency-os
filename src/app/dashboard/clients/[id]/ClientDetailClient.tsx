@@ -12,6 +12,7 @@ import {
 import TaskDetailModal from "@/app/dashboard/components/TaskDetailModal";
 import CreateProjectModal from "../CreateProjectModal";
 import CreateTaskModal from "@/app/dashboard/tasks/CreateTaskModal";
+import { createBrandAssetRequest } from "@/app/actions/brand-assets";
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -168,9 +169,12 @@ export default function ClientDetailClient({
   );
 
   // Tab view selector
-  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar">(
+  const [activeViewTab, setActiveViewTab] = useState<"list" | "calendar" | "brand-assets">(
     currentProfile.role === "member" ? "calendar" : "list"
   );
+
+  const [requestingAssetToken, setRequestingAssetToken] = useState(false);
+  const [generatedAssetLink, setGeneratedAssetLink] = useState<string | null>(null);
 
   // Files states
   const [files, setFiles] = useState<any[]>(initialFiles);
@@ -646,7 +650,85 @@ export default function ClientDetailClient({
         >
           Client Calendar View
         </button>
+        {isOwnerOrManager && (
+          <button
+            onClick={() => setActiveViewTab("brand-assets")}
+            className={`pb-3 text-sm font-bold transition-all relative cursor-pointer ${
+              activeViewTab === "brand-assets" ? "text-indigo-400 border-b-2 border-indigo-500 font-semibold" : "text-neutral-500 hover:text-white"
+            }`}
+          >
+            Brand Assets Collection
+          </button>
+        )}
       </div>
+
+      {activeViewTab === "brand-assets" && isOwnerOrManager && (
+        <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+            <div>
+              <h2 className="text-white font-bold text-base flex items-center gap-2">
+                <FolderOpen className="text-indigo-400" size={18} />
+                Brand Assets Collection ({client.name})
+              </h2>
+              <p className="text-neutral-500 text-xs mt-0.5">
+                Generate a secure public form link to send to {client.name} for uploading their brand colors, font files, and taglines.
+              </p>
+            </div>
+            <button
+              onClick={async () => {
+                setRequestingAssetToken(true);
+                const res = await createBrandAssetRequest(client.id);
+                setRequestingAssetToken(false);
+                if (res.token) {
+                  const origin = typeof window !== "undefined" ? window.location.origin : "";
+                  const link = `${origin}/brand-assets/${res.token}`;
+                  setGeneratedAssetLink(link);
+                  navigator.clipboard.writeText(link);
+                } else if (res.error) {
+                  alert(res.error);
+                }
+              }}
+              disabled={requestingAssetToken}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-indigo-900/20 shrink-0 cursor-pointer"
+            >
+              {requestingAssetToken ? (
+                <>
+                  <Loader2 size={14} className="animate-spin" /> Generating Link...
+                </>
+              ) : (
+                <>
+                  <Plus size={14} /> Generate Client Brand Request Link
+                </>
+              )}
+            </button>
+          </div>
+
+          {generatedAssetLink && (
+            <div className="p-4 bg-indigo-950/40 border border-indigo-900 rounded-xl space-y-2 text-xs">
+              <p className="text-indigo-300 font-bold flex items-center gap-1.5">
+                <CheckCircle2 size={15} className="text-emerald-400" /> Shareable Link Copied to Clipboard!
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  readOnly
+                  value={generatedAssetLink}
+                  className="flex-1 bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-1.5 text-white font-mono text-xs focus:outline-none"
+                />
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(generatedAssetLink);
+                    alert("Link copied to clipboard!");
+                  }}
+                  className="bg-neutral-800 hover:bg-neutral-700 text-white font-bold px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1"
+                >
+                  <Copy size={13} /> Copy
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {activeViewTab === "list" && isOwnerOrManager && (
         /* Two Column Section: Projects on Left, Team on Right */

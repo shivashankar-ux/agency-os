@@ -1,10 +1,11 @@
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { redirect } from "next/navigation";
+import { getOrgBranding } from "@/app/actions/branding";
 import SettingsClient from "./SettingsClient";
 
 export const metadata = {
   title: "Settings | Agency OS",
-  description: "Customize your dashboard and manage personal notes/checklists.",
+  description: "Customize your dashboard, agency branding, and document settings.",
 };
 
 export default async function SettingsPage() {
@@ -13,14 +14,16 @@ export default async function SettingsPage() {
     redirect("/login");
   }
 
+  const initialBranding = await getOrgBranding();
+
   return (
     <div>
       <h1 className="text-xl font-semibold text-white mb-1">Settings</h1>
       <p className="text-neutral-500 text-sm mb-6">
-        Customize your experience and manage personal checklists
+        Customize your experience, agency branding, and document templates
       </p>
 
-      <SettingsClient profile={profile as any} />
+      <SettingsClient profile={profile as any} initialBranding={initialBranding} />
     </div>
   );
 }
