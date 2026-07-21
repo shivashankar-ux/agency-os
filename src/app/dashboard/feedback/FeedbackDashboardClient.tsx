@@ -209,16 +209,37 @@ export default function FeedbackDashboardClient({
               {/* Captain Section: Magic Links & Submission Progress */}
               {isCaptain && (
                 <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4">
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
                         <ShieldCheck size={16} className="text-indigo-400" /> Captain Link Manager & Progress
                       </h3>
                       <p className="text-xs text-neutral-500">
-                        Share these unique magic links with team members. They complete feedback without logging in.
+                        Copy the single round link to send to everyone, or copy individual magic links.
                       </p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <button
+                        onClick={() => {
+                          const origin = typeof window !== "undefined" ? window.location.origin : "";
+                          const singleUrl = `${origin}/feedback/${selectedRound.id}`;
+                          navigator.clipboard.writeText(singleUrl);
+                          setCopiedTokenId("single-round-link");
+                          setTimeout(() => setCopiedTokenId(null), 2000);
+                        }}
+                        className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all shadow-md shadow-indigo-900/20"
+                      >
+                        {copiedTokenId === "single-round-link" ? (
+                          <>
+                            <Check size={14} className="text-emerald-300" /> Single Link Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy size={14} /> Copy 1 Single Link For Team
+                          </>
+                        )}
+                      </button>
+
                       {selectedRound.status === "active" && (
                         <button
                           onClick={() => handleCloseRound(selectedRound.id)}

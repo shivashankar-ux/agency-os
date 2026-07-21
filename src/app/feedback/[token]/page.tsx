@@ -10,32 +10,50 @@ export default async function FeedbackTokenPage({
   const { token } = await params;
   const supabase = await createClient();
 
-  // Validate token
-  const { data: tokenData, error } = await supabase
+  let giverUserId: string | null = null;
+  let round: any = null;
+  let giverName = "";
+
+  // 1. Try finding by magic token
+  const { data: tokenData } = await supabase
     .from("feedback_tokens")
     .select(`
-      id,
-      token,
-      used,
-      giver_user_id,
+      id, token, used, giver_user_id,
       feedback_rounds (
-        id,
-        title,
-        questions,
-        status,
-        feedback_round_participants (
-          user_id
-        )
+        id, title, questions, status,
+        feedback_round_participants ( user_id )
       )
     `)
     .eq("token", token)
     .maybeSingle();
 
-  if (error || !tokenData || !tokenData.feedback_rounds) {
-    notFound();
-  }
+  if (tokenData && tokenData.feedback_rounds) {
+    round = tokenData.feedback_rounds;
+    giverUserId = tokenData.giver_user_id;
 
-  const round = tokenData.feedback_rounds as any;
+    const { data: giverProfile } = await supabase
+      .from("profiles")
+      .select("name")
+      .eq("id", giverUserId)
+      .single();
+    giverName = giverProfile?.name || "Team Member";
+  } else {
+    // 2. Try finding by round_id (Single Shared Link Mode)
+    const { data: roundData } = await supabase
+      .from("feedback_rounds")
+      .select(`
+        id, title, questions, status,
+        feedback_round_participants ( user_id )
+      `)
+      .eq("id", token)
+      .maybeSingle();
+
+    if (!roundData) {
+      notFound();
+    }
+    round = roundData;
+    giverName = "Select Your Name";
+  }
 
   if (round.status === "closed") {
     return (
@@ -50,35 +68,35 @@ export default async function FeedbackTokenPage({
     );
   }
 
-  // Get giver profile details
-  const { data: giverProfile } = await supabase
-    .from("profiles")
-    .select("name")
-    .eq("id", tokenData.giver_user_id)
-    .single();
+  // Fetch all participants for this round
+  const participantUserIds = (round.feedback_round_participants || []).map(
+    (p: any) => p.user_id
+  );
 
-  // Fetch participants for this round, excluding the giver themselves
-  const participantUserIds = (round.feedback_round_participants || [])
-    .map((p: any) => p.user_id)
-    .filter((id: string) => id !== tokenData.giver_user_id);
-
-  let participants: { id: string; name: string; role: string }[] = [];
+  let allParticipants: { id: string; name: string; role: string }[] = [];
   if (participantUserIds.length > 0) {
     const { data: profiles } = await supabase
       .from("profiles")
       .select("id, name, role")
       .in("id", participantUserIds);
 
-    participants = profiles || [];
+    allParticipants = profiles || [];
   }
+
+  // Filter out giver if known, otherwise pass all participants
+  const participants = giverUserId
+    ? allParticipants.filter((p) => p.id !== giverUserId)
+    : allParticipants;
 
   return (
     <FeedbackTokenClient
       token={token}
       roundTitle={round.title}
-      giverName={giverProfile?.name || "Team Member"}
+      giverName={giverName}
+      giverUserId={giverUserId || undefined}
       questions={round.questions || []}
       participants={participants}
+      allParticipants={allParticipants}
     />
   );
 }

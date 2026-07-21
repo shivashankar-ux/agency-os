@@ -21,17 +21,22 @@ interface FeedbackTokenClientProps {
   token: string;
   roundTitle: string;
   giverName: string;
+  giverUserId?: string;
   questions: Question[];
   participants: Participant[];
+  allParticipants: Participant[];
 }
 
 export default function FeedbackTokenClient({
   token,
   roundTitle,
   giverName,
+  giverUserId,
   questions,
-  participants,
+  participants: initialParticipants,
+  allParticipants,
 }: FeedbackTokenClientProps) {
+  const [selectedGiverId, setSelectedGiverId] = useState<string>(giverUserId || "");
   const [activeIdx, setActiveIdx] = useState<number>(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -42,7 +47,13 @@ export default function FeedbackTokenClient({
     Record<string, Record<string, string | number>>
   >({});
 
+  // Filter participants to review: exclude selected giver
+  const participants = selectedGiverId
+    ? allParticipants.filter((p) => p.id !== selectedGiverId)
+    : allParticipants;
+
   const activeParticipant = participants[activeIdx];
+  const activeGiverName = allParticipants.find((p) => p.id === selectedGiverId)?.name || giverName;
 
   const handleInputChange = (receiverId: string, qId: string, value: string | number) => {
     setFeedbackData((prev) => ({
@@ -69,6 +80,12 @@ export default function FeedbackTokenClient({
 
   const handleSubmitAll = async () => {
     setError(null);
+
+    if (!selectedGiverId) {
+      setError("Please select your name under 'I am...' before submitting feedback.");
+      return;
+    }
+
     setSubmitting(true);
 
     const formattedResponses = participants
@@ -93,7 +110,7 @@ export default function FeedbackTokenClient({
       return;
     }
 
-    const res = await submitFeedbackBatch(token, formattedResponses);
+    const res = await submitFeedbackBatch(token, formattedResponses, selectedGiverId);
     setSubmitting(false);
 
     if (res.error) {
@@ -116,7 +133,7 @@ export default function FeedbackTokenClient({
           </div>
           <h1 className="text-2xl font-bold text-white tracking-tight">Feedback Submitted!</h1>
           <p className="text-neutral-400 text-sm leading-relaxed">
-            Thank you, <strong className="text-white">{giverName}</strong>! Your 360° feedback has been submitted anonymously. The recipients will receive their feedback via email without revealing your identity.
+            Thank you, <strong className="text-white">{activeGiverName}</strong>! Your 360° feedback has been submitted anonymously. Each recipient will receive an automated email notification with your feedback while keeping your identity completely confidential.
           </p>
         </motion.div>
       </div>
@@ -126,14 +143,35 @@ export default function FeedbackTokenClient({
   return (
     <div className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-start p-4 sm:p-6">
       {/* Header */}
-      <header className="w-full max-w-4xl py-6 flex items-center justify-between border-b border-neutral-900 mb-6">
+      <header className="w-full max-w-4xl py-6 flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-neutral-900 gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-extrabold shadow-lg shadow-indigo-600/30">
             360
           </div>
           <div>
             <h1 className="text-lg font-bold text-white tracking-tight">{roundTitle}</h1>
-            <p className="text-neutral-500 text-xs">Giving feedback as <span className="text-indigo-400 font-semibold">{giverName}</span></p>
+            <div className="flex items-center gap-2 text-xs text-neutral-400 mt-0.5">
+              <span>I am:</span>
+              {giverUserId ? (
+                <span className="text-indigo-400 font-bold">{activeGiverName}</span>
+              ) : (
+                <select
+                  value={selectedGiverId}
+                  onChange={(e) => {
+                    setSelectedGiverId(e.target.value);
+                    setActiveIdx(0);
+                  }}
+                  className="bg-neutral-900 border border-neutral-800 text-indigo-400 font-bold rounded-lg px-2.5 py-1 text-xs focus:outline-none focus:border-indigo-500"
+                >
+                  <option value="">-- Select Your Name --</option>
+                  {allParticipants.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.role})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
           </div>
         </div>
         <div className="text-right">

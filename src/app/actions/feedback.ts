@@ -114,33 +114,52 @@ export async function getOrCreateFeedbackToken(roundId: string, giverUserId: str
   return { token: newToken.token };
 }
 
-// ── 3. Submit Anonymous Feedback (Public / Member) ─────────────
 export async function submitFeedbackBatch(
   token: string,
   responses: {
     receiver_user_id: string;
     answers: { question_id: string; prompt: string; type: string; answer: string | number }[];
-  }[]
+  }[],
+  selectedGiverUserId?: string
 ) {
   const supabase = await createClient();
 
-  // Validate token
-  const { data: tokenData, error: tokenErr } = await supabase
+  let giverUserId: string | null = null;
+  let round: any = null;
+
+  // Try finding by token first
+  const { data: tokenData } = await supabase
     .from("feedback_tokens")
     .select("*, feedback_rounds(*)")
     .eq("token", token)
-    .single();
+    .maybeSingle();
 
-  if (tokenErr || !tokenData) {
-    return { error: "Invalid or expired feedback link." };
+  if (tokenData && tokenData.feedback_rounds) {
+    round = tokenData.feedback_rounds;
+    giverUserId = tokenData.giver_user_id;
+  } else {
+    // Single shared link mode: token is round_id
+    const { data: roundData } = await supabase
+      .from("feedback_rounds")
+      .select("*")
+      .eq("id", token)
+      .maybeSingle();
+
+    if (!roundData) {
+      return { error: "Invalid or expired feedback link." };
+    }
+    round = roundData;
+    giverUserId = selectedGiverUserId || null;
   }
 
-  const round = tokenData.feedback_rounds;
   if (!round || round.status === "closed") {
     return { error: "This feedback round is closed." };
   }
 
-  const giverUserId = tokenData.giver_user_id;
+  if (!giverUserId) {
+    return { error: "Please select who you are before submitting feedback." };
+  }
+
   const orgId = round.org_id;
 
   const insertRows = responses.map((r) => ({
