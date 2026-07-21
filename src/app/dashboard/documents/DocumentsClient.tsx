@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { 
-  FileText, Download, Sparkles, Building2, User, DollarSign, Calendar, AlertCircle, Loader2, CheckCircle2
+  FileText, Download, Sparkles, Building2, User, DollarSign, Calendar, AlertCircle, Loader2, CheckCircle2, Mail
 } from "lucide-react";
 
 interface DocumentsClientProps {
@@ -22,10 +22,11 @@ export default function DocumentsClient({ clients }: DocumentsClientProps) {
   const [generating, setGenerating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const selectedClient = clients.find((c) => c.id === selectedClientId);
 
-  const handleGenerateAndDownload = async () => {
+  const handleGenerateAndDownload = async (sendEmail = false) => {
     if (!selectedClientId) {
       setErrorMsg("Please select a client first.");
       return;
@@ -33,7 +34,11 @@ export default function DocumentsClient({ clients }: DocumentsClientProps) {
 
     setErrorMsg(null);
     setSuccessMsg(null);
-    setGenerating(true);
+    if (sendEmail) {
+      setSendingEmail(true);
+    } else {
+      setGenerating(true);
+    }
 
     try {
       const fieldData = {
@@ -51,39 +56,46 @@ export default function DocumentsClient({ clients }: DocumentsClientProps) {
           clientId: selectedClientId,
           type: docType,
           fieldData,
+          sendEmail, // pass email trigger flag to api handler
         }),
       });
 
       const data = await res.json();
       setGenerating(false);
+      setSendingEmail(false);
 
       if (!res.ok || data.error) {
-        setErrorMsg(data.error || "Failed to generate PDF document.");
+        setErrorMsg(data.error || "Failed to process PDF document.");
         return;
       }
 
-      // Convert Base64 string to Blob and trigger browser download
-      const binaryStr = atob(data.base64Pdf);
-      const len = binaryStr.length;
-      const bytes = new Uint8Array(len);
-      for (let i = 0; i < len; i++) {
-        bytes[i] = binaryStr.charCodeAt(i);
+      if (sendEmail) {
+        setSuccessMsg(`PDF Generated & successfully emailed to ${selectedClient?.email || "Client"}`);
+      } else {
+        // Convert Base64 string to Blob and trigger browser download
+        const binaryStr = atob(data.base64Pdf);
+        const len = binaryStr.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryStr.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: "application/pdf" });
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = data.filename || `document_${docType}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        setSuccessMsg(`PDF Generated & Downloaded: ${data.filename}`);
       }
-      const blob = new Blob([bytes], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = data.filename || `document_${docType}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-
-      setSuccessMsg(`PDF Generated & Downloaded: ${data.filename}`);
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setGenerating(false);
+      setSendingEmail(false);
       setErrorMsg(err.message || "An unexpected error occurred during PDF generation.");
     }
   };
@@ -204,21 +216,39 @@ export default function DocumentsClient({ clients }: DocumentsClientProps) {
             </>
           )}
 
-          <button
-            onClick={handleGenerateAndDownload}
-            disabled={generating}
-            className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-900/20 text-xs flex items-center justify-center gap-2 cursor-pointer"
-          >
-            {generating ? (
-              <>
-                <Loader2 size={16} className="animate-spin" /> Rendering Branded PDF...
-              </>
-            ) : (
-              <>
-                <Download size={16} /> Generate & Download PDF
-              </>
-            )}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleGenerateAndDownload(false)}
+              disabled={generating || sendingEmail}
+              className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-900/20 text-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {generating ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Rendering...
+                </>
+              ) : (
+                <>
+                  <Download size={16} /> Download PDF
+                </>
+              )}
+            </button>
+
+            <button
+              onClick={() => handleGenerateAndDownload(true)}
+              disabled={generating || sendingEmail}
+              className="flex-1 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
+            >
+              {sendingEmail ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" /> Sending...
+                </>
+              ) : (
+                <>
+                  <Mail size={16} className="text-indigo-400" /> Send via Email
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Real-time Summary & Overview Card */}

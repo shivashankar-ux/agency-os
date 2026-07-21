@@ -6,6 +6,7 @@ import {
   Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle, Sparkles, Building2
 } from "lucide-react";
 import BrandingSettings from "./BrandingSettings";
+import TemplateEditor from "./TemplateEditor";
 
 type Profile = {
   id: string;
@@ -22,6 +23,7 @@ type ChecklistItem = {
 type SettingsClientProps = {
   profile: Profile;
   initialBranding?: any;
+  templates?: any[];
 };
 
 const COLOR_PRESETS = [
@@ -50,7 +52,7 @@ function adjustColorBrightness(hex: string, percent: number) {
   return `#${rHex}${gHex}${bHex}`;
 }
 
-export default function SettingsClient({ profile, initialBranding }: SettingsClientProps) {
+export default function SettingsClient({ profile, initialBranding, templates = [] }: SettingsClientProps) {
   // 1. Dashboard Widget Visibility Settings (State & Initialization)
   const [widgets, setWidgets] = useState({
     kpis: true,
@@ -71,7 +73,7 @@ export default function SettingsClient({ profile, initialBranding }: SettingsCli
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
   const [newTodoText, setNewTodoText] = useState("");
 
-  const [activeSubTab, setActiveSubTab] = useState<"branding" | "widgets" | "notes" | "theme">("branding");
+  const [activeSubTab, setActiveSubTab] = useState<"branding" | "templates" | "widgets" | "notes" | "theme">("branding");
 
   // 4. Accent Theme Color Settings State
   const [selectedPreset, setSelectedPreset] = useState("amber");
@@ -204,6 +206,19 @@ export default function SettingsClient({ profile, initialBranding }: SettingsCli
           <Building2 size={14} className={activeSubTab === "branding" ? "text-indigo-400" : ""} />
           Agency Branding & PDF Setup
         </button>
+        {isOwnerOrAdmin && (
+          <button
+            onClick={() => setActiveSubTab("templates")}
+            className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left border ${
+              activeSubTab === "templates"
+                ? "bg-neutral-900 text-white border-neutral-800 shadow"
+                : "text-neutral-500 hover:bg-neutral-900/50 hover:text-white border-transparent"
+            }`}
+          >
+            <FileText size={14} className={activeSubTab === "templates" ? "text-indigo-400" : ""} />
+            Document PDF Templates
+          </button>
+        )}
         <button
           onClick={() => setActiveSubTab("widgets")}
           className={`w-full flex items-center gap-2.5 px-4 py-3 rounded-xl text-xs font-bold transition-all text-left border ${
@@ -247,6 +262,13 @@ export default function SettingsClient({ profile, initialBranding }: SettingsCli
             animate={{ opacity: 1, y: 0 }}
           >
             <BrandingSettings initialBranding={initialBranding} isOwnerOrAdmin={isOwnerOrAdmin} />
+          </motion.div>
+        ) : activeSubTab === "templates" ? (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <TemplateEditor templates={templates} isOwnerOrAdmin={isOwnerOrAdmin} />
           </motion.div>
         ) : activeSubTab === "widgets" ? (
           <motion.div

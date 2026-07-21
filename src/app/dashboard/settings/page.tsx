@@ -1,6 +1,7 @@
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { redirect } from "next/navigation";
 import { getOrgBranding } from "@/app/actions/branding";
+import { getDocumentTemplates } from "@/app/actions/document-templates";
 import SettingsClient from "./SettingsClient";
 
 export const metadata = {
@@ -15,6 +16,7 @@ export default async function SettingsPage() {
   }
 
   const initialBranding = await getOrgBranding();
+  const templates = await getDocumentTemplates();
 
   return (
     <div>
@@ -23,7 +25,11 @@ export default async function SettingsPage() {
         Customize your experience, agency branding, and document templates
       </p>
 
-      <SettingsClient profile={profile as any} initialBranding={initialBranding} />
+      <SettingsClient
+        profile={profile as any}
+        initialBranding={initialBranding}
+        templates={templates}
+      />
     </div>
   );
 }
