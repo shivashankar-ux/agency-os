@@ -57,10 +57,10 @@ export default async function FeedbackTokenPage({
     .eq("id", tokenData.giver_user_id)
     .single();
 
-  // Fetch participants for this round
-  const participantUserIds = (round.feedback_round_participants || []).map(
-    (p: any) => p.user_id
-  );
+  // Fetch participants for this round, excluding the giver themselves
+  const participantUserIds = (round.feedback_round_participants || [])
+    .map((p: any) => p.user_id)
+    .filter((id: string) => id !== tokenData.giver_user_id);
 
   let participants: { id: string; name: string; role: string }[] = [];
   if (participantUserIds.length > 0) {

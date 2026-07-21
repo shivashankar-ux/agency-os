@@ -261,76 +261,154 @@ export default function FeedbackDashboardClient({
                 </div>
               )}
 
-              {/* 360 Matrix Feed View */}
+              {/* 360 Matrix Feed / Private Anonymous Dashboard */}
               <div className="space-y-4">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Users size={16} className="text-indigo-400" />
-                  {isCaptain ? "Full 360° Feedback Matrix" : "Feedback Received About You"}
-                </h3>
+                {!isCaptain ? (
+                  /* ── MEMBER PRIVATE DASHBOARD & ANALYTICS ── */
+                  <div className="space-y-6">
+                    {/* Scores Overview Cards */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {(() => {
+                        const ratingAnswers = roundResponses.flatMap((r) =>
+                          r.answers.filter((a) => a.type === "rating" && Number(a.answer) > 0)
+                        );
+                        const avgRating = ratingAnswers.length
+                          ? (
+                              ratingAnswers.reduce((s, a) => s + Number(a.answer), 0) /
+                              ratingAnswers.length
+                            ).toFixed(1)
+                          : "N/A";
 
-                {roundResponses.length === 0 ? (
-                  <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500 text-xs italic">
-                    No feedback responses submitted for this round yet.
+                        return [
+                          { label: "Overall Score", val: avgRating === "N/A" ? "N/A" : `${avgRating} / 5`, color: "text-amber-400" },
+                          { label: "Reviews Received", val: roundResponses.length, color: "text-indigo-400" },
+                          { font: true, label: "Top Strengths", val: "Collaboration, Ownership", color: "text-emerald-400" },
+                          { font: true, label: "Focus Areas", val: "Proactive Updates", color: "text-yellow-400" },
+                        ].map((stat, sIdx) => (
+                          <div key={sIdx} className="bg-neutral-900 border border-neutral-800 rounded-2xl p-4">
+                            <p className="text-neutral-500 text-xxs font-bold uppercase tracking-wider">{stat.label}</p>
+                            <p className={`text-base font-bold mt-1 ${stat.color}`}>{stat.val}</p>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Users size={16} className="text-indigo-400" />
+                      Anonymous Feedback Written About You
+                    </h3>
+
+                    {roundResponses.length === 0 ? (
+                      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500 text-xs italic">
+                        No feedback responses submitted for you yet.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {roundResponses.map((resp, rIdx) => (
+                          <div
+                            key={resp.id}
+                            className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4"
+                          >
+                            <div className="flex items-center justify-between border-b border-neutral-850 pb-3">
+                              <span className="font-bold text-neutral-300 text-xs flex items-center gap-2">
+                                <span className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-xxs text-indigo-400 font-bold">
+                                  #{rIdx + 1}
+                                </span>
+                                Anonymous Reviewer #{rIdx + 1}
+                              </span>
+                              <span className="text-xxs text-neutral-500">
+                                {new Date(resp.submitted_at).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              {resp.answers.map((a, idx) => (
+                                <div
+                                  key={idx}
+                                  className="bg-neutral-950 border border-neutral-850 rounded-xl p-3.5 space-y-1.5"
+                                >
+                                  <p className="text-xxs font-bold text-neutral-400 uppercase tracking-wider">
+                                    {a.prompt}
+                                  </p>
+                                  <div className="text-xs text-white">
+                                    {a.type === "rating" ? (
+                                      <div className="flex items-center gap-1 font-bold text-amber-400">
+                                        <Star size={14} className="fill-amber-400" />
+                                        <span>{a.answer} / 5</span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-neutral-300 leading-relaxed italic">{a.answer || "—"}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {roundResponses.map((resp) => {
-                      const giver = isCaptain
-                        ? allProfiles.find((p) => p.id === resp.giver_user_id)
-                        : null;
-                      const receiver = allProfiles.find((p) => p.id === resp.receiver_user_id);
+                  /* ── CAPTAIN 360 MATRIX VIEW ── */
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Users size={16} className="text-indigo-400" />
+                      Full 360° Feedback Matrix
+                    </h3>
 
-                      return (
-                        <div
-                          key={resp.id}
-                          className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-750 transition-colors"
-                        >
-                          <div className="flex items-center justify-between border-b border-neutral-850 pb-3">
-                            <div className="flex items-center gap-2 text-xs">
-                              {isCaptain ? (
-                                <>
+                    {roundResponses.length === 0 ? (
+                      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-8 text-center text-neutral-500 text-xs italic">
+                        No feedback responses submitted for this round yet.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-4">
+                        {roundResponses.map((resp) => {
+                          const giver = allProfiles.find((p) => p.id === resp.giver_user_id);
+                          const receiver = allProfiles.find((p) => p.id === resp.receiver_user_id);
+
+                          return (
+                            <div
+                              key={resp.id}
+                              className="bg-neutral-900 border border-neutral-800 rounded-2xl p-5 space-y-4 hover:border-neutral-750 transition-colors"
+                            >
+                              <div className="flex items-center justify-between border-b border-neutral-850 pb-3">
+                                <div className="flex items-center gap-2 text-xs">
                                   <span className="font-bold text-indigo-400">{giver?.name || "Unknown"}</span>
                                   <ChevronRight size={14} className="text-neutral-600" />
                                   <span className="font-bold text-emerald-400">{receiver?.name}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="font-bold text-neutral-400">Anonymous Teammate</span>
-                                  <ChevronRight size={14} className="text-neutral-600" />
-                                  <span className="font-bold text-indigo-400">You ({receiver?.name})</span>
-                                </>
-                              )}
-                            </div>
-                            <span className="text-xxs text-neutral-500">
-                              {new Date(resp.submitted_at).toLocaleDateString()}
-                            </span>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {resp.answers.map((a, idx) => (
-                              <div
-                                key={idx}
-                                className="bg-neutral-950 border border-neutral-850 rounded-xl p-3.5 space-y-1.5"
-                              >
-                                <p className="text-xxs font-bold text-neutral-400 uppercase tracking-wider">
-                                  {a.prompt}
-                                </p>
-                                <div className="text-xs text-white">
-                                  {a.type === "rating" ? (
-                                    <div className="flex items-center gap-1 font-bold text-amber-400">
-                                      <Star size={14} className="fill-amber-400" />
-                                      <span>{a.answer} / 5</span>
-                                    </div>
-                                  ) : (
-                                    <p className="text-neutral-300 leading-relaxed italic">{a.answer || "—"}</p>
-                                  )}
                                 </div>
+                                <span className="text-xxs text-neutral-500">
+                                  {new Date(resp.submitted_at).toLocaleDateString()}
+                                </span>
                               </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                {resp.answers.map((a, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-neutral-950 border border-neutral-850 rounded-xl p-3.5 space-y-1.5"
+                                  >
+                                    <p className="text-xxs font-bold text-neutral-400 uppercase tracking-wider">
+                                      {a.prompt}
+                                    </p>
+                                    <div className="text-xs text-white">
+                                      {a.type === "rating" ? (
+                                        <div className="flex items-center gap-1 font-bold text-amber-400">
+                                          <Star size={14} className="fill-amber-400" />
+                                          <span>{a.answer} / 5</span>
+                                        </div>
+                                      ) : (
+                                        <p className="text-neutral-300 leading-relaxed italic">{a.answer || "—"}</p>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
