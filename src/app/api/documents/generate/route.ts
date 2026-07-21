@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { WelcomePdfDocument, InvoicePdfDocument } from "@/lib/pdf/templates";
@@ -57,21 +58,21 @@ export async function POST(req: NextRequest) {
         });
 
       pdfBuffer = await renderToBuffer(
-        <InvoicePdfDocument
-          branding={branding}
-          client={client}
-          fieldData={fieldData}
-          invoiceNumber={invoiceNumber}
-        />
+        React.createElement(InvoicePdfDocument, {
+          branding,
+          client,
+          fieldData,
+          invoiceNumber,
+        })
       );
     } else {
       // Welcome or Onboarding PDF
       pdfBuffer = await renderToBuffer(
-        <WelcomePdfDocument
-          branding={branding}
-          client={client}
-          fieldData={fieldData}
-        />
+        React.createElement(WelcomePdfDocument, {
+          branding,
+          client,
+          fieldData,
+        })
       );
     }
 
