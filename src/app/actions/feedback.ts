@@ -208,7 +208,7 @@ export async function submitFeedbackBatch(
             .join("");
 
           await resend.emails.send({
-            from: "The Story Builder <shivashankar.7991@gmail.com>",
+            from: "The Story Builder <shiva@thestorybuilder.in>",
             to: receiverEmail,
             subject: `💬 New Feedback Received (${round.title})`,
             html: `
