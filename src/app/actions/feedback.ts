@@ -233,3 +233,31 @@ export async function closeFeedbackRound(roundId: string) {
   revalidatePath("/dashboard/feedback");
   return { success: true };
 }
+
+// ── 5. Delete Feedback Round (Captain only) ─────────────────────
+export async function deleteFeedbackRound(roundId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return { error: "Unauthorized" };
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (!profile || (profile.role !== "owner" && profile.role !== "admin")) {
+    return { error: "Only the Captain/Admins can delete feedback rounds." };
+  }
+
+  const { error } = await supabase
+    .from("feedback_rounds")
+    .delete()
+    .eq("id", roundId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath("/dashboard/feedback");
+  return { success: true };
+}

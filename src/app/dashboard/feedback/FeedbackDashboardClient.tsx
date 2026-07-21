@@ -4,9 +4,9 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles, Plus, Copy, Check, Lock, Eye, Mail, Star, Users,
-  AlertCircle, ChevronRight, CheckCircle2, ShieldCheck, X
+  AlertCircle, ChevronRight, CheckCircle2, ShieldCheck, X, Trash2
 } from "lucide-react";
-import { createFeedbackRound, closeFeedbackRound, QuestionItem } from "@/app/actions/feedback";
+import { createFeedbackRound, closeFeedbackRound, deleteFeedbackRound, QuestionItem } from "@/app/actions/feedback";
 
 interface ProfileItem {
   id: string;
@@ -132,6 +132,11 @@ export default function FeedbackDashboardClient({
     await closeFeedbackRound(rId);
   };
 
+  const handleDeleteRound = async (rId: string) => {
+    if (!confirm("Are you sure you want to delete this feedback round and all its data? This cannot be undone.")) return;
+    await deleteFeedbackRound(rId);
+  };
+
   // Filter responses for selected round
   const roundResponses = responses.filter((r) => r.round_id === selectedRoundId);
   const roundTokens = tokens.filter((t) => t.round_id === selectedRoundId);
@@ -213,14 +218,22 @@ export default function FeedbackDashboardClient({
                         Share these unique magic links with team members. They complete feedback without logging in.
                       </p>
                     </div>
-                    {selectedRound.status === "active" && (
+                    <div className="flex items-center gap-2">
+                      {selectedRound.status === "active" && (
+                        <button
+                          onClick={() => handleCloseRound(selectedRound.id)}
+                          className="text-xs text-amber-400 hover:text-amber-300 bg-amber-950/40 border border-amber-900 px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                        >
+                          Close Round
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleCloseRound(selectedRound.id)}
-                        className="text-xs text-red-400 hover:text-red-300 bg-red-950/40 border border-red-900 px-3 py-1.5 rounded-lg font-semibold transition-colors"
+                        onClick={() => handleDeleteRound(selectedRound.id)}
+                        className="text-xs text-red-400 hover:text-red-300 bg-red-950/40 border border-red-900 px-3 py-1.5 rounded-lg font-semibold transition-colors flex items-center gap-1"
                       >
-                        Close Round
+                        <Trash2 size={13} /> Delete Sheet
                       </button>
-                    )}
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 pt-2">
