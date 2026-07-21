@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { 
   Settings, CheckSquare, FileText, Layout, Save, Plus, Trash2, CheckCircle2, Circle, Sparkles, Building2
 } from "lucide-react";
+import BrandingSettings from "./BrandingSettings";
 
 type Profile = {
   id: string;
