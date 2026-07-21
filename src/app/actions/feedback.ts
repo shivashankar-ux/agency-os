@@ -182,7 +182,7 @@ export async function submitFeedbackBatch(
   }
 
   // Mark token as used
-  await supabase
+  await adminSupabase
     .from("feedback_tokens")
     .update({ used: true })
     .eq("token", token);
