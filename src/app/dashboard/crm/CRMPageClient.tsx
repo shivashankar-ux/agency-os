@@ -9,6 +9,7 @@ import {
   TrendingUp, AlertCircle, CheckCircle, Clock, Edit3, Trash2,
   MessageSquare, Activity, PhoneCall, AtSign, MoreVertical
 } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 // ── Types ──────────────────────────────────────────────────────
 export type Lead = {
@@ -343,8 +344,7 @@ function LeadDrawer({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Expected Close</label>
-                    <input type="date" value={form.expected_close_date || ""} onChange={(e) => setForm({ ...form, expected_close_date: e.target.value })}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none" />
+                    <DatePicker value={form.expected_close_date || ""} onChange={(val) => setForm({ ...form, expected_close_date: val })} placeholder="Select close date..." />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Assigned To</label>
@@ -869,9 +869,7 @@ export default function CRMPageClient({
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Expected Close Date</label>
-                    <input type="date" value={createForm.expected_close_date}
-                      onChange={(e) => setCreateForm({ ...createForm, expected_close_date: e.target.value })}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none" />
+                    <DatePicker value={createForm.expected_close_date} onChange={(val) => setCreateForm({ ...createForm, expected_close_date: val })} placeholder="Select close date..." />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Assign To</label>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createInvoice } from "@/app/actions/finance";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface ClientOption {
   id: string;
@@ -19,12 +20,17 @@ interface CreateInvoiceModalProps {
 export default function CreateInvoiceModal({ isOpen, onClose, clients }: CreateInvoiceModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState("");
+  const [issueDate, setIssueDate] = useState<string>(new Date().toISOString().split("T")[0]);
+  const [dueDate, setDueDate] = useState<string>("");
 
   async function actionCreateInvoice(formData: FormData) {
     setFormError("");
     setSubmitting(true);
     
     try {
+      if (issueDate) formData.set("issue_date", issueDate);
+      if (dueDate) formData.set("due_date", dueDate);
+      
       const res = await createInvoice(formData);
       if (res?.error) {
         setFormError(res.error);
@@ -123,22 +129,12 @@ export default function CreateInvoiceModal({ isOpen, onClose, clients }: CreateI
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-neutral-400 font-semibold block">Issue Date</label>
-                  <input
-                    type="date"
-                    name="issue_date"
-                    required
-                    defaultValue={new Date().toISOString().split("T")[0]}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-neutral-700"
-                  />
+                  <DatePicker name="issue_date" value={issueDate} onChange={(val) => setIssueDate(val)} placeholder="Select issue date..." />
                 </div>
 
                 <div className="space-y-1.5">
                   <label className="text-neutral-400 font-semibold block">Due Date</label>
-                  <input
-                    type="date"
-                    name="due_date"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-neutral-700"
-                  />
+                  <DatePicker name="due_date" value={dueDate} onChange={(val) => setDueDate(val)} placeholder="Select due date..." />
                 </div>
               </div>
 

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
 
 export default function AddClientButton({ 
   role 
@@ -167,13 +168,10 @@ export default function AddClientButton({
                   />
                 )}
               </div>
-              <input
-                type="date"
+              <DatePicker
                 value={form.start_date}
-                onChange={(e) =>
-                  setForm({ ...form, start_date: e.target.value })
-                }
-                className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                onChange={(val) => setForm({ ...form, start_date: val })}
+                placeholder="Select start date..."
               />
 
               {error && (

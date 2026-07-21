@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { createProject } from "@/app/actions/projects";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -89,11 +90,7 @@ export default function CreateProjectModal({ isOpen, onClose, clientId }: Create
 
               <div className="space-y-1.5">
                 <label className="text-sm font-medium text-neutral-300">Target End Date</label>
-                <input
-                  type="date"
-                  name="end_date"
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                />
+                <DatePicker name="end_date" placeholder="Select end date..." />
               </div>
 
               <div className="pt-4 flex justify-end gap-3">

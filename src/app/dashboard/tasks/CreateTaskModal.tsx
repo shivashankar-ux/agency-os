@@ -4,6 +4,7 @@ import { useState, useTransition, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { createTask } from "@/app/actions/tasks";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface CreateTaskModalProps {
   isOpen: boolean;
@@ -168,11 +169,7 @@ export default function CreateTaskModal({
                 
                 <div className="space-y-1.5">
                   <label className="text-sm font-medium text-neutral-300">Due Date</label>
-                  <input
-                    type="date"
-                    name="due_date"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                  />
+                  <DatePicker name="due_date" placeholder="Select due date..." />
                 </div>
               </div>
 

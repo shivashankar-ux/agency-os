@@ -23,6 +23,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     files: { upload: { allowed: true, scope: "all" }, download: { allowed: true, scope: "all" }, delete: { allowed: true, scope: "all" } },
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: true, scope: "all" }, branding: { allowed: true, scope: "all" }, integrations: { allowed: true, scope: "all" }, delete_workspace: { allowed: true, scope: "all" } },
+    feedback: { view_all: { allowed: true, scope: "all" }, create_round: { allowed: true, scope: "all" }, manage_tokens: { allowed: true, scope: "all" } },
   },
   admin: {
     // Almost full access, cannot delete workspace or manage super admin fields
@@ -38,6 +39,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     files: { upload: { allowed: true, scope: "all" }, download: { allowed: true, scope: "all" }, delete: { allowed: true, scope: "all" } },
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: true, scope: "all" }, branding: { allowed: true, scope: "all" }, integrations: { allowed: true, scope: "all" }, delete_workspace: { allowed: false, scope: "all" } },
+    feedback: { view_all: { allowed: true, scope: "all" }, create_round: { allowed: true, scope: "all" }, manage_tokens: { allowed: true, scope: "all" } },
   },
   manager: {
     // Managers default to view & edit rights but can be configured individually via UI

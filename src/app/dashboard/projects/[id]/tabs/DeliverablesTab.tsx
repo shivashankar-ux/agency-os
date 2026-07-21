@@ -4,6 +4,7 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, Calendar, CheckCircle, Clock, ThumbsDown, Eye } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import DatePicker from "@/components/ui/DatePicker";
 
 interface Deliverable {
   id: string;
@@ -199,9 +200,7 @@ export default function DeliverablesTab({ projectId, initialDeliverables, milest
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Due Date</label>
-                    <input type="date" value={formData.due_date} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 text-white focus:outline-none focus:border-neutral-700"
-                    />
+                    <DatePicker value={formData.due_date} onChange={(val) => setFormData({ ...formData, due_date: val })} placeholder="Select due date..." />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-neutral-400 font-semibold">Status</label>
