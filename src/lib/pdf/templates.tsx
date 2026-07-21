@@ -212,7 +212,7 @@ export function InvoicePdfDocument({ branding, client, fieldData, invoiceNumber 
 
         <View style={{ flexDirection: "row", justifyContent: "flex-end", marginBottom: 20 }}>
           <View style={{ width: 200, padding: 8, backgroundColor: "#f8fafc", borderRadius: 4 }}>
-            <View style={{ flexDirection: "row", justifyBetween: "space-between" }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
               <Text style={{ fontWeight: 700, fontSize: 12 }}>Total Payable:</Text>
               <Text style={{ fontWeight: 700, fontSize: 12, color: primaryColor }}>
                 ₹{Number(total).toLocaleString("en-IN")}
