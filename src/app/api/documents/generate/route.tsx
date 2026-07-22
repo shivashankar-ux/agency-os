@@ -3,6 +3,7 @@ import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { WelcomePdfDocument, InvoicePdfDocument } from "@/lib/pdf/templates";
+import { AgreementPdfDocument } from "@/lib/pdf/agreement";
 
 export async function POST(req: NextRequest) {
   try {
@@ -64,6 +65,19 @@ export async function POST(req: NextRequest) {
             client={client}
             fieldData={fieldData}
             invoiceNumber={invoiceNumber}
+          />
+        ) as any
+      );
+    } else if (type === "agreement") {
+      const servicesOpted = fieldData?.services || [];
+      const retainer = fieldData?.total_amount || 0;
+      pdfBuffer = await renderToBuffer(
+        (
+          <AgreementPdfDocument
+            branding={branding}
+            clientName={client.name}
+            services={servicesOpted}
+            retainerValue={retainer}
           />
         ) as any
       );
