@@ -27,7 +27,13 @@ export default async function DocumentsPage() {
     .eq("org_id", profile.org_id)
     .order("name");
 
+  const { data: branding } = await supabase
+    .from("org_branding")
+    .select("*")
+    .eq("org_id", profile.org_id)
+    .maybeSingle();
+
   return (
-    <DocumentsClient clients={clients || []} />
+    <DocumentsClient clients={clients || []} branding={branding} />
   );
 }

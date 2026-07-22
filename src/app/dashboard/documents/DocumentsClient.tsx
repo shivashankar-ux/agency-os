@@ -1,314 +1,298 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { 
-  FileText, Download, Sparkles, Building2, User, DollarSign, Calendar, AlertCircle, Loader2, CheckCircle2, Mail, Plus, X
+  FileText, Download, Sparkles, Building2, User, DollarSign, Calendar, AlertCircle, Loader2, CheckCircle2, RotateCcw
 } from "lucide-react";
 
 interface DocumentsClientProps {
   clients: any[];
+  branding?: any;
 }
 
-const AVAILABLE_SERVICES = [
-  "Social Media Management",
-  "Performance Marketing & Ads",
-  "Search Engine Optimization (SEO)",
-  "Web Development & Maintenance",
-  "Graphic Design & Brand Asset Creation",
-  "Content Strategy & Copywriting",
-  "UI/UX Design",
-  "Video Production & Editing"
-];
-
-export default function DocumentsClient({ clients }: DocumentsClientProps) {
+export default function DocumentsClient({ clients, branding }: DocumentsClientProps) {
   // Input fields
-  const [clientName, setClientName] = useState("");
-  const [selectedServices, setSelectedServices] = useState<string[]>([]);
-  const [paymentAmount, setPaymentAmount] = useState<number>(0);
-  const [docType, setDocType] = useState<string>("agreement");
+  const [clientName, setClientName] = useState("Client Name");
+  const [projectName, setProjectName] = useState("Project Name");
+  const [dateVal, setDateVal] = useState("22 July 2026");
+  const [agencyName, setAgencyName] = useState(branding?.company_name || "The Story Builder");
+  
+  // Greeting & Body
+  const [clientFirstName, setClientFirstName] = useState("there");
+  const [greetingBody, setGreetingBody] = useState(`Thank you for choosing ${branding?.company_name || "The Story Builder"}. We build websites and digital experiences that help businesses like yours grow — and this guide is your map for the journey ahead: who you'll be working with, how we communicate, and what each stage of the project looks like.`);
 
-  const [generating, setGenerating] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [sendingEmail, setSendingEmail] = useState(false);
+  // Team
+  const [teamMarketing, setTeamMarketing] = useState("Heena");
+  const [teamCreative, setTeamCreative] = useState("Aditi");
+  const [teamDesign, setTeamDesign] = useState("Sathwika");
+  const [teamVideo, setTeamVideo] = useState("Umesh");
 
-  // Helper for services checkbox toggles
-  const handleServiceToggle = (service: string) => {
-    setSelectedServices((prev) =>
-      prev.includes(service)
-        ? prev.filter((s) => s !== service)
-        : [...prev, service]
-    );
-  };
+  // Communication
+  const [primaryContact, setPrimaryContact] = useState("Shiva");
+  const [email, setEmail] = useState("hello@thestorybuilder.in");
+  const [phone, setPhone] = useState("+91 00000 00000");
+  const [responseTime, setResponseTime] = useState("Within 24 business hours");
 
-  const handleGenerateAndDownload = async (sendEmail = false) => {
-    if (!clientName.trim()) {
-      setErrorMsg("Please enter the client business name.");
-      return;
-    }
+  // Timeline Steps
+  const [step1Title, setStep1Title] = useState("Kickoff call");
+  const [step1Desc, setStep1Desc] = useState("We align on goals, timelines, and content requirements.");
+  const [step2Title, setStep2Title] = useState("Design & build");
+  const [step2Desc, setStep2Desc] = useState("Our team designs and develops your project in stages, with check-ins along the way.");
+  const [step3Title, setStep3Title] = useState("Review & revisions");
+  const [step3Desc, setStep3Desc] = useState("You review the work and share feedback; we refine until it's right.");
+  const [step4Title, setStep4Title] = useState("Launch");
+  const [step4Desc, setStep4Desc] = useState("We go live, and hand over everything you need to manage it going forward.");
 
-    setErrorMsg(null);
-    setSuccessMsg(null);
-    if (sendEmail) {
-      setSendingEmail(true);
-    } else {
-      setGenerating(true);
-    }
+  // Notes
+  const [note1, setNote1] = useState("Please share brand assets, logins, and content early — it keeps things on schedule.");
+  const [note2, setNote2] = useState("Feedback rounds work best when notes are specific and consolidated in one message.");
+  const [note3, setNote3] = useState("Invoices are shared as per the agreed payment schedule in your service agreement.");
 
-    try {
-      // Find matching client record or mock one
-      const matchedClient = clients.find(
-        (c) => c.name.toLowerCase() === clientName.toLowerCase()
-      );
-      const clientId = matchedClient?.id || clients[0]?.id; // Default fallback to satisfy API
+  // Closing Signoff
+  const [signName, setSignName] = useState("Shiva");
+  const [signRole, setSignRole] = useState("Founder, The Story Builder");
+  const [closingEmail, setClosingEmail] = useState("hello@thestorybuilder.in");
 
-      const fieldData = {
-        date: new Date().toLocaleDateString("en-IN"),
-        welcome_message: `We are thrilled to embark on this growth journey with you. Our dedicated team is committed to driving outstanding strategy and results for your brand: ${clientName}.`,
-        scope_summary: `Services included: ${selectedServices.join(", ") || "Retainer Services"}.\nMonthly Retainer Value: ₹${Number(paymentAmount).toLocaleString("en-IN")}`,
-        service_description: selectedServices.join(" + ") || "Professional Retainer Services",
-        total_amount: paymentAmount || 0,
-        services: selectedServices,
-      };
+  // Set today's date automatically
+  useEffect(() => {
+    const today = new Date();
+    const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+    setDateVal(today.toLocaleDateString("en-US", options));
+  }, []);
 
-      const res = await fetch("/api/documents/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clientId,
-          type: docType,
-          fieldData,
-          sendEmail,
-        }),
-      });
-
-      const data = await res.json();
-      setGenerating(false);
-      setSendingEmail(false);
-
-      if (!res.ok || data.error) {
-        setErrorMsg(data.error || "Failed to process PDF document.");
-        return;
-      }
-
-      if (sendEmail) {
-        setSuccessMsg(`PDF Generated & successfully emailed to client!`);
-      } else {
-        // Convert Base64 string to Blob and trigger browser download
-        const binaryStr = atob(data.base64Pdf);
-        const len = binaryStr.length;
-        const bytes = new Uint8Array(len);
-        for (let i = 0; i < len; i++) {
-          bytes[i] = binaryStr.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = `${docType}_${clientName.replace(/\s+/g, "_")}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        setSuccessMsg(`PDF Generated & Downloaded successfully!`);
-      }
-      setTimeout(() => setSuccessMsg(null), 4000);
-    } catch (err: any) {
-      setGenerating(false);
-      setSendingEmail(false);
-      setErrorMsg(err.message || "An unexpected error occurred during PDF generation.");
-    }
+  const resetGuide = () => {
+    if (!confirm("Reset all fields back to the original placeholder text?")) return;
+    setClientName("Client Name");
+    setProjectName("Project Name");
+    setClientFirstName("there");
+    setTeamMarketing("Heena");
+    setTeamCreative("Aditi");
+    setTeamDesign("Sathwika");
+    setTeamVideo("Umesh");
+    setPrimaryContact("Shiva");
+    setEmail("hello@thestorybuilder.in");
+    setPhone("+91 00000 00000");
+    setResponseTime("Within 24 business hours");
+    setStep1Title("Kickoff call");
+    setStep1Desc("We align on goals, timelines, and content requirements.");
+    setStep2Title("Design & build");
+    setStep2Desc("Our team designs and develops your project in stages, with check-ins along the way.");
+    setStep3Title("Review & revisions");
+    setStep3Desc("You review the work and share feedback; we refine until it's right.");
+    setStep4Title("Launch");
+    setStep4Desc("We go live, and hand over everything you need to manage it going forward.");
+    setNote1("Please share brand assets, logins, and content early — it keeps things on schedule.");
+    setNote2("Feedback rounds work best when notes are specific and consolidated in one message.");
+    setNote3("Invoices are shared as per the agreed payment schedule in your service agreement.");
+    setSignName("Shiva");
+    setSignRole("Founder, The Story Builder");
+    setClosingEmail("hello@thestorybuilder.in");
   };
 
   return (
-    <div className="space-y-6 max-w-5xl text-xs">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl font-bold text-white flex items-center gap-2">
-          <FileText className="text-indigo-400" size={22} />
-          Document & Agreement Generator
-        </h1>
-        <p className="text-neutral-500 text-xs mt-1">
-          Select target output document, enter Client details & select Services to generate instantly.
-        </p>
+    <div className="space-y-6 max-w-4xl text-xs mx-auto">
+      {/* Interactive Controls Toolbar */}
+      <div className="flex items-center justify-between bg-neutral-900 border border-neutral-800 p-4 rounded-2xl shadow-xl no-print">
+        <div className="flex items-center gap-2">
+          <FileText className="text-amber-500" size={18} />
+          <span className="text-white font-bold">Client Welcome Guide Editor</span>
+          <span className="text-neutral-500 text-xxs hidden md:inline">| Double-click/click text inside the sheet below to edit directly</span>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-1 bg-amber-600 hover:bg-amber-500 text-neutral-950 font-bold px-4 py-2 rounded-lg transition-all cursor-pointer text-xs"
+          >
+            <Download size={14} />
+            Print / Download PDF
+          </button>
+          <button
+            onClick={resetGuide}
+            className="flex items-center gap-1 bg-transparent hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-700 px-3 py-2 rounded-lg transition-all cursor-pointer text-xs"
+          >
+            <RotateCcw size={14} />
+            Reset
+          </button>
+        </div>
       </div>
 
-      {successMsg && (
-        <div className="p-3.5 bg-emerald-950/50 border border-emerald-900 text-emerald-400 rounded-xl flex items-center gap-2">
-          <CheckCircle2 size={16} />
-          <p>{successMsg}</p>
-        </div>
-      )}
-
-      {errorMsg && (
-        <div className="p-3.5 bg-red-950/50 border border-red-900 text-red-400 rounded-xl flex items-center gap-2">
-          <AlertCircle size={16} />
-          <p>{errorMsg}</p>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Form Controls Column */}
-        <div className="md:col-span-6 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-5">
-          <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-neutral-800 pb-3">
-            1. Enter Client Details
-          </h2>
-
-          {/* Client Business Name (Manual Entry) */}
-          <div className="space-y-1.5">
-            <label className="text-neutral-400 font-semibold block">Client Business Name</label>
-            <input
-              type="text"
-              placeholder="e.g. Acme Corp"
-              value={clientName}
-              onChange={(e) => setClientName(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-white placeholder-neutral-600 focus:outline-none focus:border-indigo-500 font-semibold"
-            />
+      {/* RENDER SHEET */}
+      <div className="sheet bg-[#faf7f1] text-[#171512] shadow-2xl rounded-2xl overflow-hidden border border-[#ddd4c2] font-sans transition-all">
+        
+        {/* COVER STYLE */}
+        <div className="bg-[#26344d] text-[#faf7f1] p-12 relative overflow-hidden">
+          <div className="absolute right-[-60px] top-[-60px] w-[260px] h-[260px] border border-white/10 rounded-full" />
+          <div className="absolute right-[20px] top-[40px] w-[180px] h-[180px] border border-white/5 rounded-full" />
+          
+          <div className="text-[#f0e3c8] tracking-[0.18em] uppercase font-bold mb-4 text-[10px]">
+            Client Welcome Guide
           </div>
+          <h1 className="font-serif font-medium text-4xl md:text-5xl leading-tight max-w-lg mb-4 text-[#faf7f1]">
+            Welcome to <span className="italic text-[#f0e3c8] outline-none border-b border-dashed border-[#f0e3c8]/40 hover:bg-[#a8792f]/20 px-1 rounded transition-colors" contentEditable suppressContentEditableWarning onBlur={(e) => setAgencyName(e.currentTarget.textContent || "")}>{agencyName}</span>
+          </h1>
+          <p className="text-sm md:text-base leading-relaxed text-white/80 max-w-md outline-none border-b border-dashed border-white/20 hover:bg-[#a8792f]/20 px-1 rounded transition-colors" contentEditable suppressContentEditableWarning onBlur={(e) => setGreetingBody(e.currentTarget.textContent || "")}>
+            We're glad you're here. This guide walks you through how we work together, who's on your team, and what happens next.
+          </p>
 
-          {/* Services Checklist selection */}
-          <div className="space-y-2">
-            <label className="text-neutral-400 font-semibold block">Select Services Opted</label>
-            <div className="grid grid-cols-1 gap-2 bg-neutral-950 border border-neutral-850 p-3 rounded-xl max-h-40 overflow-y-auto">
-              {AVAILABLE_SERVICES.map((service) => {
-                const isSelected = selectedServices.includes(service);
-                return (
-                  <button
-                    key={service}
-                    type="button"
-                    onClick={() => handleServiceToggle(service)}
-                    className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-left transition-colors ${
-                      isSelected
-                        ? "bg-indigo-950/60 border-indigo-800 text-indigo-300 font-medium"
-                        : "bg-transparent border-transparent text-neutral-500 hover:text-neutral-350"
-                    }`}
-                  >
-                    <div
-                      className={`w-3.5 h-3.5 rounded flex items-center justify-center border text-[9px] ${
-                        isSelected ? "bg-indigo-600 border-indigo-500 text-white" : "border-neutral-750"
-                      }`}
-                    >
-                      {isSelected && "✓"}
-                    </div>
-                    <span className="truncate">{service}</span>
-                  </button>
-                );
-              })}
+          <div className="flex flex-wrap gap-8 mt-10 border-t border-white/10 pt-8">
+            <div>
+              <label className="block uppercase tracking-wider text-[9px] text-[#f0e3c8] mb-1 font-semibold">Prepared for</label>
+              <span className="font-bold text-white outline-none border-b border-dashed border-white/20 hover:bg-[#a8792f]/20 px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setClientName(e.currentTarget.textContent || "")}>{clientName}</span>
+            </div>
+            <div>
+              <label className="block uppercase tracking-wider text-[9px] text-[#f0e3c8] mb-1 font-semibold">Project</label>
+              <span className="font-bold text-white outline-none border-b border-dashed border-white/20 hover:bg-[#a8792f]/20 px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setProjectName(e.currentTarget.textContent || "")}>{projectName}</span>
+            </div>
+            <div>
+              <label className="block uppercase tracking-wider text-[9px] text-[#f0e3c8] mb-1 font-semibold">Date</label>
+              <span className="font-bold text-white outline-none border-b border-dashed border-white/20 hover:bg-[#a8792f]/20 px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setDateVal(e.currentTarget.textContent || "")}>{dateVal}</span>
             </div>
           </div>
-
-          {/* Retainer Payment Value */}
-          <div className="space-y-1.5">
-            <label className="text-neutral-400 font-semibold block">Monthly Payment / Retainer Amount (₹)</label>
-            <input
-              type="number"
-              placeholder="e.g. 75000"
-              value={paymentAmount || ""}
-              onChange={(e) => setPaymentAmount(Number(e.target.value))}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-white font-bold placeholder-neutral-600 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-
-          {/* Document Format Selector */}
-          <div className="space-y-1.5">
-            <label className="text-neutral-400 font-semibold block">Select Document Output</label>
-            <select
-              value={docType}
-              onChange={(e) => setDocType(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-2.5 text-indigo-400 font-bold focus:outline-none focus:border-indigo-500"
-            >
-              <option value="agreement">📄 1. Service Agreement (PDF)</option>
-              <option value="welcome">🎉 2. Client Welcome Document (PDF)</option>
-              <option value="advance_invoice">💳 3. Advance Invoice (PDF)</option>
-              <option value="final_invoice">🧾 4. Final Tax Invoice (PDF)</option>
-            </select>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2">
-            <button
-              onClick={() => handleGenerateAndDownload(false)}
-              disabled={generating || sendingEmail}
-              className="flex-1 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-indigo-900/20 text-xs flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {generating ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" /> Rendering...
-                </>
-              ) : (
-                <>
-                  <Download size={16} /> Download PDF
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => handleGenerateAndDownload(true)}
-              disabled={generating || sendingEmail}
-              className="flex-1 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 disabled:opacity-50 text-white font-bold py-3 rounded-xl transition-all text-xs flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {sendingEmail ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" /> Sending...
-                </>
-              ) : (
-                <>
-                  <Mail size={16} className="text-indigo-400" /> Send via Email
-                </>
-              )}
-            </button>
-          </div>
         </div>
 
-        {/* Real-time Summary Card */}
-        <div className="md:col-span-6 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 space-y-4 flex flex-col justify-between">
-          <div className="space-y-4">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider border-b border-neutral-800 pb-3 flex items-center gap-2">
-              <Sparkles size={16} className="text-indigo-400" /> 2. Selected Layout Summary
-            </h2>
+        {/* CONTENT */}
+        <div className="p-8 md:p-12 space-y-10">
+          <div>
+            <p className="font-serif text-xl md:text-2xl text-[#171512] mb-3">
+              Hi <span className="outline-none border-b border-dashed border-[#171512]/20 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setClientFirstName(e.currentTarget.textContent || "")}>{clientFirstName}</span>,
+            </p>
+            <p className="text-neutral-700 leading-relaxed text-sm max-w-2xl outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setGreetingBody(e.currentTarget.textContent || "")}>
+              {greetingBody}
+            </p>
+          </div>
 
-            <div className="space-y-3 bg-neutral-950 border border-neutral-800 rounded-xl p-4">
-              <div className="flex justify-between border-b border-neutral-850 pb-2">
-                <span className="text-neutral-400">Client Business Name:</span>
-                <span className="text-white font-bold">{clientName || "—"}</span>
-              </div>
-              <div className="flex justify-between border-b border-neutral-850 pb-2">
-                <span className="text-neutral-400">Selected Output:</span>
-                <span className="text-indigo-400 font-bold uppercase">{docType.replace("_", " ")}</span>
-              </div>
-              <div className="flex justify-between border-b border-neutral-850 pb-2">
-                <span className="text-neutral-400">Retainer payment amount:</span>
-                <span className="text-emerald-400 font-bold">₹{Number(paymentAmount || 0).toLocaleString("en-IN")}</span>
-              </div>
-              <div className="space-y-1">
-                <span className="text-neutral-400">Services Included:</span>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {selectedServices.length === 0 ? (
-                    <span className="text-neutral-600 italic">None selected</span>
-                  ) : (
-                    selectedServices.map((s) => (
-                      <span key={s} className="bg-neutral-900 border border-neutral-805 text-white-literal px-2 py-0.5 rounded-md text-[10px]">
-                        {s}
-                      </span>
-                    ))
-                  )}
+          {/* CHAPTER 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-4 border-t border-[#ddd4c2] pt-8">
+            <div className="font-serif italic text-2xl text-[#a8792f] font-semibold">01</div>
+            <div>
+              <h2 className="font-serif text-lg font-bold mb-4 text-[#171512]">Your Team</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-[#f1ece1] border-l-4 border-[#a8792f] p-4">
+                  <div className="uppercase text-[9px] tracking-wider text-neutral-500 font-bold mb-1">Marketing</div>
+                  <div className="font-serif font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setTeamMarketing(e.currentTarget.textContent || "")}>{teamMarketing}</div>
+                </div>
+                <div className="bg-[#f1ece1] border-l-4 border-[#a8792f] p-4">
+                  <div className="uppercase text-[9px] tracking-wider text-neutral-500 font-bold mb-1">Creative</div>
+                  <div className="font-serif font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setTeamCreative(e.currentTarget.textContent || "")}>{teamCreative}</div>
+                </div>
+                <div className="bg-[#f1ece1] border-l-4 border-[#a8792f] p-4">
+                  <div className="uppercase text-[9px] tracking-wider text-neutral-500 font-bold mb-1">Graphic Design</div>
+                  <div className="font-serif font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setTeamDesign(e.currentTarget.textContent || "")}>{teamDesign}</div>
+                </div>
+                <div className="bg-[#f1ece1] border-l-4 border-[#a8792f] p-4">
+                  <div className="uppercase text-[9px] tracking-wider text-neutral-500 font-bold mb-1">Video Editing</div>
+                  <div className="font-serif font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setTeamVideo(e.currentTarget.textContent || "")}>{teamVideo}</div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div className="p-4 bg-indigo-950/30 border border-indigo-900/40 rounded-xl text-xxs text-neutral-350 leading-relaxed space-y-2">
-              <p className="font-bold text-indigo-300 flex items-center gap-1.5">
-                <Building2 size={13} /> Branded Output Setup
-              </p>
-              <p>
-                Your agency logo (public image URL) and branding details set up in <strong>Settings</strong> will automatically render onto the headers of your generated Service Agreements, Welcome documents, and Invoices.
-              </p>
+          {/* CHAPTER 2 */}
+          <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-4 border-t border-[#ddd4c2] pt-8">
+            <div className="font-serif italic text-2xl text-[#a8792f] font-semibold">02</div>
+            <div>
+              <h2 className="font-serif text-lg font-bold mb-4 text-[#171512]">How We'll Communicate</h2>
+              <div className="space-y-3">
+                <div className="flex justify-between items-baseline border-b border-dashed border-[#ddd4c2] pb-2">
+                  <span className="text-neutral-500 font-medium">Primary contact</span>
+                  <span className="font-bold outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setPrimaryContact(e.currentTarget.textContent || "")}>{primaryContact}</span>
+                </div>
+                <div className="flex justify-between items-baseline border-b border-dashed border-[#ddd4c2] pb-2">
+                  <span className="text-neutral-500 font-medium">Email</span>
+                  <span className="font-bold outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setEmail(e.currentTarget.textContent || "")}>{email}</span>
+                </div>
+                <div className="flex justify-between items-baseline border-b border-dashed border-[#ddd4c2] pb-2">
+                  <span className="text-neutral-500 font-medium">Phone / WhatsApp</span>
+                  <span className="font-bold outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setPhone(e.currentTarget.textContent || "")}>{phone}</span>
+                </div>
+                <div className="flex justify-between items-baseline border-b border-dashed border-[#ddd4c2] pb-2">
+                  <span className="text-neutral-500 font-medium">Response time</span>
+                  <span className="font-bold outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setResponseTime(e.currentTarget.textContent || "")}>{responseTime}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CHAPTER 3 */}
+          <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-4 border-t border-[#ddd4c2] pt-8">
+            <div className="font-serif italic text-2xl text-[#a8792f] font-semibold">03</div>
+            <div>
+              <h2 className="font-serif text-lg font-bold mb-4 text-[#171512]">What Happens Next</h2>
+              <div className="space-y-4">
+                <div className="flex gap-4 items-start">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#a8792f] mt-1.5 shrink-0" />
+                  <div>
+                    <div className="font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => setStep1Title(e.currentTarget.textContent || "")}>{step1Title}</div>
+                    <div className="text-neutral-600 leading-relaxed outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded mt-1" contentEditable suppressContentEditableWarning onBlur={(e) => setStep1Desc(e.currentTarget.textContent || "")}>{step1Desc}</div>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#a8792f] mt-1.5 shrink-0" />
+                  <div>
+                    <div className="font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => setStep2Title(e.currentTarget.textContent || "")}>{step2Title}</div>
+                    <div className="text-neutral-600 leading-relaxed outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded mt-1" contentEditable suppressContentEditableWarning onBlur={(e) => setStep2Desc(e.currentTarget.textContent || "")}>{step2Desc}</div>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#a8792f] mt-1.5 shrink-0" />
+                  <div>
+                    <div className="font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => setStep3Title(e.currentTarget.textContent || "")}>{step3Title}</div>
+                    <div className="text-neutral-600 leading-relaxed outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded mt-1" contentEditable suppressContentEditableWarning onBlur={(e) => setStep3Desc(e.currentTarget.textContent || "")}>{step3Desc}</div>
+                  </div>
+                </div>
+                <div className="flex gap-4 items-start">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#a8792f] mt-1.5 shrink-0" />
+                  <div>
+                    <div className="font-bold text-sm outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => setStep4Title(e.currentTarget.textContent || "")}>{step4Title}</div>
+                    <div className="text-neutral-600 leading-relaxed outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded mt-1" contentEditable suppressContentEditableWarning onBlur={(e) => setStep4Desc(e.currentTarget.textContent || "")}>{step4Desc}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* CHAPTER 4 */}
+          <div className="grid grid-cols-1 md:grid-cols-[60px_1fr] gap-4 border-t border-[#ddd4c2] pt-8 pb-4">
+            <div className="font-serif italic text-2xl text-[#a8792f] font-semibold">04</div>
+            <div>
+              <h2 className="font-serif text-lg font-bold mb-3 text-[#171512]">Good to Know</h2>
+              <ul className="list-disc pl-5 space-y-2 text-neutral-700 leading-relaxed">
+                <li className="outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setNote1(e.currentTarget.textContent || "")}>{note1}</li>
+                <li className="outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setNote2(e.currentTarget.textContent || "")}>{note2}</li>
+                <li className="outline-none border-b border-dashed border-neutral-300 hover:bg-[#f0e3c8] px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setNote3(e.currentTarget.textContent || "")}>{note3}</li>
+              </ul>
             </div>
           </div>
         </div>
+
+        {/* CLOSING STYLE */}
+        <div className="bg-[#171512] text-[#faf7f1] p-12 text-center space-y-4">
+          <div className="font-serif italic text-2xl text-[#f0e3c8] outline-none border-b border-dashed border-[#faf7f1]/20 hover:bg-[#a8792f]/20 px-1 rounded inline-block" contentEditable suppressContentEditableWarning onBlur={(e) => setSignName(e.currentTarget.textContent || "")}>{signName}</div>
+          <div className="text-[10px] tracking-wider uppercase text-white/50 outline-none border-b border-dashed border-[#faf7f1]/20 hover:bg-[#a8792f]/20 px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setSignRole(e.currentTarget.textContent || "")}>{signRole}</div>
+          <div className="text-xs text-white/70 pt-2 border-t border-white/5">
+            Reach us anytime at <span className="font-bold text-white outline-none border-b border-dashed border-[#faf7f1]/20 hover:bg-[#a8792f]/20 px-1 rounded" contentEditable suppressContentEditableWarning onBlur={(e) => setClosingEmail(e.currentTarget.textContent || "")}>{closingEmail}</span>
+          </div>
+        </div>
+
       </div>
+
+      <style jsx global>{`
+        @media print {
+          body {
+            background: #white !important;
+            color: #000 !important;
+          }
+          .no-print, .toolbar {
+            display: none !important;
+          }
+          .sheet {
+            box-shadow: none !important;
+            border: 0 !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
