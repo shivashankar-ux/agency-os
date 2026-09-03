@@ -52,19 +52,25 @@ export default function AlertsClient({ employees, clients, assignments, alerts }
             <button type="button" onClick={() => setRecipientMode("custom")} className={`px-3 py-2 rounded-lg border ${recipientMode === "custom" ? "bg-indigo-600 border-indigo-500 text-white" : "border-neutral-700 text-neutral-400"}`}>Custom email</button>
           </div>
           <input type="hidden" name="recipient_mode" value={recipientMode} />
-          <label className="block space-y-1.5 text-sm text-neutral-300">Client<select name="client_id" value={selectedClient} onChange={(event) => { setSelectedClient(event.target.value); setSelectedEmployee(""); }} required={recipientMode === "employee"} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white"><option value="">Choose a client</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select></label>
-          {recipientMode === "employee" ? <div className="grid sm:grid-cols-2 gap-4">
-            <label className="space-y-1.5 text-sm text-neutral-300">
+          <div className="space-y-4">
+            <label className="block space-y-2 text-sm text-neutral-300">
+              <span>Client</span>
+              <select name="client_id" value={selectedClient} onChange={(event) => { setSelectedClient(event.target.value); setSelectedEmployee(""); }} required={recipientMode === "employee"} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white"><option value="">Choose a client</option>{clients.map((client) => <option key={client.id} value={client.id}>{client.name}</option>)}</select>
+            </label>
+          {recipientMode === "employee" ? <div className="space-y-2">
+            <label className="block space-y-2 text-sm text-neutral-300">
               Employee
               <select name="recipient_id" value={selectedEmployee} onChange={(event) => setSelectedEmployee(event.target.value)} required={recipientMode === "employee"} disabled={!selectedClient} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white disabled:opacity-50">
                 <option value="">{selectedClient ? "Choose an assigned freelancer" : "Choose a client first"}</option>
                 {assignedEmployees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name} ({employee.email})</option>)}
               </select>
             </label>
+            {selectedClient && assignedEmployees.length === 0 && <p className="text-xs text-amber-400">No active freelancers are assigned to this client.</p>}
           </div> : <div className="grid sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 text-sm text-neutral-300">Recipient email<input name="recipient_email" type="email" required={recipientMode === "custom"} placeholder="person@example.com" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /></label>
             <label className="space-y-1.5 text-sm text-neutral-300">Recipient name<input name="recipient_name" placeholder="Optional name" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /></label>
           </div>}
+          </div>
           <div className="flex items-center gap-2 text-sm text-neutral-300"><input id="weekly" type="checkbox" checked={weekly} onChange={(event) => setWeekly(event.target.checked)} /><label htmlFor="weekly">Repeat every week</label></div>
           {weekly ? <div className="grid sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 text-sm text-neutral-300">Every week on<select name="recurrence_day" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white"><option value="">Choose a day</option>{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>
