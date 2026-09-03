@@ -17,6 +17,8 @@ type Alert = {
 export default function AlertsClient({ employees, alerts }: { employees: Employee[]; alerts: Alert[] }) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<string | null>(null);
+  const [recipientMode, setRecipientMode] = useState<"employee" | "custom">("employee");
+  const [weekly, setWeekly] = useState(false);
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,24 +40,33 @@ export default function AlertsClient({ employees, alerts }: { employees: Employe
         </div>
 
         <form onSubmit={submit} className="bg-neutral-900 border border-neutral-800 rounded-xl p-5 space-y-4 max-w-2xl">
-          <div className="grid sm:grid-cols-2 gap-4">
+          <div className="flex gap-2 text-sm">
+            <button type="button" onClick={() => setRecipientMode("employee")} className={`px-3 py-2 rounded-lg border ${recipientMode === "employee" ? "bg-indigo-600 border-indigo-500 text-white" : "border-neutral-700 text-neutral-400"}`}>Team employee</button>
+            <button type="button" onClick={() => setRecipientMode("custom")} className={`px-3 py-2 rounded-lg border ${recipientMode === "custom" ? "bg-indigo-600 border-indigo-500 text-white" : "border-neutral-700 text-neutral-400"}`}>Custom email</button>
+          </div>
+          <input type="hidden" name="recipient_mode" value={recipientMode} />
+          {recipientMode === "employee" ? <div className="grid sm:grid-cols-2 gap-4">
             <label className="space-y-1.5 text-sm text-neutral-300">
               Employee
-              <select name="recipient_id" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white">
+              <select name="recipient_id" required={recipientMode === "employee"} className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white">
                 <option value="">Choose an employee</option>
                 {employees.map((employee) => <option key={employee.id} value={employee.id}>{employee.name} ({employee.email})</option>)}
               </select>
             </label>
-            <label className="space-y-1.5 text-sm text-neutral-300">
-              Send time
-              <input name="scheduled_for" type="datetime-local" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" />
-              <span className="block text-xs text-neutral-500">Leave empty to send immediately.</span>
-            </label>
-          </div>
+          </div> : <div className="grid sm:grid-cols-2 gap-4">
+            <label className="space-y-1.5 text-sm text-neutral-300">Recipient email<input name="recipient_email" type="email" required={recipientMode === "custom"} placeholder="person@example.com" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /></label>
+            <label className="space-y-1.5 text-sm text-neutral-300">Recipient name<input name="recipient_name" placeholder="Optional name" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /></label>
+          </div>}
+          <div className="flex items-center gap-2 text-sm text-neutral-300"><input id="weekly" type="checkbox" checked={weekly} onChange={(event) => setWeekly(event.target.checked)} /><label htmlFor="weekly">Repeat every week</label></div>
+          {weekly ? <div className="grid sm:grid-cols-2 gap-4">
+            <label className="space-y-1.5 text-sm text-neutral-300">Every week on<select name="recurrence_day" required className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white"><option value="">Choose a day</option>{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>
+            <label className="space-y-1.5 text-sm text-neutral-300">At<input name="recurrence_time" required type="time" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /></label>
+          </div> : <label className="block space-y-1.5 text-sm text-neutral-300">Send time<input name="scheduled_for" type="datetime-local" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" /><span className="block text-xs text-neutral-500">Leave empty to send immediately.</span></label>}
           <label className="block space-y-1.5 text-sm text-neutral-300">
             Subject
             <input name="subject" required maxLength={200} placeholder="A quick message from the team" className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white" />
           </label>
+          <label className="block space-y-1.5 text-sm text-neutral-300">Image (optional, max 10 MB)<input name="image" type="file" accept="image/*" className="block w-full text-sm text-neutral-400 file:mr-3 file:rounded-lg file:border-0 file:bg-neutral-800 file:px-3 file:py-2 file:text-neutral-200" /></label>
           <label className="block space-y-1.5 text-sm text-neutral-300">
             Message
             <textarea name="message" required rows={5} placeholder="Write your message here..." className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-white resize-y" />
