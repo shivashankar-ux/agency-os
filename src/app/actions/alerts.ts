@@ -31,6 +31,7 @@ export async function createEmailAlert(formData: FormData) {
   }
 
   const recipientMode = String(formData.get("recipient_mode") || "employee");
+  const clientId = String(formData.get("client_id") || "").trim();
   const recipientId = String(formData.get("recipient_id") || "");
   const customEmail = String(formData.get("recipient_email") || "").trim();
   const customName = String(formData.get("recipient_name") || "").trim();
@@ -38,22 +39,29 @@ export async function createEmailAlert(formData: FormData) {
   const message = String(formData.get("message") || "").trim();
   const scheduledForInput = String(formData.get("scheduled_for") || "");
   const recurrenceDayInput = String(formData.get("recurrence_day") || "");
-  const recurrenceTime = String(formData.get("recurrence_time") || "").trim() || null;
+  const recurrenceIntervalInput = String(formData.get("recurrence_interval_hours") || "");
+  const recurrenceStartTime = String(formData.get("recurrence_start_time") || "").trim() || null;
+  const recurrenceEndTime = String(formData.get("recurrence_end_time") || "").trim() || null;
   const image = formData.get("image");
 
   if ((recipientMode === "employee" && !recipientId) || (recipientMode === "custom" && !customEmail) || !subject || !message) {
     return { error: "Recipient, subject, and message are required" };
   }
 
+  if (recipientMode === "employee" && !clientId) return { error: "Choose a client for this freelancer alert" };
+
   if (customEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customEmail)) return { error: "Enter a valid recipient email" };
   if (image instanceof File && image.size > 10 * 1024 * 1024) return { error: "Image must be 10 MB or smaller" };
   if (image instanceof File && image.size > 0 && !image.type.startsWith("image/")) return { error: "Only image files can be uploaded" };
 
   const recurrenceDay = recurrenceDayInput === "" ? null : Number(recurrenceDayInput);
+  const recurrenceInterval = recurrenceIntervalInput === "" ? null : Number(recurrenceIntervalInput);
   if (recurrenceDay !== null && (!Number.isInteger(recurrenceDay) || recurrenceDay < 0 || recurrenceDay > 6)) return { error: "Choose a valid weekly day" };
-  if (recurrenceDay !== null && !recurrenceTime) return { error: "Choose a weekly send time" };
+  if (recurrenceDay !== null && (!recurrenceInterval || recurrenceInterval <= 0 || recurrenceInterval > 24)) return { error: "Choose an interval between 1 and 24 hours" };
+  if (recurrenceDay !== null && (!recurrenceStartTime || !recurrenceEndTime)) return { error: "Choose a start and end time" };
+  if (recurrenceDay !== null && recurrenceStartTime && recurrenceEndTime && recurrenceStartTime >= recurrenceEndTime) return { error: "End time must be after start time" };
   const scheduledFor = recurrenceDay !== null
-    ? getNextWeeklyOccurrence(recurrenceDay, recurrenceTime as string)
+    ? getNextWeeklyOccurrence(recurrenceDay, recurrenceStartTime as string)
     : scheduledForInput ? new Date(scheduledForInput) : new Date();
   if (Number.isNaN(scheduledFor.getTime())) return { error: "Choose a valid send time" };
 
@@ -67,6 +75,16 @@ export async function createEmailAlert(formData: FormData) {
 
   const recipient = profileRecipient || { id: null, name: customName || customEmail, email: customEmail };
   if (!recipient.email) return { error: "That employee does not have an active email profile" };
+
+  if (recipientMode === "employee") {
+    const { data: assignment } = await supabase
+      .from("client_assignments")
+      .select("id")
+      .eq("client_id", clientId)
+      .eq("user_id", recipient.id)
+      .maybeSingle();
+    if (!assignment) return { error: "That freelancer is not assigned to the selected client" };
+  }
 
   let imageUrl: string | null = null;
   if (image instanceof File && image.size > 0) {
@@ -82,6 +100,7 @@ export async function createEmailAlert(formData: FormData) {
     .from("email_alerts")
     .insert({
       org_id: profile.org_id,
+      client_id: clientId || null,
       recipient_user_id: recipient.id,
       recipient_email: profileRecipient ? null : recipient.email,
       recipient_name: profileRecipient ? null : recipient.name,
@@ -90,7 +109,9 @@ export async function createEmailAlert(formData: FormData) {
       message,
       scheduled_for: scheduledFor.toISOString(),
       recurrence_day: recurrenceDay,
-      recurrence_time: recurrenceTime,
+      recurrence_interval_hours: recurrenceInterval,
+      recurrence_start_time: recurrenceStartTime,
+      recurrence_end_time: recurrenceEndTime,
       image_url: imageUrl,
       status: "scheduled",
     })

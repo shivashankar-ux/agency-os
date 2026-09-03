@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const supabase = createAdminClient();
   const { data: alerts, error } = await supabase
     .from("email_alerts")
-    .select("id, subject, message, recipient_email, recipient_name, image_url, recurrence_day, recipient:profiles!email_alerts_recipient_user_id_fkey(name, email)")
+    .select("id, subject, message, recipient_email, recipient_name, image_url, recurrence_day, recurrence_interval_hours, recurrence_start_time, recurrence_end_time, recipient:profiles!email_alerts_recipient_user_id_fkey(name, email)")
     .eq("status", "scheduled")
     .lte("scheduled_for", new Date().toISOString())
     .order("scheduled_for")
@@ -50,11 +50,30 @@ export async function GET(request: Request) {
     const update = sendError
       ? { status: "failed", error_message: sendError.message }
       : alert.recurrence_day !== null
-        ? { status: "scheduled", scheduled_for: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), sent_at: new Date().toISOString() }
+        ? { status: "scheduled", scheduled_for: getNextOccurrence(alert).toISOString(), sent_at: new Date().toISOString() }
         : { status: "sent", sent_at: new Date().toISOString() };
     await supabase.from("email_alerts").update(update).eq("id", alert.id).eq("status", "scheduled");
     sendError ? failed++ : sent++;
   }
 
   return Response.json({ success: true, sent, failed });
+}
+
+function getNextOccurrence(alert: { recurrence_day: number; recurrence_interval_hours: number; recurrence_start_time: string; recurrence_end_time: string }) {
+  const [startHours, startMinutes] = alert.recurrence_start_time.split(":").map(Number);
+  const [endHours, endMinutes] = alert.recurrence_end_time.split(":").map(Number);
+  const current = new Date();
+  const next = new Date(current);
+  const intervalMs = Number(alert.recurrence_interval_hours) * 60 * 60 * 1000;
+  const endMinutesOfDay = endHours * 60 + endMinutes;
+  const currentMinutesOfDay = current.getHours() * 60 + current.getMinutes();
+
+  if (current.getDay() === alert.recurrence_day && currentMinutesOfDay < endMinutesOfDay) {
+    const candidate = new Date(current.getTime() + intervalMs);
+    if (candidate.getDay() === alert.recurrence_day && candidate.getHours() * 60 + candidate.getMinutes() <= endMinutesOfDay) return candidate;
+  }
+
+  next.setDate(next.getDate() + ((alert.recurrence_day - next.getDay() + 7) % 7 || 7));
+  next.setHours(startHours, startMinutes, 0, 0);
+  return next;
 }
