@@ -98,3 +98,8 @@ Key tables:
 
 ### Background Jobs (Cron)
 The CRM relies on Vercel Cron Jobs to check for approaching deadlines and send push notifications automatically. Ensure `vercel.json` has the cron routes configured.
+
+### Employee Email Alerts
+Owners and Admins can use **Dashboard > Alerts** to send a custom email to an active employee immediately or at a scheduled time. Alerts are email-only and do not create tasks.
+
+Apply `supabase/migrations/023_email_alerts.sql` in the Supabase SQL Editor, then configure `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `SUPABASE_SERVICE_ROLE_KEY`, and `CRON_SECRET` in Vercel. The sending address must be verified in Resend. The scheduled sender runs through `/api/cron/send-alerts`.
