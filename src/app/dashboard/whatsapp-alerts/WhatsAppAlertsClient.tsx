@@ -213,16 +213,6 @@ export default function WhatsAppAlertsClient({
                 <option value="heena">👤 Heena — 918828396623</option>
                 <option value="sathwika">👤 Sathwika — 918688213692</option>
                 <option value="umesh">👤 Umesh — 918465903707</option>
-
-                {employees.length > 0 && (
-                  <optgroup label="Other Registered Profiles">
-                    {employees.map((emp) => (
-                      <option key={emp.id} value={emp.id}>
-                        {emp.name} ({emp.email})
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
               </select>
             </div>
           ) : null}
