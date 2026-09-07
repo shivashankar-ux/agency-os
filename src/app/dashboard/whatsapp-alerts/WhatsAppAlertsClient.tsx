@@ -221,7 +221,7 @@ export default function WhatsAppAlertsClient({
           <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-neutral-300 mb-1">
-                WhatsApp Phone Number * <span className="text-[10px] text-emerald-400 font-normal">(Default: 918341928526)</span>
+                WhatsApp Phone Number *
               </label>
               <input
                 name="recipient_phone"
