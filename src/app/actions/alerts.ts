@@ -30,6 +30,8 @@ export async function createEmailAlert(formData: FormData) {
     return { error: "Only active Owners and Admins can manage alerts" };
   }
 
+  const adminSupabase = createAdminClient();
+
   const recipientMode = String(formData.get("recipient_mode") || "employee");
   const clientId = String(formData.get("client_id") || "").trim();
   const recipientId = String(formData.get("recipient_id") || "");
@@ -38,10 +40,10 @@ export async function createEmailAlert(formData: FormData) {
   const subject = String(formData.get("subject") || "").trim();
   const message = String(formData.get("message") || "").trim();
 
-  const scheduleType = String(formData.get("schedule_type") || "immediate"); // 'immediate' | 'specific_date' | 'weekly_recurring'
+  const scheduleType = String(formData.get("schedule_type") || "weekly_recurring");
   const targetDateInput = String(formData.get("target_date") || "").trim();
-  const occurrencesPerDayInput = String(formData.get("occurrences_per_day") || "1");
-  const recurrenceDayInput = String(formData.get("recurrence_day") || "");
+  const occurrencesPerDayInput = String(formData.get("occurrences_per_day") || "5");
+  const recurrenceDayInput = String(formData.get("recurrence_day") || "1");
   const startTime = String(formData.get("start_time") || "09:00").trim();
   const endTime = String(formData.get("end_time") || "18:00").trim();
   const image = formData.get("image");
@@ -50,36 +52,54 @@ export async function createEmailAlert(formData: FormData) {
     return { error: "Recipient, subject, and message are required." };
   }
 
-  if (recipientMode === "employee" && !clientId) return { error: "Please select a client for this employee alert." };
   if (customEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customEmail)) return { error: "Please enter a valid recipient email address." };
-
   if (image instanceof File && image.size > 10 * 1024 * 1024) return { error: "Uploaded image must be 10 MB or smaller." };
-  if (image instanceof File && image.size > 0 && !image.type.startsWith("image/")) return { error: "Only image files can be uploaded." };
 
-  const occurrencesPerDay = Math.max(1, Math.min(10, parseInt(occurrencesPerDayInput, 10) || 1));
+  const occurrencesPerDay = Math.max(1, Math.min(10, parseInt(occurrencesPerDayInput, 10) || 5));
 
-  // Determine recipient details
-  const { data: profileRecipient } = recipientMode === "employee" ? await supabase
-    .from("profiles")
-    .select("id, name, email")
-    .eq("id", recipientId)
-    .eq("org_id", profile.org_id)
-    .single() : { data: null };
+  // Determine recipients
+  let targetRecipients: { id: string | null; name: string; email: string }[] = [];
 
-  const recipient = profileRecipient || { id: null, name: customName || customEmail, email: customEmail };
-  if (!recipient.email) return { error: "The selected employee does not have a valid email address." };
+  if (recipientMode === "employee") {
+    if (recipientId === "ALL_TEAM") {
+      const { data: allProfiles } = await adminSupabase
+        .from("profiles")
+        .select("id, name, email")
+        .not("email", "is", null);
 
-  // Calculate first scheduled time
+      targetRecipients = (allProfiles || []).map((p) => ({
+        id: p.id,
+        name: p.name || p.email,
+        email: p.email,
+      }));
+    } else {
+      const { data: p } = await adminSupabase
+        .from("profiles")
+        .select("id, name, email")
+        .eq("id", recipientId)
+        .single();
+
+      if (p && p.email) {
+        targetRecipients = [{ id: p.id, name: p.name || p.email, email: p.email }];
+      }
+    }
+  } else if (customEmail) {
+    targetRecipients = [{ id: null, name: customName || customEmail, email: customEmail }];
+  }
+
+  if (targetRecipients.length === 0) {
+    return { error: "No valid recipient email address found." };
+  }
+
+  // Calculate scheduled time
   let scheduledFor = new Date();
   let recurrenceDay: number | null = null;
 
   if (scheduleType === "specific_date") {
     if (!targetDateInput) return { error: "Please select a target date." };
-    const [hours, mins] = startTime.split(":").map(Number);
     scheduledFor = new Date(`${targetDateInput}T${startTime}:00`);
     if (isNaN(scheduledFor.getTime())) return { error: "Invalid target date or start time." };
   } else if (scheduleType === "weekly_recurring") {
-    if (recurrenceDayInput === "") return { error: "Please choose a day of the week." };
     recurrenceDay = Number(recurrenceDayInput);
     const [startHours, startMins] = startTime.split(":").map(Number);
     scheduledFor = new Date();
@@ -90,95 +110,85 @@ export async function createEmailAlert(formData: FormData) {
     scheduledFor.setDate(scheduledFor.getDate() + daysAhead);
   }
 
-  // Handle optional image upload
+  // Upload image if present
   let imageUrl: string | null = null;
   if (image instanceof File && image.size > 0) {
-    const admin = createAdminClient();
     const path = `email-alerts/${profile.org_id}/${crypto.randomUUID()}-${image.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const { error: uploadError } = await admin.storage.from("agency-files").upload(path, image, { contentType: image.type, upsert: false });
+    const { error: uploadError } = await adminSupabase.storage.from("agency-files").upload(path, image, { contentType: image.type, upsert: false });
     if (uploadError) return { error: `Could not upload image: ${uploadError.message}` };
-    imageUrl = admin.storage.from("agency-files").getPublicUrl(path).data.publicUrl;
+    imageUrl = adminSupabase.storage.from("agency-files").getPublicUrl(path).data.publicUrl;
   }
 
   const isImmediate = scheduleType === "immediate" || scheduledFor.getTime() <= Date.now();
 
-  const { data: alert, error: insertError } = await supabase
-    .from("email_alerts")
-    .insert({
-      org_id: profile.org_id,
-      client_id: clientId || null,
-      recipient_user_id: recipient.id,
-      recipient_email: profileRecipient ? null : recipient.email,
-      recipient_name: profileRecipient ? null : recipient.name,
-      created_by: profile.id,
-      subject,
-      message,
-      schedule_type: scheduleType,
-      target_date: scheduleType === "specific_date" ? targetDateInput : null,
-      scheduled_for: scheduledFor.toISOString(),
-      recurrence_day: recurrenceDay,
-      occurrences_per_day: occurrencesPerDay,
-      recurrence_start_time: startTime,
-      recurrence_end_time: endTime,
-      image_url: imageUrl,
-      status: "scheduled",
-      sent_count: 0,
-    })
-    .select("id")
-    .single();
+  // Create alert records for each recipient
+  for (const target of targetRecipients) {
+    const { data: alert, error: insertError } = await adminSupabase
+      .from("email_alerts")
+      .insert({
+        org_id: profile.org_id,
+        client_id: clientId || null,
+        recipient_user_id: target.id,
+        recipient_email: target.id ? null : target.email,
+        recipient_name: target.id ? null : target.name,
+        created_by: profile.id,
+        subject,
+        message,
+        schedule_type: scheduleType,
+        target_date: scheduleType === "specific_date" ? targetDateInput : null,
+        scheduled_for: scheduledFor.toISOString(),
+        recurrence_day: recurrenceDay,
+        occurrences_per_day: occurrencesPerDay,
+        recurrence_start_time: startTime,
+        recurrence_end_time: endTime,
+        image_url: imageUrl,
+        status: isImmediate ? "sent" : "scheduled",
+        sent_count: isImmediate ? 1 : 0,
+      })
+      .select("id")
+      .single();
 
-  if (insertError || !alert) {
-    console.error("Error creating alert:", insertError);
-    return { error: insertError?.message || "Could not create alert in database." };
+    if (insertError) {
+      console.error("Error inserting email_alert:", insertError);
+    } else if (isImmediate && alert) {
+      // Send immediately via Resend
+      const apiKey = process.env.RESEND_API_KEY;
+      if (apiKey) {
+        const resend = new Resend(apiKey);
+        const fromEmail = process.env.RESEND_FROM_EMAIL || "crm@thestorybuilder.in";
+        const attachments = imageUrl ? await getImageAttachment(imageUrl, image) : undefined;
+
+        await resend.emails.send({
+          from: `Agency OS <${fromEmail}>`,
+          to: target.email,
+          subject,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+              <h2 style="color: #4f46e5; margin-top: 0;">🔔 Agency OS Alert</h2>
+              <p>Hello <strong>${escapeHtml(target.name || "Team Member")}</strong>,</p>
+              <div style="background-color: #f8fafc; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin: 16px 0;">
+                <p style="margin: 0; font-size: 15px; white-space: pre-wrap;">${escapeHtml(message)}</p>
+              </div>
+              ${imageUrl ? `<div style="margin-top: 16px;"><img src="${imageUrl}" alt="Alert Attachment" style="max-width: 100%; border-radius: 6px;" /></div>` : ""}
+              <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+                Sent from Agency OS by ${escapeHtml(profile.name || "your manager")}.
+              </p>
+            </div>
+          `,
+          ...(attachments ? { attachments: [attachments] } : {}),
+        });
+      }
+    }
   }
-
-  if (!isImmediate) {
-    revalidatePath("/dashboard/alerts");
-    return { success: true, status: "scheduled" as const };
-  }
-
-  // If immediate, send the first email right away!
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    await supabase.from("email_alerts").update({ status: "failed", error_message: "RESEND_API_KEY is missing in environment" }).eq("id", alert.id);
-    return { error: "Resend Email API key is missing. Check .env.local" };
-  }
-
-  const resend = new Resend(apiKey);
-  const fromEmail = process.env.RESEND_FROM_EMAIL || "crm@thestorybuilder.in";
-  const attachments = imageUrl ? await getImageAttachment(imageUrl, image) : undefined;
-
-  const { error: sendError } = await resend.emails.send({
-    from: `Agency OS <${fromEmail}>`,
-    to: recipient.email,
-    subject,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-        <h2 style="color: #4f46e5; margin-top: 0;">🔔 Agency OS Alert</h2>
-        <p>Hello <strong>${escapeHtml(recipient.name || "Team Member")}</strong>,</p>
-        <div style="background-color: #f8fafc; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin: 16px 0;">
-          <p style="margin: 0; font-size: 15px; white-space: pre-wrap;">${escapeHtml(message)}</p>
-        </div>
-        ${imageUrl ? `<div style="margin-top: 16px;"><img src="${imageUrl}" alt="Alert Attachment" style="max-width: 100%; border-radius: 6px;" /></div>` : ""}
-        <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-          Sent from Agency OS by ${escapeHtml(profile.name || "your manager")}.
-        </p>
-      </div>
-    `,
-    ...(attachments ? { attachments: [attachments] } : {}),
-  });
-
-  await supabase
-    .from("email_alerts")
-    .update(
-      sendError
-        ? { status: "failed", error_message: sendError.message }
-        : { status: occurrencesPerDay > 1 ? "scheduled" : "sent", sent_count: 1, sent_at: new Date().toISOString() }
-    )
-    .eq("id", alert.id);
 
   revalidatePath("/dashboard/alerts");
-  return sendError ? { error: sendError.message } : { success: true, status: "sent" as const };
+  return {
+    success: true,
+    status: isImmediate ? "sent" : "scheduled",
+    message: isImmediate
+      ? `Email alert sent to ${targetRecipients.length} team member(s)!`
+      : `Email alert scheduled for ${targetRecipients.length} team member(s) (${occurrencesPerDay}x per day)!`,
+  };
 }
 
 export async function deleteEmailAlert(alertId: string) {

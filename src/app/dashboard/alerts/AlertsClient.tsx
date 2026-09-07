@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2, User } from "lucide-react";
+import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2, Users } from "lucide-react";
 import { createEmailAlert, deleteEmailAlert } from "@/app/actions/alerts";
 
 type Employee = { id: string; name: string; email: string; role?: string };
@@ -42,24 +42,24 @@ export default function AlertsClient({
 
   const [recipientMode, setRecipientMode] = useState<"employee" | "custom">("employee");
   const [selectedClient, setSelectedClient] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState(currentUserId || employees[0]?.id || "");
+  const [selectedEmployee, setSelectedEmployee] = useState("ALL_TEAM");
 
   const [scheduleType, setScheduleType] = useState<"weekly_recurring" | "specific_date" | "immediate">("weekly_recurring");
   const [targetDate, setTargetDate] = useState("2026-09-07");
   const [recurrenceDay, setRecurrenceDay] = useState("1"); // 1 = Monday
-  const [occurrencesPerDay, setOccurrencesPerDay] = useState(5); // Default 5 times a day as requested
+  const [occurrencesPerDay, setOccurrencesPerDay] = useState(5); // Default 5 times on Monday
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
 
   const [subject, setSubject] = useState("🎨 Work Reminder: Creative Deliverables Update");
   const [message, setMessage] = useState("Hi team,\n\nThis is an automated reminder regarding the creative deliverables review. Please complete and submit your work on time.");
 
-  // Filter employees if a specific client is picked, otherwise show ALL team members (including current user)
-  const displayedEmployees = selectedClient
+  // Identify assigned employees for selected client (if any)
+  const assignedEmployees = selectedClient
     ? employees.filter((emp) =>
         assignments.some((a) => a.client_id === selectedClient && a.user_id === emp.id)
       )
-    : employees;
+    : [];
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -74,7 +74,7 @@ export default function AlertsClient({
       } else {
         setResult({
           success: true,
-          message: response.status === "sent" ? "Email alert sent successfully!" : "Email alert scheduled successfully!",
+          message: response.message || (response.status === "sent" ? "Email alert sent successfully!" : "Email alert scheduled successfully!"),
         });
         form.reset();
       }
@@ -112,7 +112,7 @@ export default function AlertsClient({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
-              1. Team Recipient & Email
+              1. Team Recipient & Email List
             </label>
 
             <div className="flex gap-2">
@@ -125,7 +125,7 @@ export default function AlertsClient({
                     : "border-neutral-800 text-neutral-400 bg-neutral-950 hover:text-white"
                 }`}
               >
-                Team Member
+                Team Member List
               </button>
               <button
                 type="button"
@@ -151,12 +151,10 @@ export default function AlertsClient({
                 <select
                   name="client_id"
                   value={selectedClient}
-                  onChange={(e) => {
-                    setSelectedClient(e.target.value);
-                  }}
+                  onChange={(e) => setSelectedClient(e.target.value)}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">All Team Members ({employees.length})</option>
+                  <option value="">All Clients ({clients.length})</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -167,21 +165,34 @@ export default function AlertsClient({
 
               <div>
                 <label className="block text-xs font-medium text-neutral-300 mb-1">
-                  Select Team Member / Email *
+                  Select Team Member / Email Address *
                 </label>
                 <select
                   name="recipient_id"
                   value={selectedEmployee}
                   onChange={(e) => setSelectedEmployee(e.target.value)}
                   required={recipientMode === "employee"}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Choose a team member...</option>
-                  {displayedEmployees.map((emp) => (
-                    <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
-                    </option>
-                  ))}
+                  <option value="ALL_TEAM">👥 All Team Members (Send to Everyone)</option>
+
+                  {selectedClient && assignedEmployees.length > 0 && (
+                    <optgroup label={`Assigned to ${clients.find((c) => c.id === selectedClient)?.name || "Client"}`}>
+                      {assignedEmployees.map((emp) => (
+                        <option key={`assigned-${emp.id}`} value={emp.id}>
+                          ⭐ {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  <optgroup label="All Team Members">
+                    {employees.map((emp) => (
+                      <option key={emp.id} value={emp.id}>
+                        {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
+                      </option>
+                    ))}
+                  </optgroup>
                 </select>
               </div>
             </div>
@@ -193,7 +204,7 @@ export default function AlertsClient({
                   name="recipient_email"
                   type="email"
                   required={recipientMode === "custom"}
-                  placeholder="person@example.com"
+                  placeholder="shivashankar.7991@gmail.com"
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
