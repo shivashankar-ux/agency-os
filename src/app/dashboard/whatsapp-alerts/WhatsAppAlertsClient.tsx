@@ -59,8 +59,8 @@ export default function WhatsAppAlertsClient({
   const [recipientMode, setRecipientMode] = useState<"employee" | "custom">("employee");
   const [selectedClient, setSelectedClient] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("ALL_TEAM");
-  const [customPhone, setCustomPhone] = useState("");
-  const [customName, setCustomName] = useState("");
+  const [customPhone, setCustomPhone] = useState("918341928526"); // Default number as requested
+  const [customName, setCustomName] = useState("Shiva Shankar");
 
   const [scheduleType, setScheduleType] = useState<"weekly_recurring" | "specific_date" | "immediate">("weekly_recurring");
   const [targetDate, setTargetDate] = useState(getTodayDateString);
@@ -69,8 +69,8 @@ export default function WhatsAppAlertsClient({
   const [startTime, setStartTime] = useState(getCurrentTimeString);
   const [endTime, setEndTime] = useState("23:00");
 
-  const [subject, setSubject] = useState("💬 Creative Review Alert: Deliverables Reminder");
-  const [message, setMessage] = useState("Hi team,\n\nThis is an automated WhatsApp reminder regarding today's creative deliverables review. Please check your assigned tasks and submit your updates!");
+  const [subject, setSubject] = useState("💬 Work Reminder: Creative Deliverables Update");
+  const [message, setMessage] = useState("Hi team,\n\nThis is an automated WhatsApp reminder regarding today's creative deliverables review. Please complete and submit your work on time.");
 
   useEffect(() => {
     setStartTime(getCurrentTimeString());
@@ -102,7 +102,7 @@ export default function WhatsAppAlertsClient({
           whatsappUrl: response.whatsappUrl,
         });
 
-        // Automatically open WhatsApp web link in new window if available
+        // Automatically open WhatsApp Web window if immediate
         if (response.whatsappUrl && scheduleType === "immediate") {
           window.open(response.whatsappUrl, "_blank");
         }
@@ -229,11 +229,11 @@ export default function WhatsAppAlertsClient({
             </div>
           ) : null}
 
-          {/* Phone Number Input */}
+          {/* Phone Number Input (Default: 918341928526) */}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-medium text-neutral-300 mb-1">
-                WhatsApp Phone Number * <span className="text-[10px] text-emerald-400 font-normal">(With Country Code, e.g. 919999999999)</span>
+                WhatsApp Phone Number * <span className="text-[10px] text-emerald-400 font-normal">(Default: 918341928526)</span>
               </label>
               <input
                 name="recipient_phone"
@@ -241,8 +241,8 @@ export default function WhatsAppAlertsClient({
                 required
                 value={customPhone}
                 onChange={(e) => setCustomPhone(e.target.value)}
-                placeholder="919999999999"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
+                placeholder="918341928526"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500 font-semibold"
               />
             </div>
             <div>
@@ -465,14 +465,14 @@ export default function WhatsAppAlertsClient({
 
             {result.whatsappUrl && (
               <div className="pt-2 border-t border-emerald-800/60 flex items-center justify-between">
-                <span className="text-emerald-300">Ready to launch on WhatsApp Web / Mobile:</span>
+                <span className="text-emerald-300">Launch pre-filled message on WhatsApp:</span>
                 <a
                   href={result.whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-neutral-950 font-bold text-xs shadow-md transition-all"
                 >
-                  <ExternalLink size={14} /> Open WhatsApp Now
+                  <ExternalLink size={14} /> Open WhatsApp Now (+{customPhone})
                 </a>
               </div>
             )}
@@ -502,7 +502,7 @@ export default function WhatsAppAlertsClient({
               ? "✓ WhatsApp Alert Created Successfully!"
               : scheduleType === "immediate"
               ? "Send WhatsApp Alert Now"
-              : "Schedule WhatsApp Alert"}
+              : "Send WhatsApp Alert"}
           </button>
         </div>
       </form>
@@ -547,7 +547,7 @@ export default function WhatsAppAlertsClient({
                   </div>
 
                   <p className="text-xs text-neutral-400 truncate">
-                    Phone: <span className="font-mono text-emerald-300">{alertItem.recipient_phone || "N/A"}</span> ({alertItem.recipient_name || alertItem.recipient?.name || "Team Member"})
+                    Phone: <span className="font-mono text-emerald-300">{alertItem.recipient_phone || "918341928526"}</span> ({alertItem.recipient_name || alertItem.recipient?.name || "Shiva Shankar"})
                   </p>
                   <p className="text-xs text-neutral-400 line-clamp-2 mt-1">{alertItem.message}</p>
                 </div>

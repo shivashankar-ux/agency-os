@@ -25,10 +25,15 @@ export async function createWhatsAppAlert(formData: FormData) {
   const recipientMode = String(formData.get("recipient_mode") || "employee");
   const clientId = String(formData.get("client_id") || "").trim();
   const recipientId = String(formData.get("recipient_id") || "");
-  const customPhoneInput = String(formData.get("recipient_phone") || "").trim();
+  let customPhoneInput = String(formData.get("recipient_phone") || "").trim();
   const customName = String(formData.get("recipient_name") || "").trim();
   const subject = String(formData.get("subject") || "").trim();
   const message = String(formData.get("message") || "").trim();
+
+  // Default to 8341928526 if no phone provided
+  if (!customPhoneInput) {
+    customPhoneInput = "8341928526";
+  }
 
   const scheduleType = String(formData.get("schedule_type") || "weekly_recurring");
   const targetDateInput = String(formData.get("target_date") || "").trim();
@@ -37,13 +42,17 @@ export async function createWhatsAppAlert(formData: FormData) {
   const startTime = String(formData.get("start_time") || "09:00").trim();
   const endTime = String(formData.get("end_time") || "18:00").trim();
 
-  if ((recipientMode === "employee" && !recipientId) || (recipientMode === "custom" && !customPhoneInput) || !subject || !message) {
-    return { error: "Recipient, phone number, subject, and message are required." };
+  if (!subject || !message) {
+    return { error: "Subject and message are required." };
   }
 
   const occurrencesPerDay = Math.max(1, Math.min(10, parseInt(occurrencesPerDayInput, 10) || 5));
 
-  // Determine recipients & phone numbers
+  // Format phone number
+  const cleanPhone = customPhoneInput.replace(/\D/g, "");
+  const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone || "918341928526";
+
+  // Determine recipients
   let targetRecipients: { id: string | null; name: string; phone: string }[] = [];
 
   if (recipientMode === "employee") {
@@ -55,7 +64,7 @@ export async function createWhatsAppAlert(formData: FormData) {
       targetRecipients = (allProfiles || []).map((p) => ({
         id: p.id,
         name: p.name || p.email,
-        phone: customPhoneInput || "",
+        phone: formattedPhone,
       }));
     } else {
       const { data: p } = await adminSupabase
@@ -65,20 +74,16 @@ export async function createWhatsAppAlert(formData: FormData) {
         .single();
 
       if (p) {
-        targetRecipients = [{ id: p.id, name: p.name || p.email, phone: customPhoneInput }];
+        targetRecipients = [{ id: p.id, name: p.name || p.email, phone: formattedPhone }];
       }
     }
-  } else if (customPhoneInput) {
-    targetRecipients = [{ id: null, name: customName || customPhoneInput, phone: customPhoneInput }];
+  } else {
+    targetRecipients = [{ id: null, name: customName || formattedPhone, phone: formattedPhone }];
   }
 
   if (targetRecipients.length === 0) {
-    return { error: "No valid recipient found." };
+    targetRecipients = [{ id: null, name: "Default Contact", phone: "918341928526" }];
   }
-
-  // Format phone number
-  const cleanPhone = customPhoneInput.replace(/\D/g, "");
-  const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone;
 
   // Calculate scheduled time
   let scheduledFor = new Date();
@@ -100,8 +105,9 @@ export async function createWhatsAppAlert(formData: FormData) {
   }
 
   const isImmediate = scheduleType === "immediate" || scheduledFor.getTime() <= Date.now();
-
   let createdAlertId: string | null = null;
+
+  const fullText = `*${subject}*\n\n${message}`;
 
   for (const target of targetRecipients) {
     const phoneToUse = target.phone ? target.phone.replace(/\D/g, "") : formattedPhone;
@@ -135,10 +141,19 @@ export async function createWhatsAppAlert(formData: FormData) {
     } else if (alert) {
       createdAlertId = alert.id;
     }
+
+    // Try automated WhatsApp API dispatch if CallMeBot API Key is present
+    if (isImmediate && process.env.CALLMEBOT_API_KEY) {
+      try {
+        const callMeBotUrl = `https://api.callmebot.com/whatsapp.php?phone=${phoneToUse}&text=${encodeURIComponent(fullText)}&apikey=${process.env.CALLMEBOT_API_KEY}`;
+        await fetch(callMeBotUrl);
+      } catch (err) {
+        console.error("CallMeBot automated send error:", err);
+      }
+    }
   }
 
   // Generate 1-click WhatsApp web link
-  const fullText = `*${subject}*\n\n${message}`;
   const whatsappUrl = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(fullText)}`;
 
   revalidatePath("/dashboard/whatsapp-alerts");
@@ -149,8 +164,8 @@ export async function createWhatsAppAlert(formData: FormData) {
     alertId: createdAlertId,
     status: isImmediate ? "sent" : "scheduled",
     message: isImmediate
-      ? `WhatsApp alert generated! Click the link to dispatch on WhatsApp.`
-      : `WhatsApp alert scheduled for ${targetRecipients.length} recipient(s) (${occurrencesPerDay}x per day)!`,
+      ? `WhatsApp alert generated for +${formattedPhone}! Click link below or open WhatsApp.`
+      : `WhatsApp alert scheduled for +${formattedPhone} (${occurrencesPerDay}x per day)!`,
   };
 }
 
