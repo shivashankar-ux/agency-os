@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export default async function WhatsAppAlertsPage() {
   const profile = await getCurrentProfile();
-  if (!profile || !["owner", "admin"].includes(profile.role)) redirect("/dashboard");
+  if (!profile) redirect("/login");
 
   const adminSupabase = createAdminClient();
 

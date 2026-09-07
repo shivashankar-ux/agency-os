@@ -16,8 +16,8 @@ export async function createWhatsAppAlert(formData: FormData) {
     .eq("id", user.id)
     .single();
 
-  if (!profile?.is_active || !["owner", "admin"].includes(profile.role)) {
-    return { error: "Only active Owners and Admins can manage WhatsApp alerts" };
+  if (!profile?.is_active) {
+    return { error: "Only active team members can manage WhatsApp alerts" };
   }
 
   const adminSupabase = createAdminClient();
