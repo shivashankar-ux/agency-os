@@ -174,58 +174,56 @@ export default function WhatsAppAlertsClient({
           <input type="hidden" name="recipient_mode" value={recipientMode} />
 
           {recipientMode === "employee" ? (
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-medium text-neutral-300 mb-1">
-                  Filter by Client (Optional)
-                </label>
-                <select
-                  name="client_id"
-                  value={selectedClient}
-                  onChange={(e) => setSelectedClient(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="">All Clients ({clients.length})</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-300 mb-1">
+                Select Team Member *
+              </label>
+              <select
+                name="recipient_id"
+                value={selectedEmployee}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSelectedEmployee(val);
+                  if (val === "shiva") {
+                    setCustomPhone("918341928526");
+                    setCustomName("Shiva Shankar");
+                  } else if (val === "bharath") {
+                    setCustomPhone("919652388859");
+                    setCustomName("Bharath");
+                  } else if (val === "heena") {
+                    setCustomPhone("918828396623");
+                    setCustomName("Heena");
+                  } else if (val === "sathwika") {
+                    setCustomPhone("918688213692");
+                    setCustomName("Sathwika");
+                  } else if (val === "umesh") {
+                    setCustomPhone("918465903707");
+                    setCustomName("Umesh");
+                  } else if (val === "ALL_TEAM") {
+                    setCustomPhone("918341928526");
+                    setCustomName("All Team Members");
+                  }
+                }}
+                required={recipientMode === "employee"}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-emerald-500"
+              >
+                <option value="ALL_TEAM">👥 All Team Members (Send to Everyone)</option>
+                <option value="shiva">👤 Shiva Shankar — 918341928526 (You)</option>
+                <option value="bharath">👤 Bharath — 919652388859</option>
+                <option value="heena">👤 Heena — 918828396623</option>
+                <option value="sathwika">👤 Sathwika — 918688213692</option>
+                <option value="umesh">👤 Umesh — 918465903707</option>
 
-              <div>
-                <label className="block text-xs font-medium text-neutral-300 mb-1">
-                  Select Team Member *
-                </label>
-                <select
-                  name="recipient_id"
-                  value={selectedEmployee}
-                  onChange={(e) => setSelectedEmployee(e.target.value)}
-                  required={recipientMode === "employee"}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-emerald-500"
-                >
-                  <option value="ALL_TEAM">👥 All Team Members (Send to Everyone)</option>
-
-                  {selectedClient && assignedEmployees.length > 0 && (
-                    <optgroup label={`Assigned to ${clients.find((c) => c.id === selectedClient)?.name || "Client"}`}>
-                      {assignedEmployees.map((emp) => (
-                        <option key={`assigned-${emp.id}`} value={emp.id}>
-                          ⭐ {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-
-                  <optgroup label="All Team Members">
+                {employees.length > 0 && (
+                  <optgroup label="Other Registered Profiles">
                     {employees.map((emp) => (
                       <option key={emp.id} value={emp.id}>
-                        {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
+                        {emp.name} ({emp.email})
                       </option>
                     ))}
                   </optgroup>
-                </select>
-              </div>
+                )}
+              </select>
             </div>
           ) : null}
 

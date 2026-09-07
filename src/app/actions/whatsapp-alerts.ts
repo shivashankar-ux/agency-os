@@ -53,20 +53,27 @@ export async function createWhatsAppAlert(formData: FormData) {
   const cleanPhone = customPhoneInput.replace(/\D/g, "");
   const formattedPhone = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone || "918341928526";
 
+  const PREDEFINED_TEAM: Record<string, { name: string; phone: string }> = {
+    shiva: { name: "Shiva Shankar", phone: "918341928526" },
+    bharath: { name: "Bharath", phone: "919652388859" },
+    heena: { name: "Heena", phone: "918828396623" },
+    sathwika: { name: "Sathwika", phone: "918688213692" },
+    umesh: { name: "Umesh", phone: "918465903707" },
+  };
+
   // Determine recipients
   let targetRecipients: { id: string | null; name: string; phone: string }[] = [];
 
   if (recipientMode === "employee") {
     if (recipientId === "ALL_TEAM") {
-      const { data: allProfiles } = await adminSupabase
-        .from("profiles")
-        .select("id, name, email");
-
-      targetRecipients = (allProfiles || []).map((p) => ({
-        id: p.id,
-        name: p.name || p.email,
-        phone: formattedPhone,
+      targetRecipients = Object.values(PREDEFINED_TEAM).map((tm) => ({
+        id: null,
+        name: tm.name,
+        phone: tm.phone,
       }));
+    } else if (PREDEFINED_TEAM[recipientId]) {
+      const tm = PREDEFINED_TEAM[recipientId];
+      targetRecipients = [{ id: null, name: tm.name, phone: tm.phone }];
     } else {
       const { data: p } = await adminSupabase
         .from("profiles")
