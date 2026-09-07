@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2 } from "lucide-react";
+import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2, User } from "lucide-react";
 import { createEmailAlert, deleteEmailAlert } from "@/app/actions/alerts";
 
-type Employee = { id: string; name: string; email: string };
+type Employee = { id: string; name: string; email: string; role?: string };
 type Client = { id: string; name: string };
 type Assignment = { client_id: string; user_id: string };
 
@@ -24,11 +24,13 @@ type Alert = {
 };
 
 export default function AlertsClient({
+  currentUserId,
   employees,
   clients,
   assignments,
   alerts: initialAlerts,
 }: {
+  currentUserId?: string;
   employees: Employee[];
   clients: Client[];
   assignments: Assignment[];
@@ -40,42 +42,24 @@ export default function AlertsClient({
 
   const [recipientMode, setRecipientMode] = useState<"employee" | "custom">("employee");
   const [selectedClient, setSelectedClient] = useState("");
-  const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedEmployee, setSelectedEmployee] = useState(currentUserId || employees[0]?.id || "");
 
-  const [scheduleType, setScheduleType] = useState<"immediate" | "specific_date" | "weekly_recurring">("specific_date");
-  const [targetDate, setTargetDate] = useState("2026-09-07"); // Default Monday Sept 7th
-  const [recurrenceDay, setRecurrenceDay] = useState("1"); // Monday = 1
-  const [occurrencesPerDay, setOccurrencesPerDay] = useState(4); // 4 times a day
+  const [scheduleType, setScheduleType] = useState<"weekly_recurring" | "specific_date" | "immediate">("weekly_recurring");
+  const [targetDate, setTargetDate] = useState("2026-09-07");
+  const [recurrenceDay, setRecurrenceDay] = useState("1"); // 1 = Monday
+  const [occurrencesPerDay, setOccurrencesPerDay] = useState(5); // Default 5 times a day as requested
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("18:00");
 
-  const [subject, setSubject] = useState("🎨 Creative Review Reminder: Deliverables due today!");
-  const [message, setMessage] = useState("Reminder: Please complete and upload all client creative deliverables for review today by 6:00 PM.");
+  const [subject, setSubject] = useState("🎨 Work Reminder: Creative Deliverables Update");
+  const [message, setMessage] = useState("Hi team,\n\nThis is an automated reminder regarding the creative deliverables review. Please complete and submit your work on time.");
 
-  const assignedEmployees = selectedClient
-    ? employees.filter((employee) =>
-        assignments.some((assignment) => assignment.client_id === selectedClient && assignment.user_id === employee.id)
+  // Filter employees if a specific client is picked, otherwise show ALL team members (including current user)
+  const displayedEmployees = selectedClient
+    ? employees.filter((emp) =>
+        assignments.some((a) => a.client_id === selectedClient && a.user_id === emp.id)
       )
-    : employees; // fallback to all employees if no client chosen
-
-  function applyPreset(type: "creative_review" | "client_delivery") {
-    if (type === "creative_review") {
-      setScheduleType("specific_date");
-      setTargetDate("2026-09-07");
-      setOccurrencesPerDay(4);
-      setStartTime("09:00");
-      setEndTime("18:00");
-      setSubject("🎨 Creative Review Reminder: Review required before Wednesday delivery!");
-      setMessage("Hi team,\n\nToday (Monday 7th) is the review day for upcoming client creatives due this Wednesday (9th). Please finish all edits and post for approval.");
-    } else {
-      setScheduleType("specific_date");
-      setTargetDate("2026-09-09");
-      setOccurrencesPerDay(1);
-      setStartTime("10:00");
-      setSubject("🚀 Client Creative Delivery Day!");
-      setMessage("Hi team,\n\nToday (Wednesday 9th) is final delivery day for client creatives. Ensure all final files are sent to the client portal.");
-    }
-  }
+    : employees;
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -90,7 +74,7 @@ export default function AlertsClient({
       } else {
         setResult({
           success: true,
-          message: response.status === "sent" ? "Alert sent successfully via email!" : "Alert scheduled successfully!",
+          message: response.status === "sent" ? "Email alert sent successfully!" : "Email alert scheduled successfully!",
         });
         form.reset();
       }
@@ -107,20 +91,7 @@ export default function AlertsClient({
     }
   }
 
-  // Calculate live preview schedule text
-  const previewText = () => {
-    if (scheduleType === "immediate") return "Will send 1 email notification immediately right now.";
-
-    const occ = occurrencesPerDay > 1 ? `${occurrencesPerDay} times` : "1 time";
-    const timeWindow = `${startTime} to ${endTime}`;
-
-    if (scheduleType === "specific_date") {
-      return `Will send ${occ} on ${targetDate || "selected date"} between ${timeWindow}.`;
-    }
-
-    const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][Number(recurrenceDay)] || "Monday";
-    return `Will repeat every ${dayName}, sending ${occ} per day between ${timeWindow}.`;
-  };
+  const dayName = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"][Number(recurrenceDay)] || "Monday";
 
   return (
     <div className="p-4 md:p-6 lg:p-8 pb-16 max-w-5xl mx-auto space-y-6">
@@ -128,82 +99,64 @@ export default function AlertsClient({
       <div>
         <h1 className="text-2xl font-bold text-white flex items-center gap-2.5">
           <Bell className="text-amber-500" size={24} />
-          Email Alerts & Notifications
+          Email Alerts
         </h1>
         <p className="text-neutral-400 text-sm mt-1">
-          Send instant or scheduled email notifications to team members using Resend.
+          Send private email alerts to team members (including yourself) with custom days, times, and daily occurrences.
         </p>
-      </div>
-
-      {/* Quick Presets */}
-      <div className="bg-neutral-900/90 border border-neutral-800 rounded-xl p-4 flex flex-wrap items-center gap-3">
-        <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-          <Sparkles size={14} className="text-amber-400" /> Agency Presets:
-        </span>
-        <button
-          type="button"
-          onClick={() => applyPreset("creative_review")}
-          className="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 text-xs font-medium transition-colors"
-        >
-          🎨 Review Day (4x on Mon 7th)
-        </button>
-        <button
-          type="button"
-          onClick={() => applyPreset("client_delivery")}
-          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-medium transition-colors"
-        >
-          🚀 Client Delivery (Wed 9th)
-        </button>
       </div>
 
       {/* Main Form */}
       <form onSubmit={handleSubmit} className="bg-neutral-900 border border-neutral-800 rounded-xl p-6 space-y-6 shadow-xl">
-        {/* Recipient Mode */}
+        {/* Recipient Selection */}
         <div className="space-y-4">
-          <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400">
-            1. Recipient
-          </label>
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-semibold uppercase tracking-wider text-neutral-400">
+              1. Team Recipient & Email
+            </label>
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setRecipientMode("employee")}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                recipientMode === "employee"
-                  ? "bg-indigo-600 border-indigo-500 text-white shadow-md"
-                  : "border-neutral-800 text-neutral-400 bg-neutral-950 hover:text-white"
-              }`}
-            >
-              Team Employee
-            </button>
-            <button
-              type="button"
-              onClick={() => setRecipientMode("custom")}
-              className={`px-4 py-2 rounded-lg text-xs font-semibold border transition-all ${
-                recipientMode === "custom"
-                  ? "bg-indigo-600 border-indigo-500 text-white shadow-md"
-                  : "border-neutral-800 text-neutral-400 bg-neutral-950 hover:text-white"
-              }`}
-            >
-              Custom Email Address
-            </button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setRecipientMode("employee")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                  recipientMode === "employee"
+                    ? "bg-indigo-600 border-indigo-500 text-white"
+                    : "border-neutral-800 text-neutral-400 bg-neutral-950 hover:text-white"
+                }`}
+              >
+                Team Member
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecipientMode("custom")}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                  recipientMode === "custom"
+                    ? "bg-indigo-600 border-indigo-500 text-white"
+                    : "border-neutral-800 text-neutral-400 bg-neutral-950 hover:text-white"
+                }`}
+              >
+                Custom Email
+              </button>
+            </div>
           </div>
           <input type="hidden" name="recipient_mode" value={recipientMode} />
 
           {recipientMode === "employee" ? (
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-300 mb-1">Filter by Client (Optional)</label>
+                <label className="block text-xs font-medium text-neutral-300 mb-1">
+                  Filter by Client (Optional)
+                </label>
                 <select
                   name="client_id"
                   value={selectedClient}
                   onChange={(e) => {
                     setSelectedClient(e.target.value);
-                    setSelectedEmployee("");
                   }}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">All Clients / All Team</option>
+                  <option value="">All Team Members ({employees.length})</option>
                   {clients.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -213,7 +166,9 @@ export default function AlertsClient({
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-neutral-300 mb-1">Select Employee *</label>
+                <label className="block text-xs font-medium text-neutral-300 mb-1">
+                  Select Team Member / Email *
+                </label>
                 <select
                   name="recipient_id"
                   value={selectedEmployee}
@@ -221,10 +176,10 @@ export default function AlertsClient({
                   required={recipientMode === "employee"}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 >
-                  <option value="">Choose an employee...</option>
-                  {assignedEmployees.map((emp) => (
+                  <option value="">Choose a team member...</option>
+                  {displayedEmployees.map((emp) => (
                     <option key={emp.id} value={emp.id}>
-                      {emp.name} ({emp.email})
+                      {emp.name} ({emp.email}) {emp.id === currentUserId ? "— (You)" : ""}
                     </option>
                   ))}
                 </select>
@@ -233,12 +188,12 @@ export default function AlertsClient({
           ) : (
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-medium text-neutral-300 mb-1">Recipient Email *</label>
+                <label className="block text-xs font-medium text-neutral-300 mb-1">Recipient Email Address *</label>
                 <input
                   name="recipient_email"
                   type="email"
                   required={recipientMode === "custom"}
-                  placeholder="colleague@agency.com"
+                  placeholder="person@example.com"
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -247,7 +202,7 @@ export default function AlertsClient({
                 <input
                   name="recipient_name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Optional Name"
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                 />
               </div>
@@ -255,26 +210,27 @@ export default function AlertsClient({
           )}
         </div>
 
-        {/* Schedule Mode */}
+        {/* Schedule Mode & Timing Settings */}
         <div className="space-y-4 pt-4 border-t border-neutral-800">
           <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400">
-            2. Frequency & Occurrences
+            2. Schedule, Day of Week, Occurrences & Time Window
           </label>
 
+          {/* Schedule Mode Toggles */}
           <div className="grid sm:grid-cols-3 gap-3">
             <button
               type="button"
-              onClick={() => setScheduleType("immediate")}
+              onClick={() => setScheduleType("weekly_recurring")}
               className={`p-3 rounded-lg border text-left flex items-start gap-2.5 transition-all ${
-                scheduleType === "immediate"
+                scheduleType === "weekly_recurring"
                   ? "bg-indigo-600/10 border-indigo-500 text-white"
                   : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white"
               }`}
             >
-              <Send size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+              <Repeat size={16} className="mt-0.5 text-indigo-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">⚡ Right Now</div>
-                <div className="text-[11px] text-neutral-400">Send 1 email immediately</div>
+                <div className="text-xs font-bold text-white">🔄 Day of Week (Weekly)</div>
+                <div className="text-[11px] text-neutral-400">Repeat on Monday, Tuesday, etc.</div>
               </div>
             </button>
 
@@ -290,33 +246,51 @@ export default function AlertsClient({
               <Calendar size={16} className="mt-0.5 text-indigo-400 shrink-0" />
               <div>
                 <div className="text-xs font-bold text-white">📅 Specific Date</div>
-                <div className="text-[11px] text-neutral-400">Target a specific day (e.g. Sept 7th)</div>
+                <div className="text-[11px] text-neutral-400">Target a date (e.g. Sept 7th)</div>
               </div>
             </button>
 
             <button
               type="button"
-              onClick={() => setScheduleType("weekly_recurring")}
+              onClick={() => setScheduleType("immediate")}
               className={`p-3 rounded-lg border text-left flex items-start gap-2.5 transition-all ${
-                scheduleType === "weekly_recurring"
+                scheduleType === "immediate"
                   ? "bg-indigo-600/10 border-indigo-500 text-white"
                   : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white"
               }`}
             >
-              <Repeat size={16} className="mt-0.5 text-indigo-400 shrink-0" />
+              <Send size={16} className="mt-0.5 text-indigo-400 shrink-0" />
               <div>
-                <div className="text-xs font-bold text-white">🔄 Weekly Recurring</div>
-                <div className="text-[11px] text-neutral-400">Every Monday, Tuesday, etc.</div>
+                <div className="text-xs font-bold text-white">⚡ Send Right Now</div>
+                <div className="text-[11px] text-neutral-400">Send 1 email immediately</div>
               </div>
             </button>
           </div>
           <input type="hidden" name="schedule_type" value={scheduleType} />
 
-          {/* Conditional Options */}
           {scheduleType !== "immediate" && (
             <div className="bg-neutral-950 p-4 rounded-xl border border-neutral-800 space-y-4">
-              <div className="grid sm:grid-cols-3 gap-4">
-                {scheduleType === "specific_date" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {/* Day of Week OR Specific Date */}
+                {scheduleType === "weekly_recurring" ? (
+                  <div>
+                    <label className="block text-xs font-medium text-neutral-300 mb-1">Day of the Week *</label>
+                    <select
+                      name="recurrence_day"
+                      value={recurrenceDay}
+                      onChange={(e) => setRecurrenceDay(e.target.value)}
+                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-semibold focus:outline-none focus:border-indigo-500"
+                    >
+                      <option value="1">Monday</option>
+                      <option value="2">Tuesday</option>
+                      <option value="3">Wednesday</option>
+                      <option value="4">Thursday</option>
+                      <option value="5">Friday</option>
+                      <option value="6">Saturday</option>
+                      <option value="0">Sunday</option>
+                    </select>
+                  </div>
+                ) : (
                   <div>
                     <label className="block text-xs font-medium text-neutral-300 mb-1">Target Date *</label>
                     <input
@@ -328,84 +302,76 @@ export default function AlertsClient({
                       className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
                     />
                   </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-medium text-neutral-300 mb-1">Day of Week *</label>
-                    <select
-                      name="recurrence_day"
-                      value={recurrenceDay}
-                      onChange={(e) => setRecurrenceDay(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
-                    >
-                      <option value="1">Monday</option>
-                      <option value="2">Tuesday</option>
-                      <option value="3">Wednesday</option>
-                      <option value="4">Thursday</option>
-                      <option value="5">Friday</option>
-                      <option value="6">Saturday</option>
-                      <option value="0">Sunday</option>
-                    </select>
-                  </div>
                 )}
 
+                {/* Occurrence per day */}
                 <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">
-                    Occurrences on That Day *
-                  </label>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">Occurrences on That Day *</label>
                   <select
                     name="occurrences_per_day"
                     value={occurrencesPerDay}
                     onChange={(e) => setOccurrencesPerDay(Number(e.target.value))}
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-amber-400 font-bold focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-amber-400 font-bold focus:outline-none focus:border-indigo-500"
                   >
                     <option value="1">1 time on that day</option>
                     <option value="2">2 times on that day</option>
                     <option value="3">3 times on that day</option>
-                    <option value="4">4 times on that day (Review Day Preset)</option>
-                    <option value="5">5 times on that day</option>
+                    <option value="4">4 times on that day</option>
+                    <option value="5">5 times on that day (e.g. 5x on Monday)</option>
                     <option value="6">6 times on that day</option>
+                    <option value="8">8 times on that day</option>
+                    <option value="10">10 times on that day</option>
                   </select>
                 </div>
 
+                {/* Starting Time */}
                 <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">Time Window</label>
-                  <div className="flex items-center gap-1.5">
-                    <input
-                      type="time"
-                      name="start_time"
-                      value={startTime}
-                      onChange={(e) => setStartTime(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-2 text-xs text-white"
-                    />
-                    <span className="text-neutral-500 text-xs">to</span>
-                    <input
-                      type="time"
-                      name="end_time"
-                      value={endTime}
-                      onChange={(e) => setEndTime(e.target.value)}
-                      className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-2 py-2 text-xs text-white"
-                    />
-                  </div>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">Starting Time *</label>
+                  <input
+                    type="time"
+                    name="start_time"
+                    value={startTime}
+                    onChange={(e) => setStartTime(e.target.value)}
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                {/* Ending Time */}
+                <div>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">Ending Time *</label>
+                  <input
+                    type="time"
+                    name="end_time"
+                    value={endTime}
+                    onChange={(e) => setEndTime(e.target.value)}
+                    required
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                  />
                 </div>
               </div>
 
               {/* Schedule Summary Banner */}
               <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs flex items-center gap-2">
-                <Clock size={14} className="shrink-0" />
-                <span>{previewText()}</span>
+                <Clock size={14} className="shrink-0 text-amber-400" />
+                <span>
+                  {scheduleType === "weekly_recurring"
+                    ? `Email will be sent ${occurrencesPerDay} times every ${dayName} between ${startTime} and ${endTime}.`
+                    : `Email will be sent ${occurrencesPerDay} times on ${targetDate} between ${startTime} and ${endTime}.`}
+                </span>
               </div>
             </div>
           )}
         </div>
 
-        {/* Content */}
+        {/* Email Content */}
         <div className="space-y-4 pt-4 border-t border-neutral-800">
           <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-400">
             3. Email Content
           </label>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-300 mb-1">Subject *</label>
+            <label className="block text-xs font-medium text-neutral-300 mb-1">Subject Line *</label>
             <input
               name="subject"
               type="text"
@@ -441,7 +407,7 @@ export default function AlertsClient({
           </div>
         </div>
 
-        {/* Alerts & Results */}
+        {/* Status Messages */}
         {result?.error && (
           <div className="p-3.5 rounded-lg bg-red-950/60 border border-red-800/80 text-red-300 text-xs flex items-start gap-2">
             <AlertCircle size={16} className="shrink-0 mt-0.5" />
@@ -456,7 +422,7 @@ export default function AlertsClient({
           </div>
         )}
 
-        {/* Submit */}
+        {/* Action Button */}
         <button
           disabled={isPending || (recipientMode === "employee" && employees.length === 0)}
           className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md cursor-pointer"
@@ -466,15 +432,15 @@ export default function AlertsClient({
         </button>
       </form>
 
-      {/* Alert Log */}
+      {/* Log */}
       <section className="space-y-3 pt-4">
         <h2 className="text-base font-bold text-white flex items-center gap-2">
-          <Clock size={16} className="text-neutral-400" /> Recent & Scheduled Alerts
+          <Clock size={16} className="text-neutral-400" /> Recent & Scheduled Email Alerts
         </h2>
 
         {alertsList.length === 0 ? (
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center text-neutral-500 text-sm">
-            No alerts set up yet. Create your first email alert above!
+            No email alerts scheduled yet. Use the form above to schedule your first alert!
           </div>
         ) : (
           <div className="space-y-2.5">
@@ -500,13 +466,13 @@ export default function AlertsClient({
 
                     {alertItem.occurrences_per_day && alertItem.occurrences_per_day > 1 && (
                       <span className="text-[10px] bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full font-semibold">
-                        ⚡ {alertItem.occurrences_per_day}x a day (Sent {alertItem.sent_count || 0}/{alertItem.occurrences_per_day})
+                        ⚡ {alertItem.occurrences_per_day}x daily (Sent {alertItem.sent_count || 0}/{alertItem.occurrences_per_day})
                       </span>
                     )}
                   </div>
 
                   <p className="text-xs text-neutral-400 truncate">
-                    To {alertItem.recipient?.name || alertItem.recipient_name || "Recipient"} (
+                    To: {alertItem.recipient?.name || alertItem.recipient_name || "Team Member"} (
                     {alertItem.recipient?.email || alertItem.recipient_email || "no email"})
                   </p>
                   <p className="text-xs text-neutral-400 line-clamp-2 mt-1">{alertItem.message}</p>
