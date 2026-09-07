@@ -29,6 +29,7 @@ export async function createWhatsAppAlert(formData: FormData) {
   const customName = String(formData.get("recipient_name") || "").trim();
   const subject = String(formData.get("subject") || "").trim();
   const message = String(formData.get("message") || "").trim();
+  const callmebotApiKey = String(formData.get("callmebot_apikey") || "").trim();
 
   // Default to 8341928526 if no phone provided
   if (!customPhoneInput) {
@@ -130,6 +131,7 @@ export async function createWhatsAppAlert(formData: FormData) {
         occurrences_per_day: occurrencesPerDay,
         recurrence_start_time: startTime,
         recurrence_end_time: endTime,
+        callmebot_apikey: callmebotApiKey || process.env.CALLMEBOT_API_KEY || null,
         status: isImmediate ? "sent" : "scheduled",
         sent_count: isImmediate ? 1 : 0,
       })

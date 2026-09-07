@@ -229,8 +229,8 @@ export default function WhatsAppAlertsClient({
             </div>
           ) : null}
 
-          {/* Phone Number Input (Default: 918341928526) */}
-          <div className="grid sm:grid-cols-2 gap-4">
+          {/* Phone Number & Automatic Dispatch Settings */}
+          <div className="grid sm:grid-cols-3 gap-4">
             <div>
               <label className="block text-xs font-medium text-neutral-300 mb-1">
                 WhatsApp Phone Number * <span className="text-[10px] text-emerald-400 font-normal">(Default: 918341928526)</span>
@@ -254,6 +254,17 @@ export default function WhatsAppAlertsClient({
                 onChange={(e) => setCustomName(e.target.value)}
                 placeholder="Shiva Shankar"
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-neutral-300 mb-1">
+                CallMeBot API Key <span className="text-[10px] text-emerald-400 font-normal">(Optional for 100% Auto Send)</span>
+              </label>
+              <input
+                name="callmebot_apikey"
+                type="text"
+                placeholder="Optional free key"
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
               />
             </div>
           </div>

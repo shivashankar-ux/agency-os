@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.whatsapp_alerts (
   recurrence_start_time TIME DEFAULT '09:00',
   recurrence_end_time TIME DEFAULT '18:00',
   sent_count INTEGER DEFAULT 0,
+  callmebot_apikey TEXT,
   status TEXT DEFAULT 'scheduled',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
