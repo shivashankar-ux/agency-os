@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2, Users } from "lucide-react";
+import { useState, useTransition, useEffect } from "react";
+import { Bell, Loader2, Send, Calendar, Clock, Repeat, Sparkles, CheckCircle2, AlertCircle, Trash2, Check } from "lucide-react";
 import { createEmailAlert, deleteEmailAlert } from "@/app/actions/alerts";
 
 type Employee = { id: string; name: string; email: string; role?: string };
@@ -23,6 +23,21 @@ type Alert = {
   recipient_name?: string;
 };
 
+function getCurrentTimeString() {
+  const now = new Date();
+  const hours = String(now.getHours()).padStart(2, "0");
+  const minutes = String(now.getMinutes()).padStart(2, "0");
+  return `${hours}:${minutes}`;
+}
+
+function getTodayDateString() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export default function AlertsClient({
   currentUserId,
   employees,
@@ -38,6 +53,7 @@ export default function AlertsClient({
 }) {
   const [isPending, startTransition] = useTransition();
   const [result, setResult] = useState<{ error?: string; success?: boolean; message?: string } | null>(null);
+  const [isSentSuccess, setIsSentSuccess] = useState(false);
   const [alertsList, setAlertsList] = useState<Alert[]>(initialAlerts);
 
   const [recipientMode, setRecipientMode] = useState<"employee" | "custom">("employee");
@@ -45,16 +61,21 @@ export default function AlertsClient({
   const [selectedEmployee, setSelectedEmployee] = useState("ALL_TEAM");
 
   const [scheduleType, setScheduleType] = useState<"weekly_recurring" | "specific_date" | "immediate">("weekly_recurring");
-  const [targetDate, setTargetDate] = useState("2026-09-07");
+  const [targetDate, setTargetDate] = useState(getTodayDateString);
   const [recurrenceDay, setRecurrenceDay] = useState("1"); // 1 = Monday
   const [occurrencesPerDay, setOccurrencesPerDay] = useState(5); // Default 5 times on Monday
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("18:00");
+  const [startTime, setStartTime] = useState(getCurrentTimeString); // Dynamic immediate drafting time
+  const [endTime, setEndTime] = useState("23:00");
 
   const [subject, setSubject] = useState("🎨 Work Reminder: Creative Deliverables Update");
   const [message, setMessage] = useState("Hi team,\n\nThis is an automated reminder regarding the creative deliverables review. Please complete and submit your work on time.");
 
-  // Identify assigned employees for selected client (if any)
+  // Update dynamic start time on mount
+  useEffect(() => {
+    setStartTime(getCurrentTimeString());
+  }, []);
+
+  // Filter employees if a specific client is picked
   const assignedEmployees = selectedClient
     ? employees.filter((emp) =>
         assignments.some((a) => a.client_id === selectedClient && a.user_id === emp.id)
@@ -64,6 +85,7 @@ export default function AlertsClient({
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setResult(null);
+    setIsSentSuccess(false);
     const form = event.currentTarget;
     const formData = new FormData(form);
 
@@ -71,12 +93,15 @@ export default function AlertsClient({
       const response = await createEmailAlert(formData);
       if (response.error) {
         setResult({ error: response.error });
+        setIsSentSuccess(false);
       } else {
+        setIsSentSuccess(true);
         setResult({
           success: true,
           message: response.message || (response.status === "sent" ? "Email alert sent successfully!" : "Email alert scheduled successfully!"),
         });
-        form.reset();
+        // Reset green button indicator after 5 seconds
+        setTimeout(() => setIsSentSuccess(false), 5000);
       }
     });
   }
@@ -335,16 +360,18 @@ export default function AlertsClient({
                   </select>
                 </div>
 
-                {/* Starting Time */}
+                {/* Starting Time (Default: Immediate Drafting Time) */}
                 <div>
-                  <label className="block text-xs font-medium text-neutral-300 mb-1">Starting Time *</label>
+                  <label className="block text-xs font-medium text-neutral-300 mb-1">
+                    Starting Time * <span className="text-[10px] text-indigo-400 font-normal">(Defaults to Current Time)</span>
+                  </label>
                   <input
                     type="time"
                     name="start_time"
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     required
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-semibold"
                   />
                 </div>
 
@@ -357,7 +384,7 @@ export default function AlertsClient({
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     required
-                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 font-semibold"
                   />
                 </div>
               </div>
@@ -429,18 +456,36 @@ export default function AlertsClient({
         {result?.success && (
           <div className="p-3.5 rounded-lg bg-emerald-950/60 border border-emerald-800/80 text-emerald-300 text-xs flex items-center gap-2">
             <CheckCircle2 size={16} className="shrink-0" />
-            <div>{result.message}</div>
+            <div className="font-semibold">{result.message}</div>
           </div>
         )}
 
-        {/* Action Button */}
-        <button
-          disabled={isPending || (recipientMode === "employee" && employees.length === 0)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 text-white px-6 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md cursor-pointer"
-        >
-          {isPending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-          {isPending ? "Processing..." : scheduleType === "immediate" ? "Send Alert Now" : "Schedule Alert"}
-        </button>
+        {/* Action Button: Turns GREEN on success */}
+        <div>
+          <button
+            disabled={isPending || (recipientMode === "employee" && employees.length === 0)}
+            className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all shadow-lg cursor-pointer ${
+              isSentSuccess
+                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-900/30 scale-[1.02]"
+                : "bg-amber-500 hover:bg-amber-400 active:bg-amber-600 text-neutral-950 shadow-amber-900/20"
+            } disabled:opacity-50`}
+          >
+            {isPending ? (
+              <Loader2 size={16} className="animate-spin" />
+            ) : isSentSuccess ? (
+              <Check size={16} className="stroke-[3]" />
+            ) : (
+              <Send size={16} />
+            )}
+            {isPending
+              ? "Sending Alert..."
+              : isSentSuccess
+              ? "✓ Email Alert Sent Successfully!"
+              : scheduleType === "immediate"
+              ? "Send Alert Now"
+              : "Send Alert"}
+          </button>
+        </div>
       </form>
 
       {/* Log */}
@@ -451,7 +496,7 @@ export default function AlertsClient({
 
         {alertsList.length === 0 ? (
           <div className="bg-neutral-900 border border-neutral-800 rounded-xl p-8 text-center text-neutral-500 text-sm">
-            No email alerts scheduled yet. Use the form above to schedule your first alert!
+            No email alerts scheduled yet. Use the form above to send your first alert!
           </div>
         ) : (
           <div className="space-y-2.5">
