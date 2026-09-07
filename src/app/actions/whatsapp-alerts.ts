@@ -55,6 +55,7 @@ export async function createWhatsAppAlert(formData: FormData) {
 
   const PREDEFINED_TEAM: Record<string, { name: string; phone: string }> = {
     shiva: { name: "Shiva Shankar", phone: "918341928526" },
+    test: { name: "Test Number", phone: "918186939526" },
     bharath: { name: "Bharath", phone: "919652388859" },
     heena: { name: "Heena", phone: "918828396623" },
     sathwika: { name: "Sathwika", phone: "918688213692" },

@@ -187,6 +187,9 @@ export default function WhatsAppAlertsClient({
                   if (val === "shiva") {
                     setCustomPhone("918341928526");
                     setCustomName("Shiva Shankar");
+                  } else if (val === "test") {
+                    setCustomPhone("918186939526");
+                    setCustomName("Test Number");
                   } else if (val === "bharath") {
                     setCustomPhone("919652388859");
                     setCustomName("Bharath");
@@ -209,6 +212,7 @@ export default function WhatsAppAlertsClient({
               >
                 <option value="ALL_TEAM">👥 All Team Members (Send to Everyone)</option>
                 <option value="shiva">👤 Shiva Shankar — 918341928526 (You)</option>
+                <option value="test">🧪 Test Number — 918186939526</option>
                 <option value="bharath">👤 Bharath — 919652388859</option>
                 <option value="heena">👤 Heena — 918828396623</option>
                 <option value="sathwika">👤 Sathwika — 918688213692</option>
@@ -246,14 +250,25 @@ export default function WhatsAppAlertsClient({
             </div>
             <div>
               <label className="block text-xs font-medium text-neutral-300 mb-1">
-                CallMeBot API Key <span className="text-[10px] text-emerald-400 font-normal">(Optional for 100% Auto Send)</span>
+                CallMeBot API Key <span className="text-[10px] text-emerald-400 font-normal">(Required for 100% Auto Send)</span>
               </label>
               <input
                 name="callmebot_apikey"
                 type="text"
-                placeholder="Optional free key"
+                placeholder="Enter CallMeBot API key"
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-lg px-3 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-emerald-500"
               />
+            </div>
+          </div>
+
+          <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs flex items-start gap-2">
+            <Sparkles size={16} className="shrink-0 text-emerald-400 mt-0.5" />
+            <div>
+              <span className="font-bold text-white">🤖 100% Automated Background Sending Setup:</span> To send WhatsApp alerts automatically in the background (5 times, 1 min apart) without opening WhatsApp Web:
+              <br />
+              1. Open WhatsApp & send <code className="bg-neutral-900 px-1.5 py-0.5 rounded text-emerald-300 font-mono">I allow callmebot to send me messages</code> to <span className="font-mono font-bold text-white">+34 644 44 24 57</span>.
+              <br />
+              2. Paste the API key received into the box above!
             </div>
           </div>
         </div>
