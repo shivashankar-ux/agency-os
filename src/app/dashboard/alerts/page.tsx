@@ -3,6 +3,9 @@ import AlertsClient from "./AlertsClient";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default async function AlertsPage() {
   const profile = await getCurrentProfile();
   if (!profile || !["owner", "admin"].includes(profile.role)) redirect("/dashboard");
