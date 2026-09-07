@@ -72,15 +72,48 @@ export default function WhatsAppAlertsClient({
   const [subject, setSubject] = useState("💬 Work Reminder: Creative Deliverables Update");
   const [message, setMessage] = useState("Hi team,\n\nThis is an automated WhatsApp reminder regarding today's creative deliverables review. Please complete and submit your work on time.");
 
+  const [autoSequenceActive, setAutoSequenceActive] = useState(false);
+  const [autoSequenceCount, setAutoSequenceCount] = useState(0);
+  const [autoSequenceSecondsLeft, setAutoSequenceSecondsLeft] = useState(60);
+
   useEffect(() => {
     setStartTime(getCurrentTimeString());
   }, []);
 
-  const assignedEmployees = selectedClient
-    ? employees.filter((emp) =>
-        assignments.some((a) => a.client_id === selectedClient && a.user_id === emp.id)
-      )
-    : [];
+  function startAutoSequence(phone: string, alertSubject: string, alertMessage: string, total: number, apikey?: string) {
+    setAutoSequenceActive(true);
+    setAutoSequenceCount(1);
+    let currentSent = 1;
+    let secondsLeft = 60;
+    setAutoSequenceSecondsLeft(60);
+
+    const timer = setInterval(() => {
+      secondsLeft -= 1;
+      setAutoSequenceSecondsLeft(secondsLeft);
+
+      if (secondsLeft <= 0) {
+        currentSent += 1;
+        setAutoSequenceCount(currentSent);
+        secondsLeft = 60;
+        setAutoSequenceSecondsLeft(60);
+
+        const fullText = `*${alertSubject}* (Occurrence ${currentSent}/${total})\n\n${alertMessage}`;
+        const targetPhone = phone.replace(/\D/g, "");
+
+        if (apikey) {
+          fetch(`https://api.callmebot.com/whatsapp.php?phone=${targetPhone}&text=${encodeURIComponent(fullText)}&apikey=${apikey}`)
+            .catch((e) => console.error(e));
+        } else {
+          window.open(`https://wa.me/${targetPhone}?text=${encodeURIComponent(fullText)}`, "_blank");
+        }
+
+        if (currentSent >= total) {
+          clearInterval(timer);
+          setAutoSequenceActive(false);
+        }
+      }
+    }, 1000);
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -88,6 +121,7 @@ export default function WhatsAppAlertsClient({
     setIsSentSuccess(false);
     const form = event.currentTarget;
     const formData = new FormData(form);
+    const apikey = String(formData.get("callmebot_apikey") || "").trim();
 
     startTransition(async () => {
       const response = await createWhatsAppAlert(formData);
@@ -105,6 +139,10 @@ export default function WhatsAppAlertsClient({
         // Automatically open WhatsApp Web window if immediate
         if (response.whatsappUrl && scheduleType === "immediate") {
           window.open(response.whatsappUrl, "_blank");
+
+          if (occurrencesPerDay > 1 && !autoSequenceActive) {
+            startAutoSequence(customPhone, subject, message, occurrencesPerDay, apikey);
+          }
         }
 
         setTimeout(() => setIsSentSuccess(false), 6000);
@@ -261,14 +299,18 @@ export default function WhatsAppAlertsClient({
             </div>
           </div>
 
-          <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs flex items-start gap-2">
-            <Sparkles size={16} className="shrink-0 text-emerald-400 mt-0.5" />
-            <div>
-              <span className="font-bold text-white">🤖 100% Automated Background Sending Setup:</span> To send WhatsApp alerts automatically in the background (5 times, 1 min apart) without opening WhatsApp Web:
+          <div className="p-3.5 rounded-lg bg-emerald-950/40 border border-emerald-800/60 text-emerald-300 text-xs space-y-1.5">
+            <div className="flex items-center gap-2 font-bold text-white text-sm">
+              <Sparkles size={16} className="text-emerald-400" />
+              🤖 100% Automated Background Dispatch Setup
+            </div>
+            <p className="text-neutral-300 leading-relaxed">
+              If CallMeBot API key hasn't arrived yet, simply select <strong className="text-emerald-300">"⚡ Send Right Now"</strong> with <strong>5 occurrences</strong> and click Send! The page will automatically trigger all 5 messages 1 minute apart.
+            </p>
+            <div className="text-[11px] text-neutral-400 pt-1 border-t border-emerald-900/60">
+              <strong>Alternative CallMeBot Numbers to request API Key:</strong> Send <code className="bg-neutral-900 px-1 py-0.5 rounded text-emerald-300 font-mono">I allow callmebot to send me messages</code> to any of these numbers on WhatsApp:
               <br />
-              1. Open WhatsApp & send <code className="bg-neutral-900 px-1.5 py-0.5 rounded text-emerald-300 font-mono">I allow callmebot to send me messages</code> to <span className="font-mono font-bold text-white">+34 644 44 24 57</span>.
-              <br />
-              2. Paste the API key received into the box above!
+              • <span className="font-mono text-white font-semibold">+34 644 68 02 46</span> &nbsp;|&nbsp; • <span className="font-mono text-white font-semibold">+34 644 71 96 34</span> &nbsp;|&nbsp; • <span className="font-mono text-white font-semibold">+34 644 44 24 57</span>
             </div>
           </div>
         </div>
@@ -490,6 +532,23 @@ export default function WhatsAppAlertsClient({
                 </a>
               </div>
             )}
+          </div>
+        )}
+
+        {autoSequenceActive && (
+          <div className="p-4 rounded-lg bg-emerald-950/90 border border-emerald-500/50 text-emerald-200 text-xs space-y-2 animate-pulse shadow-lg">
+            <div className="flex items-center justify-between font-bold text-sm text-emerald-300">
+              <span className="flex items-center gap-2">
+                <Sparkles className="animate-spin text-emerald-400" size={18} />
+                🤖 Live 5-Message Auto-Sequence Active ({autoSequenceCount}/{occurrencesPerDay})
+              </span>
+              <span className="font-mono bg-emerald-900/80 px-2.5 py-1 rounded text-emerald-300 border border-emerald-700">
+                Next in {autoSequenceSecondsLeft}s
+              </span>
+            </div>
+            <p className="text-neutral-300">
+              Automated 1-minute interval dispatcher is running for target phone <strong className="text-emerald-300">+{customPhone}</strong>. Message {autoSequenceCount} sent!
+            </p>
           </div>
         )}
 
