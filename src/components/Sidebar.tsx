@@ -87,6 +87,7 @@ export default function Sidebar({ profile }: { profile: Profile }) {
         { href: "/dashboard/reports", label: "Reports", icon: BarChart3, show: canView("reports") },
         { href: "/dashboard/feedback", label: "360° Feedback", icon: MessageSquare, show: true },
         { href: "/dashboard/alerts", label: "Alerts", icon: Bell, show: profile.role === "owner" || profile.role === "admin" },
+        { href: "/dashboard/whatsapp-alerts", label: "WhatsApp Alerts", icon: MessageSquare, show: profile.role === "owner" || profile.role === "admin" },
         { href: "/dashboard/ai", label: "AI Copilot", icon: Sparkles, show: canUseAI },
         { href: "/dashboard/team", label: "Team", icon: UserCog, show: profile.role === "owner" || profile.role === "admin" },
         { href: "/dashboard/finance", label: "Finance", icon: Wallet, show: profile.role === "owner" },
