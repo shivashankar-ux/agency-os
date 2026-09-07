@@ -187,7 +187,15 @@ export async function createEmailAlert(formData: FormData) {
         emailPayload.attachments = [attachments];
       }
 
-      const { error: sendError } = await resend.emails.send(emailPayload);
+      let { error: sendError } = await resend.emails.send(emailPayload);
+
+      // Fallback: If custom domain fails due to unverified domain, retry with onboarding@resend.dev
+      if (sendError && (sendError.message.includes("domain") || sendError.message.includes("verify") || sendError.message.includes("not verified"))) {
+        console.log("Retrying with onboarding@resend.dev fallback...");
+        emailPayload.from = "Agency OS <onboarding@resend.dev>";
+        const retryRes = await resend.emails.send(emailPayload);
+        sendError = retryRes.error;
+      }
 
       if (sendError) {
         console.error("Resend send error:", sendError);
