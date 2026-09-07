@@ -120,6 +120,7 @@ export async function createEmailAlert(formData: FormData) {
   }
 
   const isImmediate = scheduleType === "immediate" || scheduledFor.getTime() <= Date.now();
+  let lastResendError: string | null = null;
 
   // Create alert records for each recipient
   for (const target of targetRecipients) {
@@ -153,35 +154,57 @@ export async function createEmailAlert(formData: FormData) {
     } else if (isImmediate && alert) {
       // Send immediately via Resend
       const apiKey = process.env.RESEND_API_KEY;
-      if (apiKey) {
-        const resend = new Resend(apiKey);
-        const fromEmail = process.env.RESEND_FROM_EMAIL || "crm@thestorybuilder.in";
-        const attachments = imageUrl ? await getImageAttachment(imageUrl, image) : undefined;
+      if (!apiKey) {
+        lastResendError = "RESEND_API_KEY is missing in environment variables";
+        await adminSupabase.from("email_alerts").update({ status: "failed", error_message: lastResendError }).eq("id", alert.id);
+        continue;
+      }
 
-        await resend.emails.send({
-          from: `Agency OS <${fromEmail}>`,
-          to: target.email,
-          subject,
-          html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
-              <h2 style="color: #4f46e5; margin-top: 0;">🔔 Agency OS Alert</h2>
-              <p>Hello <strong>${escapeHtml(target.name || "Team Member")}</strong>,</p>
-              <div style="background-color: #f8fafc; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin: 16px 0;">
-                <p style="margin: 0; font-size: 15px; white-space: pre-wrap;">${escapeHtml(message)}</p>
-              </div>
-              ${imageUrl ? `<div style="margin-top: 16px;"><img src="${imageUrl}" alt="Alert Attachment" style="max-width: 100%; border-radius: 6px;" /></div>` : ""}
-              <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-                Sent from Agency OS by ${escapeHtml(profile.name || "your manager")}.
-              </p>
+      const resend = new Resend(apiKey);
+      const fromEmail = process.env.RESEND_FROM_EMAIL || "crm@thestorybuilder.in";
+      const attachments = imageUrl ? await getImageAttachment(imageUrl, image) : undefined;
+
+      const emailPayload: any = {
+        from: `Agency OS <${fromEmail}>`,
+        to: target.email,
+        subject,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #1e293b; line-height: 1.6; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <h2 style="color: #4f46e5; margin-top: 0;">🔔 Agency OS Alert</h2>
+            <p>Hello <strong>${escapeHtml(target.name || "Team Member")}</strong>,</p>
+            <div style="background-color: #f8fafc; padding: 16px; border-left: 4px solid #6366f1; border-radius: 4px; margin: 16px 0;">
+              <p style="margin: 0; font-size: 15px; white-space: pre-wrap;">${escapeHtml(message)}</p>
             </div>
-          `,
-          ...(attachments ? { attachments: [attachments] } : {}),
-        });
+            ${imageUrl ? `<div style="margin-top: 16px;"><img src="${imageUrl}" alt="Alert Attachment" style="max-width: 100%; border-radius: 6px;" /></div>` : ""}
+            <p style="color: #94a3b8; font-size: 12px; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+              Sent from Agency OS by ${escapeHtml(profile.name || "your manager")}.
+            </p>
+          </div>
+        `,
+      };
+
+      if (attachments) {
+        emailPayload.attachments = [attachments];
+      }
+
+      const { error: sendError } = await resend.emails.send(emailPayload);
+
+      if (sendError) {
+        console.error("Resend send error:", sendError);
+        lastResendError = sendError.message;
+        await adminSupabase.from("email_alerts").update({ status: "failed", error_message: sendError.message }).eq("id", alert.id);
       }
     }
   }
 
   revalidatePath("/dashboard/alerts");
+
+  if (isImmediate && lastResendError) {
+    return {
+      error: `Resend API Error: ${lastResendError}. Please check your Resend API Key in Vercel & Resend dashboard.`,
+    };
+  }
+
   return {
     success: true,
     status: isImmediate ? "sent" : "scheduled",
