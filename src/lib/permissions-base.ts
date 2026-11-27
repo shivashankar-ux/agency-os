@@ -24,6 +24,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: true, scope: "all" }, branding: { allowed: true, scope: "all" }, integrations: { allowed: true, scope: "all" }, delete_workspace: { allowed: true, scope: "all" } },
     feedback: { view_all: { allowed: true, scope: "all" }, create_round: { allowed: true, scope: "all" }, manage_tokens: { allowed: true, scope: "all" } },
+    content: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: true, scope: "all" } },
   },
   admin: {
     // Almost full access, cannot delete workspace or manage super admin fields
@@ -40,6 +41,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: true, scope: "all" }, branding: { allowed: true, scope: "all" }, integrations: { allowed: true, scope: "all" }, delete_workspace: { allowed: false, scope: "all" } },
     feedback: { view_all: { allowed: true, scope: "all" }, create_round: { allowed: true, scope: "all" }, manage_tokens: { allowed: true, scope: "all" } },
+    content: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: true, scope: "all" } },
   },
   manager: {
     // Managers default to view & edit rights but can be configured individually via UI
@@ -47,7 +49,7 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     projects: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, archive: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     tasks: { view: { allowed: true, scope: "all" }, assign: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, complete: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     team: { view: { allowed: true, scope: "all" }, invite: { allowed: false, scope: "all" }, remove: { allowed: false, scope: "all" }, change_roles: { allowed: false, scope: "all" } },
-    crm: { view: { allowed: false, scope: "all" }, create: { allowed: false, scope: "all" }, edit: { allowed: false, scope: "all" }, delete: { allowed: false, scope: "all" }, convert: { allowed: false, scope: "all" } },
+    crm: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" }, convert: { allowed: true, scope: "all" } },
     calendar: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     dashboard: { view_revenue: { allowed: false, scope: "all" }, view_analytics: { allowed: true, scope: "all" }, view_kpis: { allowed: true, scope: "all" }, view_financial_cards: { allowed: false, scope: "all" }, view_team_performance: { allowed: true, scope: "all" } },
     reports: { view: { allowed: true, scope: "all" }, export: { allowed: false, scope: "all" } },
@@ -55,6 +57,26 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     files: { upload: { allowed: true, scope: "all" }, download: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
     settings: { company_settings: { allowed: false, scope: "all" }, branding: { allowed: false, scope: "all" }, integrations: { allowed: false, scope: "all" }, delete_workspace: { allowed: false, scope: "all" } },
+    feedback: { view_all: { allowed: false, scope: "all" }, create_round: { allowed: false, scope: "all" }, manage_tokens: { allowed: false, scope: "all" } },
+    content: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
+  },
+  planner: {
+    // New role for the gym-content business: leads, clients, content pipeline, reports.
+    // No Finance, no Team admin, no Settings (per owner decision).
+    clients: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" }, export: { allowed: false, scope: "all" } },
+    projects: { view: { allowed: true, scope: "all" }, create: { allowed: false, scope: "all" }, edit: { allowed: false, scope: "all" }, archive: { allowed: false, scope: "all" }, delete: { allowed: false, scope: "all" } },
+    tasks: { view: { allowed: true, scope: "own" }, assign: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, complete: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
+    team: { view: { allowed: false, scope: "own" }, invite: { allowed: false, scope: "own" }, remove: { allowed: false, scope: "own" }, change_roles: { allowed: false, scope: "own" } },
+    crm: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" }, convert: { allowed: true, scope: "all" } },
+    calendar: { view: { allowed: true, scope: "all" }, create: { allowed: false, scope: "all" }, edit: { allowed: false, scope: "all" }, delete: { allowed: false, scope: "all" } },
+    dashboard: { view_revenue: { allowed: false, scope: "own" }, view_analytics: { allowed: false, scope: "own" }, view_kpis: { allowed: true, scope: "all" }, view_financial_cards: { allowed: false, scope: "own" }, view_team_performance: { allowed: false, scope: "own" } },
+    reports: { view: { allowed: true, scope: "all" }, export: { allowed: false, scope: "all" } },
+    finance: { view: { allowed: false, scope: "own" }, create_invoice: { allowed: false, scope: "own" }, edit_invoice: { allowed: false, scope: "own" }, expenses: { allowed: false, scope: "own" }, revenue: { allowed: false, scope: "own" }, profit: { allowed: false, scope: "own" } },
+    files: { upload: { allowed: true, scope: "all" }, download: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
+    ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
+    settings: { company_settings: { allowed: false, scope: "own" }, branding: { allowed: false, scope: "own" }, integrations: { allowed: false, scope: "own" }, delete_workspace: { allowed: false, scope: "own" } },
+    feedback: { view_all: { allowed: false, scope: "all" }, create_round: { allowed: false, scope: "all" }, manage_tokens: { allowed: false, scope: "all" } },
+    content: { view: { allowed: true, scope: "all" }, create: { allowed: true, scope: "all" }, edit: { allowed: true, scope: "all" }, delete: { allowed: false, scope: "all" } },
   },
   member: {
     // Employees (members) have highly restricted defaults and scope = 'own'
@@ -69,6 +91,8 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     finance: { view: { allowed: false, scope: "own" }, create_invoice: { allowed: false, scope: "own" }, edit_invoice: { allowed: false, scope: "own" }, expenses: { allowed: false, scope: "own" }, revenue: { allowed: false, scope: "own" }, profit: { allowed: false, scope: "own" } },
     files: { upload: { allowed: true, scope: "own" }, download: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
     ai: { proposal_generator: { allowed: true, scope: "all" }, marketing_ai: { allowed: true, scope: "all" }, caption_generator: { allowed: true, scope: "all" }, reports_ai: { allowed: true, scope: "all" } },
+    feedback: { view_all: { allowed: false, scope: "own" }, create_round: { allowed: false, scope: "own" }, manage_tokens: { allowed: false, scope: "own" } },
+    content: { view: { allowed: true, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
   },
   client: {
     // Client Portal specific permissions: only view their own projects/tasks/invoices
@@ -84,6 +108,8 @@ export const ROLE_DEFAULTS: Record<string, PermissionMap> = {
     files: { upload: { allowed: true, scope: "own" }, download: { allowed: true, scope: "own" }, delete: { allowed: false, scope: "own" } },
     ai: { proposal_generator: { allowed: false, scope: "own" }, marketing_ai: { allowed: false, scope: "own" }, caption_generator: { allowed: false, scope: "own" }, reports_ai: { allowed: false, scope: "own" } },
     settings: { company_settings: { allowed: false, scope: "own" }, branding: { allowed: false, scope: "own" }, integrations: { allowed: false, scope: "own" }, delete_workspace: { allowed: false, scope: "own" } },
+    feedback: { view_all: { allowed: false, scope: "own" }, create_round: { allowed: false, scope: "own" }, manage_tokens: { allowed: false, scope: "own" } },
+    content: { view: { allowed: false, scope: "own" }, create: { allowed: false, scope: "own" }, edit: { allowed: false, scope: "own" }, delete: { allowed: false, scope: "own" } },
   },
 };
 

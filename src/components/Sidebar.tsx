@@ -79,9 +79,9 @@ export default function Sidebar({ profile }: { profile: Profile }) {
     : [
         { href: "/dashboard", label: "Overview", icon: LayoutDashboard, show: true },
         { href: "/dashboard/clients", label: "Clients", icon: Users, show: canView("clients") },
-        { href: "/dashboard/content", label: "Content", icon: CalendarDays, show: canView("calendar") },
+        { href: "/dashboard/content", label: "Content", icon: CalendarDays, show: canView("content") },
         { href: "/dashboard/tasks", label: "Tasks", icon: CheckSquare, show: canView("tasks") },
-        { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: false },
+        { href: "/dashboard/crm", label: "Sales CRM", icon: TrendingUp, show: canView("crm") },
         { href: "/dashboard/calendar", label: "Calendar", icon: CalendarDays, show: canView("calendar") },
         { href: "/dashboard/files", label: "Files", icon: FolderOpen, show: canView("files") },
         { href: "/dashboard/documents", label: "Documents", icon: FileText, show: profile.role === "owner" || profile.role === "admin" || profile.role === "manager" },

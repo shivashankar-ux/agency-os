@@ -76,6 +76,7 @@ export default async function DashboardPage() {
       owner: "bg-amber-950/40 text-amber-400 border-amber-900/50",
       admin: "bg-red-950/40 text-red-400 border-red-900/50",
       manager: "bg-indigo-950/40 text-indigo-400 border-indigo-900/50",
+      planner: "bg-sky-950/40 text-sky-400 border-sky-900/50",
       member: "bg-neutral-800 text-neutral-400 border-neutral-700",
     };
 
@@ -83,6 +84,7 @@ export default async function DashboardPage() {
       owner: "Super Admin",
       admin: "Administrator",
       manager: "Manager",
+      planner: "Planner",
       member: "Employee",
     };
 

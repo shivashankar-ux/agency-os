@@ -30,7 +30,7 @@ export default function ClientsTable({
   role
 }: { 
   clients: Client[]; 
-  role?: "owner" | "admin" | "manager" | "member" | "client";
+  role?: "owner" | "admin" | "manager" | "planner" | "member" | "client";
 }) {
   const isOwnerOrAdmin = role === "owner" || role === "admin";
   const canViewDetails = role === "owner" || role === "admin" || role === "manager" || role === "member";

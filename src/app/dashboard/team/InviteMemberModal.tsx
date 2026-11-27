@@ -202,6 +202,7 @@ export default function InviteMemberModal() {
                         className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       >
                         <option value="member">Member</option>
+                        <option value="planner">Planner</option>
                         <option value="manager">Manager</option>
                         <option value="admin">Admin</option>
                         <option value="client">Client</option>

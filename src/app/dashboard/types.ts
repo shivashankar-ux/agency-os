@@ -4,7 +4,7 @@ export interface Profile {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "admin" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "planner" | "member" | "client";
   avatar_url?: string | null;
   is_active: boolean;
   org_id: string;

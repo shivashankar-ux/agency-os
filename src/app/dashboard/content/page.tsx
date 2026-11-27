@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
+import { getPermissions } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import ContentPageClient from "./ContentPageClient";
 
@@ -11,6 +12,9 @@ export const metadata = {
 export default async function ContentPage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
+
+  const permissions = await getPermissions(profile.id);
+  if (!permissions?.content?.view?.allowed) redirect("/dashboard");
 
   const supabase = await createClient();
 

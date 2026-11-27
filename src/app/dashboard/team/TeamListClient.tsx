@@ -10,7 +10,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "admin" | "manager" | "member" | "client";
+  role: "owner" | "admin" | "manager" | "planner" | "member" | "client";
   job_title: string | null;
   is_active: boolean;
 };
@@ -36,7 +36,7 @@ export default function TeamListClient({
   // Edit form state
   const [editForm, setEditForm] = useState({
     name: "",
-    role: "member" as "admin" | "manager" | "member" | "client",
+    role: "member" as "admin" | "manager" | "planner" | "member" | "client",
     job_title: "",
     is_active: true,
   });
@@ -197,12 +197,13 @@ export default function TeamListClient({
                   <select
                     value={editForm.role}
                     onChange={(e) =>
-                      setEditForm({ ...editForm, role: e.target.value as "admin" | "manager" | "member" | "client" })
+                      setEditForm({ ...editForm, role: e.target.value as "admin" | "manager" | "planner" | "member" | "client" })
                     }
                     disabled={loading}
                     className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   >
                     <option value="member">Member</option>
+                    <option value="planner">Planner</option>
                     <option value="manager">Manager</option>
                     <option value="admin">Admin</option>
                     <option value="client">Client</option>

@@ -9,7 +9,7 @@ import DatePicker from "@/components/ui/DatePicker";
 export default function AddClientButton({ 
   role 
 }: { 
-  role?: "owner" | "admin" | "manager" | "member" | "client";
+  role?: "owner" | "admin" | "manager" | "planner" | "member" | "client";
 }) {
   const isOwnerOrAdmin = role === "owner" || role === "admin";
   const [open, setOpen] = useState(false);

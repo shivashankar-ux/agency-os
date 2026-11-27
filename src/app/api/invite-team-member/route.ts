@@ -43,6 +43,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields: email, name, or role" }, { status: 400 });
     }
 
+    const INVITABLE_ROLES = ["admin", "manager", "planner", "member", "client"];
+    if (!INVITABLE_ROLES.includes(role)) {
+      return NextResponse.json({ error: "Invalid role" }, { status: 400 });
+    }
+
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
       return NextResponse.json({ error: "Service role key configuration missing on server" }, { status: 500 });
     }

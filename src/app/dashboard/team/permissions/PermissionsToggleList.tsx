@@ -11,7 +11,7 @@ type Profile = {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "admin" | "manager" | "member";
+  role: "owner" | "admin" | "manager" | "planner" | "member";
   job_title: string | null;
 };
 
