@@ -4,6 +4,7 @@ import { renderToBuffer } from "@react-pdf/renderer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { WelcomePdfDocument, InvoicePdfDocument } from "@/lib/pdf/templates";
 import { AgreementPdfDocument } from "@/lib/pdf/agreement";
+import { ContentServicesAgreementPdfDocument } from "@/lib/pdf/contentServicesAgreement";
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,6 +79,25 @@ export async function POST(req: NextRequest) {
             clientName={client.name}
             services={servicesOpted}
             retainerValue={retainer}
+          />
+        ) as any
+      );
+    } else if (type === "content_services_agreement") {
+      pdfBuffer = await renderToBuffer(
+        (
+          <ContentServicesAgreementPdfDocument
+            branding={branding}
+            clientName={client.name}
+            clientAddress={fieldData?.client_address}
+            ownerName={fieldData?.owner_name || client.contact_person}
+            ownerPhone={fieldData?.owner_phone || client.phone}
+            agreementDate={fieldData?.agreement_date}
+            planStartDate={fieldData?.plan_start_date}
+            plan={fieldData?.plan || "monthly"}
+            fee={fieldData?.fee || 0}
+            paymentSchedule={fieldData?.payment_schedule}
+            reschedulingFee={fieldData?.rescheduling_fee}
+            revisionFee={fieldData?.revision_fee}
           />
         ) as any
       );

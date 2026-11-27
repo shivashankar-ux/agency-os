@@ -556,6 +556,12 @@ export default function ClientDetailClient({
           <div>
             <h1 className="text-2xl font-bold text-white">{client.name}</h1>
             <p className="text-neutral-500 text-sm mt-1">Client ID: {client.id}</p>
+            <Link
+              href={`/dashboard/clients/${client.id}/onboarding`}
+              className="inline-flex items-center gap-1.5 text-amber-500 hover:text-amber-400 text-xs font-semibold mt-2"
+            >
+              <Briefcase size={13} /> Onboarding Form
+            </Link>
           </div>
           <span
             className={`text-xs px-2.5 py-1 rounded-full border font-medium capitalize self-start md:self-center ${

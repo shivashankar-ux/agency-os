@@ -2,7 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentProfile } from "@/lib/supabase/profile";
 import { getPermissions } from "@/lib/permissions";
 import { redirect } from "next/navigation";
-import ReportsPageClient from "./ReportsPageClient";
+import ReportsTabsClient from "./ReportsTabsClient";
 
 export const metadata = {
   title: "Reports & Analytics | Agency OS",
@@ -36,6 +36,7 @@ export default async function ReportsPage() {
     { data: tasks },
     { data: projects },
     { data: profiles },
+    { data: clients },
   ] = await Promise.all([
     supabase
       .from("invoices")
@@ -62,16 +63,26 @@ export default async function ReportsPage() {
       .from("profiles")
       .select("id, name")
       .order("name", { ascending: true }),
+
+    supabase
+      .from("clients")
+      .select("id, name")
+      .eq("org_id", orgId)
+      .order("name", { ascending: true }),
   ]);
 
   return (
-    <ReportsPageClient
-      invoices={(invoices ?? []) as any}
-      expenses={(expenses ?? []) as any}
-      tasks={(tasks ?? []) as any}
-      projects={(projects ?? []) as any}
-      profiles={(profiles ?? []) as any}
-      permissions={permissions}
+    <ReportsTabsClient
+      internalProps={{
+        invoices: (invoices ?? []) as any,
+        expenses: (expenses ?? []) as any,
+        tasks: (tasks ?? []) as any,
+        projects: (projects ?? []) as any,
+        profiles: (profiles ?? []) as any,
+        permissions,
+      }}
+      clients={clients ?? []}
+      profile={profile}
     />
   );
 }
