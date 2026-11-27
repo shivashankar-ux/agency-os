@@ -114,14 +114,23 @@ export async function canExport(userId: string, module: string): Promise<boolean
   return (await hasPermission(userId, module, "export")).allowed;
 }
 
-// Scoped Data Queries filter helpers
-export async function applyClientFilters(query: any, userId: string, scope: PermissionScope) {
+// Cached so the three apply*Filters helpers below (and any page calling more
+// than one of them per request) share a single profiles round-trip instead of
+// each issuing its own — this was the main source of dashboard load latency.
+const getUserRoleAndClientId = cache(async (userId: string) => {
   const supabase = await createClient();
-  const { data: profile } = await supabase
+  const { data } = await supabase
     .from("profiles")
     .select("role, client_id")
     .eq("id", userId)
     .single();
+  return data;
+});
+
+// Scoped Data Queries filter helpers
+export async function applyClientFilters(query: any, userId: string, scope: PermissionScope) {
+  const supabase = await createClient();
+  const profile = await getUserRoleAndClientId(userId);
 
   if (profile?.role === "client") {
     return query.eq("id", profile.client_id || "00000000-0000-0000-0000-000000000000");
@@ -147,11 +156,7 @@ export async function applyClientFilters(query: any, userId: string, scope: Perm
 
 export async function applyProjectFilters(query: any, userId: string, scope: PermissionScope) {
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, client_id")
-    .eq("id", userId)
-    .single();
+  const profile = await getUserRoleAndClientId(userId);
 
   if (profile?.role === "client") {
     return query.eq("client_id", profile.client_id || "00000000-0000-0000-0000-000000000000");
@@ -177,11 +182,7 @@ export async function applyProjectFilters(query: any, userId: string, scope: Per
 
 export async function applyTaskFilters(query: any, userId: string, scope: PermissionScope) {
   const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role, client_id")
-    .eq("id", userId)
-    .single();
+  const profile = await getUserRoleAndClientId(userId);
 
   if (profile?.role === "client") {
     const { data: projects } = await supabase

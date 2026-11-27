@@ -17,17 +17,32 @@ export default async function DashboardPage() {
 
     const supabase = await createClient();
 
-    // Fetch profile and organization name join
-    const { data: profileWithOrg } = await supabase
-      .from("profiles")
-      .select("*, organizations(name)")
-      .eq("id", profile.id)
-      .single();
+    // Fetch org name, permissions, dashboard KPIs and recent files concurrently —
+    // these are independent queries that were previously awaited one-by-one,
+    // which is what made the dashboard feel slow to load.
+    const [{ data: profileWithOrg }, permissions, data, { data: recentFiles }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("*, organizations(name)")
+        .eq("id", profile.id)
+        .single(),
+      getPermissions(profile.id),
+      getDashboardData(),
+      supabase
+        .from("files")
+        .select(`
+          *,
+          uploader:profiles!files_created_by_fkey(name),
+          client:clients!files_client_id_fkey(name),
+          project:projects!files_project_id_fkey(name)
+        `)
+        .order("created_at", { ascending: false })
+        .limit(6),
+    ]);
 
     const workspaceName = profileWithOrg?.organizations?.name || "The Story Builder";
 
     // Resolve user permissions and scopes
-    const permissions = await getPermissions(profile.id);
     const canViewClients = permissions.clients?.view?.allowed || false;
     const canViewProjects = permissions.projects?.view?.allowed || false;
     const canViewTasks = permissions.tasks?.view?.allowed || false;
@@ -38,21 +53,7 @@ export default async function DashboardPage() {
     const canViewTeamPerformance = canViewTeam && (permissions.dashboard?.view_team_performance?.allowed || false);
     const canViewReports = permissions.reports?.view?.allowed || false;
 
-    // Load dynamic aggregations from Supabase
-    const data = await getDashboardData();
     const { kpis } = data;
-
-    // Fetch recent shared files
-    const { data: recentFiles } = await supabase
-      .from("files")
-      .select(`
-        *,
-        uploader:profiles!files_created_by_fkey(name),
-        client:clients!files_client_id_fkey(name),
-        project:projects!files_project_id_fkey(name)
-      `)
-      .order("created_at", { ascending: false })
-      .limit(6);
 
     // Formatting currency values
     const formattedRevenue = `₹${kpis.revenue.toLocaleString("en-IN")}`;

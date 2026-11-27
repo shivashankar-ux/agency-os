@@ -133,10 +133,12 @@ export async function getDashboardData(): Promise<DashboardData> {
     .select("id, title, status, priority, due_date, assigned_to, project_id, created_at, updated_at, projects(name, client_id, clients(name)), profiles!assigned_to(name)")
     .order("created_at", { ascending: false });
 
-  // Apply scope-based visibility filters
-  clientsQuery = await applyClientFilters(clientsQuery, profile.id, clientScope);
-  projectsQuery = await applyProjectFilters(projectsQuery, profile.id, projectScope);
-  tasksQuery = await applyTaskFilters(tasksQuery, profile.id, taskScope);
+  // Apply scope-based visibility filters (run concurrently — independent queries)
+  [clientsQuery, projectsQuery, tasksQuery] = await Promise.all([
+    applyClientFilters(clientsQuery, profile.id, clientScope),
+    applyProjectFilters(projectsQuery, profile.id, projectScope),
+    applyTaskFilters(tasksQuery, profile.id, taskScope),
+  ]);
 
   // Parallel fetch operations for maximum performance
   const [
