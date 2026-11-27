@@ -16,11 +16,10 @@ export async function GET(request: Request) {
   const authHeader = request.headers.get("authorization");
 
   if (
-    process.env.CRON_SECRET &&
     authHeader !== `Bearer ${process.env.CRON_SECRET}` &&
     secretParam !== process.env.CRON_SECRET
   ) {
-    // If not matching header or param secret, but CRON_SECRET is set, check if manual testing bypass allowed
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const supabase = createAdminClient();
